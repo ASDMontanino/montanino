@@ -1,0 +1,112 @@
+A.S.D. MONTANINO — GUIDA AI TABELLINI DELLE SINGOLE PARTITE (V2.2)
+====================================================================
+
+1. COSA VEDRAI NEL SITO
+----------------------
+Apri index.html > CALENDARIO > GIÀ GIOCATE.
+Per ogni risultato trovi il pulsante "TABELLINO E VOTI +".
+Il pannello può mostrare:
+- Modulo e giocatori titolari sul campo, suddivisi per reparto.
+- Panchina e minuto di ingresso dei subentrati.
+- Cronologia: gol, assist (abbinato al gol), ammonizioni, espulsioni, sostituzioni.
+- Tabella per ogni calciatore: gol, assist, cartellini, voto e commento.
+- Note finali del match.
+
+Per i tre match già giocati i risultati provengono dalla UISP. Le statistiche dei
+singoli giocatori NON sono state ancora fornite e pertanto rimangono vuote.
+Il pulsante "GUARDA UN ESEMPIO DI TABELLINO" mostra una DEMO VISIVA:
+non salva o pubblica dati e NON descrive la partita reale.
+
+2. DOVE INSERIRE LE INFORMAZIONI
+--------------------------------
+Apri data.js in Visual Studio Code e cerca "dettagliPartite".
+Sono presenti gli identificativi delle partite già disputate:
+  A01 = Montanino - Gaiole
+  A02 = Vacchereccia - Montanino
+  A03 = Montanino - San Cipriano
+La chiave A01, A02 ecc. è la stessa del relativo oggetto nel calendario.
+Puoi creare un blocco per qualsiasi altra giornata (A04..A13, R01..R13).
+
+3. ESEMPIO DA COPIARE E ADATTARE
+-------------------------------
+ATTENZIONE: le persone e gli eventi sotto sono SEGNAPOSTO, non dati reali.
+Sostituiscili integralmente con i tuoi nomi e dati verificati.
+
+"A03": {
+  modulo: "4-3-3",
+  titolari: [
+    { numero: 1, nome: "NOME PORTIERE", reparto: "P", voto: 6.5, nota: "Buona prova" },
+    { numero: 2, nome: "NOME DIFENSORE 1", reparto: "D", voto: 6 },
+    { numero: 3, nome: "NOME DIFENSORE 2", reparto: "D", voto: 6 },
+    { numero: 4, nome: "NOME DIFENSORE 3", reparto: "D", voto: 6 },
+    { numero: 5, nome: "NOME DIFENSORE 4", reparto: "D", voto: 6 },
+    { numero: 6, nome: "NOME CENTROCAMPISTA 1", reparto: "C", voto: 6 },
+    { numero: 7, nome: "NOME CENTROCAMPISTA 2", reparto: "C", voto: 6 },
+    { numero: 8, nome: "NOME CENTROCAMPISTA 3", reparto: "C", voto: 6 },
+    { numero: 9, nome: "NOME ATTACCANTE 1", reparto: "A", voto: 6 },
+    { numero: 10, nome: "NOME ATTACCANTE 2", reparto: "A", voto: 6 },
+    { numero: 11, nome: "NOME ATTACCANTE 3", reparto: "A", voto: 6 }
+  ],
+  panchina: [
+    { numero: 12, nome: "NOME RISERVA 1", reparto: "P", voto: null },
+    { numero: 13, nome: "NOME RISERVA 2", reparto: "C", entrato: 67, voto: 6 }
+  ],
+  eventi: [
+    { minuto: 23, tipo: "gol", giocatore: "NOME ATTACCANTE 1", assist: "NOME CENTROCAMPISTA 1", squadra: "Montanino" },
+    { minuto: "45+1", tipo: "giallo", giocatore: "NOME DIFENSORE 2", squadra: "Montanino" },
+    { minuto: 61, tipo: "rosso", giocatore: "NOME CENTROCAMPISTA 2", squadra: "Montanino" },
+    { minuto: 67, tipo: "sostituzione", esce: "NOME CENTROCAMPISTA 3", entra: "NOME RISERVA 2", squadra: "Montanino" }
+  ],
+  note: "Commento opzionale sulla prestazione della squadra.",
+  datiCompleti: false,
+  eventiCompleti: false
+},
+
+Il blocco precedente è un esempio sintattico. Non incollarlo senza modificarlo,
+perché altrimenti apparirebbero nomi segnaposto sul sito pubblico.
+
+4. REGOLE PER INSERIRE CORRETTAMENTE I DATI
+------------------------------------------
+- reparto: "P" portiere, "D" difensore, "C" centrocampista, "A" attaccante.
+- numero: numero di maglia. Deve essere un numero, non una stringa.
+- voto: numero (per esempio 6.5), "SV" oppure null per voto non assegnato.
+- nota: breve pagella testuale facoltativa, per esempio "Buona prova".
+- evento gol: un evento per ogni gol. Se c'è l'assist, usa la proprietà assist.
+  Se lo stesso giocatore segna due gol, inserisci due eventi tipo "gol".
+- evento giallo/rosso: un evento per ogni cartellino.
+- evento sostituzione: usa le proprietà esce ed entra.
+- minuto: numero o testo come "45+2".
+- squadra: "Montanino" per gli eventi dei nostri giocatori. Un evento di
+  un'altra squadra può essere indicato con il nome dell'avversario.
+- eventiCompleti: true SOLO quando tutti gli eventi rilevanti sono presenti.
+  Altrimenti lascia false e le statistiche mancanti saranno indicate con "—".
+- datiCompleti: true SOLO quando l'intero tabellino è stato controllato.
+- Tutti i nomi devono essere SCRITTI IDENTICI tra titolari/panchina ed eventi:
+  questo permette al programma di associare correttamente gol e cartellini.
+- Non inserire un assist come un evento a parte: deve essere associato al gol.
+
+5. COME AGGIUNGERE UNA NUOVA PARTITA
+-----------------------------------
+Quando una giornata (per esempio A04) è stata giocata:
+  a) Nel calendario di data.js inserisci golCasa e golOspite.
+  b) In dettagliPartite aggiungi "A04": { ... } usando lo schema qui sopra.
+  c) Se è l'ultima partita, aggiorna anche ultimoRisultato.idPartita = "A04",
+     oltre al punteggio, data e squadre nel blocco ultimoRisultato.
+  d) Salva con Cmd+S e aggiorna Chrome con Cmd+R.
+Il pulsante compare automaticamente per ogni partita che ha entrambi i punteggi.
+
+6. DIFFERENZA TRA TABELLINO E STATISTICHE STAGIONALI
+---------------------------------------------------
+In questa V2.2 i gol, gli assist e i cartellini mostrati nel TABELLINO vengono
+calcolati dagli eventi DELLA SINGOLA PARTITA. La tabella STATISTICHE STAGIONALI
+continua a leggere l'elenco giocatori di data.js, da aggiornare separatamente.
+Non somma ancora automaticamente tutte le partite: lo aggiungeremo quando avremo
+una rosa completa e un archivio verificato dei tabellini, così da evitare doppi conteggi.
+
+7. COSA OCCORRE PER I DATI REALI
+--------------------------------
+Per ogni partita servono elenco degli 11 titolari, panchina, eventuali cambi,
+nomi dei marcatori, assist, cartellini, voti e, se disponibile, commenti alle
+prestazioni. Puoi copiarli a mano in data.js senza programmi o abbonamenti.
+
+TUTTO FUNZIONA IN LOCALE ED È PUBBLICABILE GRATUITAMENTE CON GITHUB PAGES.

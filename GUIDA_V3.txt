@@ -1,0 +1,111 @@
+A.S.D. MONTANINO — V3.0
+GUIDA PASSO PASSO — TUTTO CON STRUMENTI GRATUITI
+================================================
+
+FASE 1 — PROVA IL PANNELLO SENZA ACCOUNT (SOLO SUL TUO MAC)
+1. Estrai lo ZIP in una cartella nuova: montanino-sito-v3.
+2. Apri admin.html in Chrome oppure con Live Server in VS Code.
+3. L'indicatore in alto dice «DEMO · SOLO QUESTO BROWSER».
+4. Vai in ROSA e inserisci prima nome, numero e ruolo dei giocatori.
+5. Torna a PARTITE, scegli una giornata, compila formazione, voti ed episodi.
+6. Premi «SALVA MODIFICHE»: la demo usa la memoria di QUESTO browser.
+7. Torna a index.html e ricarica: sullo stesso browser e origine vedrai i dati
+   di prova. Non sono online e non sono condivisi con altri dispositivi.
+8. Premi «ESPORTA BACKUP» per scaricare un file JSON dei dati modificati.
+   Puoi recuperarlo con «IMPORTA BACKUP» anche nella versione online.
+   IMPORTANTE: non affidarti solo alla memoria del browser.
+
+Attenzione: aprendo i file direttamente con doppio clic (file://), la
+memoria locale può comportarsi diversamente secondo il browser. Per la
+prova più affidabile usa l'estensione gratuita «Live Server» di VS Code:
+  a) Installa Visual Studio Code (https://code.visualstudio.com/)
+  b) Apri la cartella del sito con File > Open Folder
+  c) Nelle Estensioni cerca «Live Server» di Ritwick Dey e installalo
+  d) Fai clic destro su admin.html > Open with Live Server
+  e) Apri index.html usando lo stesso indirizzo localhost e porta.
+
+FASE 2 — CREA IL DATABASE ONLINE SUPABASE (PIANO FREE)
+1. Vai su https://supabase.com, crea un account e un progetto FREE.
+2. Tieni da parte la PASSWORD del database solo per te (NON va nel sito).
+3. Dal progetto vai in SQL Editor > New query.
+4. Apri il file supabase_setup.sql con VS Code, copia tutto e premi Run.
+5. Dal menu Authentication > Users crea un nuovo utente con email e password
+   usando le opzioni disponibili nel pannello (o invita un utente e verifica
+   la mail, secondo la configurazione del progetto).
+6. AUTORIZZA il tuo utente: apri SQL Editor, crea una nuova query e incolla
+   questa query sostituendo LA_TUA_EMAIL con l'email ESATTA del tuo utente:
+
+   insert into public.club_admins (user_id)
+   select id from auth.users where email = 'LA_TUA_EMAIL'
+   on conflict (user_id) do nothing;
+
+   Poi premi Run. Se l'email non esiste, la query non inserisce nessuna riga.
+7. Se non vuoi che il pubblico possa registrarsi, disabilita nuove iscrizioni
+   pubbliche nelle impostazioni Authentication. L'accesso admin usa l'utente
+   creato dal proprietario, non un modulo di registrazione pubblico.
+
+FASE 3 — COLLEGA IL SITO
+1. Apri in Supabase Project Settings > API / Connect (i nomi possono variare).
+2. Copia il Project URL (esempio https://xxxx.supabase.co).
+3. Copia la PUBLISHABLE key (sb_publishable_...) oppure la legacy anon key.
+   ATTENZIONE: non usare la service_role key o altre secret keys!
+4. Apri config.js in VS Code e compila:
+
+   window.MONTANINO_SUPABASE = {
+     url: 'https://IL-TUO-PROGETTO.supabase.co',
+     anonKey: 'LA-TUA-PUBLISHABLE-KEY'
+   };
+
+   Questo file contiene solo una chiave pubblica: l'accesso ai dati è
+   controllato dal login e dalle regole RLS eseguite in Supabase.
+5. Avvia il sito con Live Server (non con file:// se hai problemi di rete).
+6. Apri admin.html, inserisci email e password del tuo utente Supabase.
+7. Se il database è vuoto, premi «SALVA MODIFICHE» una volta per caricare i
+   dati di partenza V2.2 (26 giornate e primi risultati), poi modifica liberamente.
+8. Riapri index.html e ricarica: il sito legge ora il database online.
+9. Se il sito non raggiunge il DB, usa temporaneamente il backup data.js;
+   le modifiche online non possono essere recuperate senza connessione.
+
+FASE 4 — PUBBLICAZIONE GRATIS CON GITHUB PAGES
+1. Accedi a https://github.com e crea un repository pubblico montanino.
+2. Carica TUTTI i file DELLA CARTELLA montanino-sito-v3 nella ROOT del repo,
+   insieme alla cartella assets/img. Non caricare lo ZIP come unico file.
+3. NON caricare mai password, secret key, credenziali database o backup privati.
+4. In GitHub: Settings > Pages > Deploy from a branch > main > /(root) > Save.
+5. Il sito sarà sul tipo di URL:
+   https://TUO-USERNAME.github.io/montanino/
+6. Condividerai l'URL di index.html. Per i tuoi aggiornamenti usa
+   https://TUO-USERNAME.github.io/montanino/admin.html
+   La pagina admin è raggiungibile, ma scrivere nel DB richiede login E
+   autorizzazione esplicita. Il link nascosto NON è un sistema di sicurezza.
+
+PRIMA DI PUBBLICARE
+- Verifica gli incontri, la rosa e i risultati sui comunicati ufficiali.
+- Chiedi il permesso per pubblicare fotografie e dati personali dei giocatori.
+- Il contenuto di club_content è leggibile da CHIUNQUE tramite API pubblica:
+  salva solo dati che vuoi rendere pubblici! Niente telefoni, indirizzi privati,
+  password o note di spogliatoio.
+- Salva regolarmente un backup con «ESPORTA BACKUP» e conservalo privatamente.
+- Supabase Free ha limiti, può sospendere il progetto dopo inattività e non
+  garantisce i backup automatici. Verifica il piano aggiornato su supabase.com.
+
+COME FUNZIONANO I CONTEGGI
+- Le statistiche si aggiornano automaticamente SOLO se un match ha il
+  risultato, 11 titolari, «Formazione e pagelle verificate» e «Tutti gli episodi
+  verificati» spuntati.
+- I titolari ricevono una presenza; le riserve solo se hanno il minuto di
+  ingresso oppure compaiono in un evento di sostituzione come entranti.
+- Ogni episodio "Gol" del Montanino vale 1 rete; un assist è assegnato al
+  giocatore scelto nell'episodio gol. Cartellini secondo gli eventi registrati.
+- Le medie dei voti sono calcolate per le partite complete con voto disponibile.
+- I totali sono PARZIALI finché non sono completati tutti i tabellini disputati.
+- La CLASSIFICA GENERALE va aggiornata a mano: manca il calendario completo
+  degli altri incontri del girone.
+
+COSTO: € 0 se resti entro i limiti del piano Supabase Free e utilizzi
+GitHub Pages con repository pubblico. Un dominio personalizzato può costare.
+
+LINK UFFICIALI
+https://supabase.com/docs/reference/javascript/installing
+https://supabase.com/docs/guides/platform/billing-on-supabase
+https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages

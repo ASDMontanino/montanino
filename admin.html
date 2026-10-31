@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#08100c">
+  <title>Montanino / Pannello amministratore</title>
+  <link rel="icon" href="assets/img/stemma.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script src="data.js" defer></script><script src="config.js" defer></script>
+  <script src="site-common.js" defer></script><script src="admin.js" defer></script>
+</head>
+<body>
+<header class="admin-header"><a href="index.html" class="admin-brand"><img src="assets/img/stemma.webp" alt="Stemma Montanino"><span><strong>MONTANINO</strong><small>CONTROL ROOM · V3.0</small></span></a><div class="header-actions"><span id="mode-label" class="mode-label">CARICAMENTO…</span><a class="link-back" href="index.html">← VEDI IL SITO</a><button type="button" id="logout" class="btn-quiet" hidden>ESCI</button></div></header>
+<main class="admin-shell">
+  <section class="admin-intro"><p class="eyebrow">CLUB MANAGEMENT / STAGIONE 2026—27</p><h1>IL CLUB.<br><em>AI TUOI COMANDI.</em></h1><p>Gestisci partite, formazione, pagelle, rosa, classifica, staff e sponsor. Le statistiche individuali vengono calcolate dai tabellini confermati.</p></section>
+  <div id="alert" role="status" aria-live="polite" class="alert" hidden></div>
+  <section id="login-panel" class="surface login-panel" hidden>
+    <p class="eyebrow">AREA RISERVATA</p><h2>ACCESSO AMMINISTRATORE</h2>
+    <p>Entra con l'account che hai autorizzato su Supabase. Il login è protetto dalle regole di accesso del database.</p>
+    <form id="login-form"><label>Email<input required id="login-email" type="email" autocomplete="username" placeholder="email@esempio.it"></label><label>Password<input required id="login-password" type="password" autocomplete="current-password" minlength="6" placeholder="Password Supabase"></label><button class="btn-primary" type="submit">ACCEDI AL PANNELLO →</button></form>
+  </section>
+  <section id="editor" hidden>
+    <div class="editor-top surface"><div><p class="eyebrow">STATO DEL SITO</p><strong id="save-status">Dati caricati</strong><small id="save-note">Salva dopo aver modificato una sezione.</small></div><div class="editor-top-actions"><button type="button" class="btn-quiet" id="import-json">IMPORTA BACKUP</button><input id="import-file" type="file" accept="application/json,.json" hidden><button type="button" class="btn-quiet" id="export-json">ESPORTA BACKUP</button><button type="button" class="btn-primary" id="save-all">SALVA MODIFICHE →</button></div></div>
+    <nav class="admin-tabs" aria-label="Sezioni del pannello">
+      <button type="button" class="active" data-panel="partite">01 · PARTITE</button>
+      <button type="button" data-panel="rosa">02 · ROSA</button>
+      <button type="button" data-panel="classifica">03 · CLASSIFICA</button>
+      <button type="button" data-panel="staff">04 · STAFF</button>
+      <button type="button" data-panel="sponsor">05 · SPONSOR & SOCIAL</button>
+    </nav>
+    <section class="editor-panel" data-editor-panel="partite">
+      <div class="section-head"><h2>PARTITE & TABELLINI</h2><p>Seleziona la partita e compila risultato, undici titolari, panchina, pagelle ed episodi. Salva per pubblicare.</p></div>
+      <div class="surface pad"><label class="wide-label">Scegli la giornata<select id="match-select"></select></label><div class="form-grid three"><label>Data<input id="match-date" type="date"></label><label>Orario<input id="match-time" type="time"></label><label>Campo<input id="match-field" placeholder="Campo di gioco"></label></div><div class="form-grid two"><label>Squadra casa<input id="match-home" required></label><label>Squadra ospite<input id="match-away" required></label><label>Gol casa (vuoto se da giocare)<input id="match-goals-home" type="number" min="0" step="1" placeholder="Da giocare"></label><label>Gol ospiti (vuoto se da giocare)<input id="match-goals-away" type="number" min="0" step="1" placeholder="Da giocare"></label></div></div>
+      <div class="surface pad"><div class="block-head"><div><h3>FORMAZIONE</h3><p>11 titolari, panchina e voti; aggiungi prima i giocatori nella scheda Rosa.</p></div><label class="small-label">Modulo<input id="match-module" placeholder="4-3-3" maxlength="12"></label></div><div class="subhead"><h4>TITOLARI <span id="starter-count">0/11</span></h4><button type="button" class="btn-add" id="add-starter">+ TITOLARE</button></div><div id="starters-list" class="lineup-list"></div><div class="subhead"><h4>PANCHINA</h4><button type="button" class="btn-add" id="add-bench">+ RISERVA</button></div><div id="bench-list" class="lineup-list"></div></div>
+      <div class="surface pad"><div class="block-head"><div><h3>EPISODI DEL MATCH</h3><p>Gol, assist, cartellini e sostituzioni. Per la formazione avversaria puoi scrivere il nome liberamente.</p></div><button type="button" id="add-event" class="btn-add">+ EPISODIO</button></div><datalist id="player-names"></datalist><div id="events-list" class="events-list"></div><label>Note della partita<textarea id="match-notes" rows="3" placeholder="Cronaca, prestazione, episodi importanti…"></textarea></label><div class="check-row"><label><input type="checkbox" id="match-complete"> Formazione e pagelle verificate (tabellino completo)</label><label><input type="checkbox" id="events-complete"> Tutti gli episodi verificati (statistiche conteggiabili)</label></div><p class="hint">Le statistiche stagionali vengono calcolate soltanto dai tabellini in cui entrambe le caselle sono spuntate. Non contrassegnare come completo un elenco parziale.</p></div>
+    </section>
+    <section class="editor-panel" data-editor-panel="rosa" hidden><div class="section-head"><h2>ROSA GIOCATORI</h2><p>Inserisci nome, numero e ruolo. Gol, assist, presenze, cartellini e media voto sono ricavati automaticamente dalle partite complete.</p></div><div class="surface pad"><div class="block-head"><h3>GIOCATORI</h3><button type="button" id="add-player" class="btn-add">+ GIOCATORE</button></div><div id="players-list" class="entity-list"></div><p class="hint">Usa sempre lo stesso nome e cognome nei tabellini: è il collegamento tra le pagelle e la statistica stagionale.</p></div></section>
+    <section class="editor-panel" data-editor-panel="classifica" hidden><div class="section-head"><h2>CLASSIFICA UISP</h2><p>La classifica generale comprende tutte le squadre e non può essere calcolata dai soli risultati del Montanino: aggiorna qui i dati ufficiali.</p></div><div class="surface pad"><div id="standings-list" class="entity-list"></div></div></section>
+    <section class="editor-panel" data-editor-panel="staff" hidden><div class="section-head"><h2>STAFF & DIRIGENZA</h2><p>Inserisci gli incarichi societari reali. Le fotografie sono facoltative.</p></div><div class="surface pad"><div class="block-head"><h3>PERSONE</h3><button type="button" id="add-staff" class="btn-add">+ MEMBRO</button></div><div id="staff-editor-list" class="entity-list"></div></div></section>
+    <section class="editor-panel" data-editor-panel="sponsor" hidden><div class="section-head"><h2>SPONSOR & SOCIAL</h2><p>I nuovi link saranno visibili online dopo il salvataggio. Per i loghi, inserisci il nome del file già caricato in <code>assets/img</code>.</p></div><div class="surface pad"><div class="block-head"><h3>SPONSOR</h3><button type="button" id="add-sponsor" class="btn-add">+ SPONSOR</button></div><div id="sponsors-editor-list" class="entity-list"></div><h3 class="social-heading">CANALI SOCIAL</h3><div class="form-grid"><label>Instagram<input id="social-instagram" type="url" placeholder="https://www.instagram.com/..."></label><label>Facebook<input id="social-facebook" type="url" placeholder="https://www.facebook.com/..."></label><label>TikTok<input id="social-tiktok" type="url" placeholder="https://www.tiktok.com/@..."></label></div></div></section>
+    <div class="editor-bottom"><button id="save-bottom" class="btn-primary" type="button">SALVA TUTTO →</button><span>Le modifiche non sono pubblicate finché non premi Salva.</span></div>
+  </section>
+  <section id="demo-explanation" class="surface pad" hidden><h2>MODALITÀ PROVA SUL MAC</h2><p>Il pannello è utilizzabile senza account in modalità demo. Le modifiche restano soltanto in questo browser: non sono pubblicate su Internet e non sono protette da un login. Per attivare la modalità online, segui la guida <strong>GUIDA_V3.txt</strong>.</p><p><strong>Importante:</strong> non inserire password o dati privati nella modalità demo. Usa “Esporta backup” per conservare le modifiche.</p></section>
+</main>
+<footer class="admin-footer">A.S.D. MONTANINO · CONTROL ROOM V3.0 · <a href="index.html">TORNA AL SITO ↗</a></footer>
+</body>
+</html>

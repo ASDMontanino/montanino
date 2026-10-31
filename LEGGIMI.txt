@@ -1,0 +1,14 @@
+A.S.D. MONTANINO — SITO V3.0
+===========================
+1) Apri index.html per visualizzare il sito.
+2) Apri admin.html per gestire partite, formazioni, voti, gol,
+   assist, cartellini, rosa, staff, sponsor, social e classifica.
+3) Finché config.js è vuoto, il pannello è una DEMO LOCALE; i dati
+   non vengono pubblicati e sono visibili solo sul browser usato.
+4) Per pubblicare e salvare i dati online, segui GUIDA_V3.txt e
+   configura Supabase, accesso admin e GitHub Pages.
+5) Il file data.js rimane come copia di base dei dati V2.2.
+6) Fai backup regolari usando il pulsante Esporta backup.
+
+Non inserire credenziali segrete in config.js o su GitHub.
+Usa solo informazioni che la squadra vuole rendere pubbliche.
