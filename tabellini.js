@@ -1,5 +1,5 @@
 /* =====================================================================
-   A.S.D. MONTANINO / V2.2 — MATCH REPORT
+   A.S.D. MONTANINO / V3.1 — MATCH REPORT
    Nessun servizio esterno: legge SITE_DATA.dettagliPartite in data.js.
    Non inventa dati sportivi e non modifica i risultati del campionato.
    ===================================================================== */
@@ -56,16 +56,21 @@
     if(!starters.length){
       section.append(make('p','md-empty-small','Formazione titolare non ancora disponibile.'));
     }else{
+      const common=window.MontaninoCommon;
+      const layout=common.formationSlots(v.modulo||'4-3-3');
+      const positions=common.assignFormation(layout.module,starters,SITE_DATA.giocatori||[],true);
+      const byPosition=new Map(positions.filter(p=>p.posizione).map(p=>[p.posizione,p]));
       const pitch=make('div','md-pitch');
-      const labels=[['A','ATTACCO'],['C','CENTROCAMPO'],['D','DIFESA'],['P','PORTA']];
       const lines=make('div','md-pitch-lines');lines.setAttribute('aria-hidden','true');pitch.append(lines);
-      labels.forEach(([code,name])=>{
-        const players=starters.filter(x=>repOf(x)===code);
-        const row=make('div','md-pitch-row');row.setAttribute('aria-label',name);
-        players.forEach(p=>{
+      layout.rows.forEach(line=>{
+        const row=make('div','md-pitch-row');row.setAttribute('aria-label',line.label);
+        line.slots.forEach(slot=>{
+          const p=byPosition.get(slot.id);
+          // Non inventare i nomi: mostrare soltanto le posizioni effettivamente compilate.
+          if(!p)return;
           const badge=make('div','md-pitch-player');
           badge.append(make('span','md-shirt',p.numero??'•'),make('span','md-player-name',p.nome||'Da inserire'));
-          if(p.voto!==undefined && p.voto!==null && p.voto!=='')badge.append(make('span','md-pitch-vote',rate(p.voto)));
+          if(p.voto!==undefined&&p.voto!==null&&p.voto!=='')badge.append(make('span','md-pitch-vote',rate(p.voto)));
           row.append(badge);
         });
         pitch.append(row);
@@ -74,15 +79,14 @@
     }
     const substitutes=safeArray(v.panchina);
     const bench=make('div','md-bench');
-    const benchTitle=make('h5','',`PANCHINA · ${substitutes.length ? substitutes.length + ' GIOCATORI' : 'DA INSERIRE'}`);
-    bench.append(benchTitle);
+    bench.append(make('h5','',`PANCHINA · ${substitutes.length ? substitutes.length + ' GIOCATORI' : 'DA INSERIRE'}`));
     if(!substitutes.length)bench.append(make('p','md-empty-small','Nessun nominativo inserito.'));
-    else {
+    else{
       const chips=make('div','md-bench-grid');
       substitutes.forEach(p=>{
         const chip=make('div','md-bench-player');
         chip.append(make('span','md-bench-number',p.numero??'—'),make('span','',p.nome||'Da inserire'));
-        if(p.entrato!==undefined && p.entrato!==null)chip.append(make('small','',`IN CAMPO AL ${minuteLabel(p.entrato)}`));
+        if(p.entrato!==undefined&&p.entrato!==null&&p.entrato!=='')chip.append(make('small','',`IN CAMPO AL ${minuteLabel(p.entrato)}`));
         chips.append(chip);
       });
       bench.append(chips);

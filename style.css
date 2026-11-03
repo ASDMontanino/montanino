@@ -445,3 +445,47 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 .stats-coverage{border:1px solid rgba(107,218,151,.4);border-radius:8px;background:rgba(27,92,50,.3);color:#c9edda;padding:12px 16px;font-size:.83rem;letter-spacing:.015em;margin:0 0 16px}
 
 .sync-offline{background:#492f13;color:#ffecbe;border-block:1px solid #9d7836;text-align:center;font:700 12px/1.5 'DM Sans',sans-serif;letter-spacing:.06em;padding:9px 12px}
+/* V3.1: altezza fluida per moduli con tre, quattro o cinque linee */
+.md-pitch{min-height:470px;gap:14px;justify-content:space-around}
+.md-pitch-row{min-height:58px;align-items:flex-start}
+@media(max-width:560px){.md-pitch{min-height:390px;gap:9px}.md-pitch-row{min-height:54px}}
+
+/* MONTANINO V3.2 — RITRATTI STAFF EDITORIAL */
+.section-staff .staff-grid{gap:clamp(14px,2vw,24px)}
+.section-staff .staff-card{position:relative;isolation:isolate;overflow:hidden;border:1px solid #326546;border-radius:6px;background:#0c2116;box-shadow:0 14px 36px #0004;transition:transform .45s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .45s}
+.section-staff .staff-card::before{content:"M";position:absolute;z-index:2;top:8px;left:14px;font:900 86px/.9 var(--title);color:#0c4025;opacity:.16;pointer-events:none}
+.section-staff .staff-card::after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,#40e586,#e4ffe9 54%,#40e586);z-index:4;transform:scaleX(.22);transform-origin:left;transition:transform .4s}
+.section-staff .staff-card-media{height:clamp(255px,29vw,360px);position:relative;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 52% 35%,#c9edd2 0%,#9dcfb0 48%,#3b7550 100%)}
+.section-staff .staff-card-media::before{content:"";position:absolute;inset:0;z-index:0;background:repeating-linear-gradient(-65deg,transparent 0 65px,#174b3022 65px 67px)}
+.section-staff .staff-card-media::after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(0deg,#0b2418 0%,#0b241800 29%,transparent 80%);pointer-events:none}
+.section-staff .staff-card-media img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;object-position:center 38%;mix-blend-mode:multiply;filter:contrast(1.04) saturate(.93);transition:transform .65s cubic-bezier(.2,.8,.2,1)}
+.section-staff .staff-details{position:relative;z-index:3;min-height:124px;padding:20px 22px 23px;gap:7px;border-top:1px solid #3e7650;background:linear-gradient(145deg,#0d2c1c,#09170f)}
+.section-staff .staff-details::after{content:"";position:absolute;right:18px;top:22px;width:30px;height:30px;border-top:1px solid #71ce8c;border-right:1px solid #71ce8c;opacity:.65}
+.section-staff .staff-details small{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#68e394}
+.section-staff .staff-details strong{font:900 clamp(25px,2.3vw,37px)/.97 var(--title);text-transform:uppercase;color:#fff;max-width:90%;text-wrap:balance}
+.section-staff .staff-details span{color:#c4deca;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.section-staff .staff-card:hover{transform:translateY(-8px);border-color:#68e394;box-shadow:0 22px 48px #0008,0 0 28px #3cc97519}.section-staff .staff-card:hover::after{transform:scaleX(1)}.section-staff .staff-card:hover img{transform:scale(1.055)}}
+@media(max-width:560px){.section-staff .staff-card-media{height:clamp(310px,96vw,470px)}.section-staff .staff-details{padding:23px}.section-staff .staff-details strong{font-size:36px}}
+@media(prefers-reduced-motion:reduce){.section-staff .staff-card,.section-staff .staff-card *{animation:none!important;transition:none!important}}
+
+
+/* V3.3 — STAFF IN GRUPPI / RITRATTI UNIFORMI */
+.section-staff .staff-groups{display:flex;flex-direction:column;gap:clamp(38px,6vw,80px)}
+.section-staff .staff-group{min-width:0}
+.section-staff .staff-group-heading{display:flex;gap:clamp(13px,2vw,26px);align-items:center;flex-wrap:wrap;margin:0 0 21px;padding:0 0 15px;border-bottom:1px solid #376a48;position:relative}
+.section-staff .staff-group-heading::after{content:'';width:86px;height:3px;background:#59df88;position:absolute;bottom:-2px;left:0}
+.section-staff .staff-group-number{font:900 18px/1 var(--title);color:#56d985;letter-spacing:.04em}
+.section-staff .staff-group-title{font:900 clamp(30px,4.2vw,54px)/.9 var(--title);text-transform:uppercase;letter-spacing:.02em;color:#f1fff5;margin:0}
+.section-staff .staff-group-count{margin-left:auto;font-size:10px;letter-spacing:.12em;color:#8ccaa0;font-weight:800}
+.section-staff .staff-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2vw,23px)}
+.section-staff .staff-card{border:1px solid #2a5a3e;background:#0a1a11;border-radius:5px;overflow:hidden;min-width:0}
+.section-staff .staff-card-media{height:auto;aspect-ratio:4/5;display:grid;place-items:center;position:relative;overflow:hidden;background:radial-gradient(ellipse at 45% 40%,#125b35,#081c11 75%)}
+.section-staff .staff-card-media::after{background:linear-gradient(0deg,#071c13bb,transparent 20%)}
+.section-staff .staff-card-media img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;mix-blend-mode:normal;filter:none;position:absolute;inset:0}
+.section-staff .staff-card-media .staff-initial{position:relative;z-index:2}
+.section-staff .staff-details{min-height:132px;padding:22px 21px 23px}
+.section-staff .staff-details small{font-size:10px;letter-spacing:.14em}
+.section-staff .staff-details strong{font-size:clamp(26px,2.9vw,37px);overflow-wrap:anywhere}
+.section-staff .staff-details span{font-size:11px;letter-spacing:.04em}
+@media(max-width:950px){.section-staff .staff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:575px){.section-staff .staff-grid{grid-template-columns:1fr}.section-staff .staff-group-heading{gap:10px}.section-staff .staff-group-count{width:100%;margin:0}.section-staff .staff-card-media{max-height:none}}

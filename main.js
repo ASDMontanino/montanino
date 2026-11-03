@@ -114,19 +114,21 @@
   window.addEventListener('hashchange', () => window.MontaninoTabellini?.openFromHash());
   requestAnimationFrame(() => window.MontaninoTabellini?.openFromHash());
 
-  const coverage=SITE_DATA._statsCoverage||{complete:0,played:0};
+  const coverage=SITE_DATA._statsCoverage||{formations:0,events:0,played:0};
   const coverageEl=$('stats-coverage');
-  if(coverageEl && coverage.played>0){
+  const formations=coverage.formations??coverage.complete??0;
+  const events=coverage.events??coverage.complete??0;
+  if(coverageEl&&coverage.played>0){
     coverageEl.hidden=false;
-    coverageEl.textContent=coverage.complete===coverage.played
-      ? `STATISTICHE CALCOLATE SU ${coverage.complete} PARTITE COMPLETE.`
-      : `STATISTICHE PARZIALI: ${coverage.complete} TABELLINI COMPLETATI SU ${coverage.played} PARTITE GIOCATE. I DATI ASSENTI NON EQUIVALGONO A ZERO.`;
+    coverageEl.textContent=`STATISTICHE SU ${coverage.played} GARE GIOCATE · PRESENZE E VOTI: ${formations} FORMAZIONI VERIFICATE · GOL, ASSIST E CARTELLINI: ${events} CRONOLOGIE VERIFICATE. I DATI ASSENTI NON SONO CONTEGGIATI.`;
   }
   const players=Array.isArray(SITE_DATA.giocatori)?SITE_DATA.giocatori:[];
   const intVal=x=>Math.max(0,Number(x)||0);
   const sum=k=>players.reduce((n,p)=>n+intVal(p[k]),0);
-  set('stat-players-total',players.length);set('stat-goals-total',sum('gol'));
-  set('stat-assists-total',sum('assist'));set('stat-apps-total',sum('presenze'));
+  set('stat-players-total',players.length);
+  set('stat-goals-total',events||!coverage.played?sum('gol'):'—');
+  set('stat-assists-total',events||!coverage.played?sum('assist'):'—');
+  set('stat-apps-total',formations||!coverage.played?sum('presenze'):'—');
   const statsBody=$('player-stats');
   function renderStats(order='gol'){
     if(!statsBody)return;
@@ -135,7 +137,8 @@
     document.querySelector('.player-stat-table').hidden=players.length===0;
     [...players].sort((a,b)=>intVal(b[order])-intVal(a[order])||String(a.nome).localeCompare(String(b.nome),'it'))
       .forEach(p=>{
-        const tr=create('tr');const values=[p.numero??'—',p.nome||'—',p.ruolo||'—',p.presenze??0,p.gol??0,p.assist??0,p.gialli??0,p.rossi??0,p.mediaVoto??'—'];
+        const tr=create('tr');const showLineups=formations||!coverage.played,showEvents=events||!coverage.played;
+        const values=[p.numero??'—',p.nome||'—',p.ruolo||'—',showLineups?(p.presenze??0):'—',showEvents?(p.gol??0):'—',showEvents?(p.assist??0):'—',showEvents?(p.gialli??0):'—',showEvents?(p.rossi??0):'—',showLineups?(p.mediaVoto??'—'):'—'];
         values.forEach((v,i)=>{const td=create('td',i===1?'player-name-cell':'',String(v));tr.appendChild(td)});statsBody.appendChild(tr);
       });
   }
@@ -147,14 +150,51 @@
 
   const staff=Array.isArray(SITE_DATA.staff)?SITE_DATA.staff:[];
   $('staff-empty').hidden=staff.length>0;
-  staff.forEach(s=>{
-    const card=create('article','staff-card reveal');
-    const media=create('div','staff-card-media');
-    if(s.foto){const im=document.createElement('img');im.src='assets/img/'+encodeURIComponent(s.foto);im.alt=s.nome||'Membro staff';im.loading='lazy';media.appendChild(im);}
-    else media.appendChild(create('span','staff-initial',String(s.nome||'M').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase()));
-    const details=create('div','staff-details');details.append(create('small','',s.gruppo||'STAFF'),create('strong','',s.nome||'NOME DA INSERIRE'),create('span','',s.ruolo||''));
-    card.append(media,details);$('staff-list').appendChild(card);
+  const staffRoot=$('staff-list');staffRoot.replaceChildren();
+  const normalizeStaffGroup=s=>String(s||'').trim().replace(/\s+/g,' ');
+  const groupId=s=>normalizeStaffGroup(s).toLocaleLowerCase('it');
+  const groupedStaff=new Map();
+  const availableGroups=[
+    'Dirigenza','Staff tecnico','Comunicazione',
+    ...(Array.isArray(SITE_DATA.staffGruppi)?SITE_DATA.staffGruppi:[]),
+    ...staff.map(s=>s.gruppo||'Altro staff')
+  ];
+  const labels=new Map();
+  availableGroups.forEach(name=>{
+    const clean=normalizeStaffGroup(name);if(clean&&!labels.has(groupId(clean)))labels.set(groupId(clean),clean);
   });
+  staff.forEach(member=>{
+    const key=groupId(member.gruppo||'Altro staff');
+    if(!groupedStaff.has(key))groupedStaff.set(key,[]);
+    groupedStaff.get(key).push(member);
+  });
+  let visibleGroupNumber=0;
+  for(const [key,label] of labels){
+    const members=groupedStaff.get(key)||[];if(!members.length)continue;
+    visibleGroupNumber++;
+    const section=create('section','staff-group');
+    section.setAttribute('aria-label',label);
+    const heading=create('div','staff-group-heading');
+    const number=create('span','staff-group-number',String(visibleGroupNumber).padStart(2,'0'));
+    const title=create('h3','staff-group-title',label);
+    const count=create('span','staff-group-count',members.length===1?'01 PERSONA':String(members.length).padStart(2,'0')+' PERSONE');
+    heading.append(number,title,count);
+    const cards=create('div','staff-grid');
+    for(const s of members){
+      const card=create('article','staff-card reveal');
+      const media=create('div','staff-card-media');
+      if(s.foto){
+        const im=document.createElement('img');
+        im.src='assets/img/'+encodeURIComponent(s.foto);im.alt='Ritratto di '+(s.nome||'membro staff');im.loading='lazy';
+        im.onerror=()=>{im.remove();media.appendChild(create('span','staff-initial',String(s.nome||'M').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase()));};
+        media.appendChild(im);
+      } else media.appendChild(create('span','staff-initial',String(s.nome||'M').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase()));
+      const details=create('div','staff-details');
+      details.append(create('small','','A.S.D. MONTANINO'),create('strong','',s.nome||'NOME DA INSERIRE'),create('span','',s.ruolo||''));
+      card.append(media,details);cards.appendChild(card);
+    }
+    section.append(heading,cards);staffRoot.appendChild(section);
+  }
 
   const sponsors=Array.isArray(SITE_DATA.sponsor)?SITE_DATA.sponsor:[];
   $('sponsors-empty').hidden=sponsors.length>0;

@@ -1,4 +1,4 @@
-/* A.S.D. MONTANINO — amministrazione V3.0
+/* A.S.D. MONTANINO — amministrazione V3.3
    Modalità prova: localStorage, NON pubblica. Modalità online: Supabase Auth + RLS. */
 (async function(){
   'use strict';
@@ -11,7 +11,7 @@
   const el=(tag,cls='',text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
   const inp=(value='',kind='text',field='',placeholder='')=>{const n=el('input');n.type=kind;n.value=value??'';n.placeholder=placeholder;n.dataset.field=field;return n;};
   const pick=(value,items,field)=>{const s=el('select');s.dataset.field=field;items.forEach(([val,label])=>{const o=el('option','',label);o.value=val;s.append(o)});s.value=value||'';return s;};
-  const del=()=>{const b=el('button','delete-row','×');b.type='button';b.setAttribute('aria-label','Rimuovi riga');b.title='Rimuovi riga';b.onclick=()=>{if(confirm('Rimuovere questa riga?')){b.closest('.editor-row')?.remove();markDirty();updateCounts();}};return b;};
+  const del=()=>{const b=el('button','delete-row','×');b.type='button';b.setAttribute('aria-label','Rimuovi riga');b.title='Rimuovi riga';b.onclick=()=>{if(confirm('Rimuovere questa riga?')){b.closest('.editor-row')?.remove();markDirty();updateCounts();renderPitchPreview();}};return b;};
   const read=(row,field)=>row.querySelector(`[data-field="${field}"]`)?.value?.trim()||'';
   const arr=selector=>[...$(selector).querySelectorAll('.editor-row')];
   const markDirty=()=>{dirty=true;$('save-status').textContent='Modifiche non salvate';$('save-note').textContent='Premi Salva per aggiornare i dati.';};
@@ -19,53 +19,133 @@
   function makeRow(parent,klass='',number=''){
     const row=el('div','editor-row '+klass);if(number!=='')row.append(el('span','row-number',number));parent.append(row);return row;
   }
-  function lineupRow(parent,p={},bench=false){
-    const row=makeRow(parent,bench?'bench-row lineup-row':'lineup-row','◦');
-    const name=inp(p.nome,'text','nome','Nome e cognome');name.setAttribute('list','player-names');name.setAttribute('aria-label','Nome giocatore');row.append(name);
-    const number=inp(p.numero??'','number','numero','#');number.min='0';number.max='99';number.setAttribute('aria-label','Numero maglia');row.append(number);
-    row.append(pick(p.reparto||'C',[['P','P · Portiere'],['D','D · Difensore'],['C','C · Centrocampo'],['A','A · Attaccante']],'reparto'));
-    const vote=inp(p.voto??'','number','voto','Voto');vote.min='0';vote.max='10';vote.step='.5';vote.setAttribute('aria-label','Voto');row.append(vote);
-    if(bench){const entrance=inp(p.entrato??'','text','entrato','Entrato al min.');entrance.setAttribute('aria-label','Minuto ingresso');row.append(entrance);}
-    const note=inp(p.nota||'','text','nota','Commento facoltativo');note.setAttribute('aria-label','Nota pagella');row.append(note,del());updateCounts();return row;
+  // La rosa del pannello è la fonte dei menu: include anche modifiche non ancora pubblicate.
+  const rosterNow=()=>{
+    const rows=$('players-list')?[...$('players-list').querySelectorAll('.editor-row')]:[];
+    return rows.map(r=>({nome:read(r,'nome'),numero:read(r,'numero')===''?null:Number(read(r,'numero')),ruolo:read(r,'ruolo')})).filter(p=>p.nome);
+  };
+  const findPlayer=name=>rosterNow().find(p=>C.normalize(p.nome)===C.normalize(name));
+  function rosterSelect(value='',field='nome',label='Seleziona dalla rosa'){
+    const menu=el('select','roster-choice');menu.dataset.field=field;menu.setAttribute('aria-label',label);
+    const blank=el('option','','— Seleziona dalla rosa —');blank.value='';menu.append(blank);
+    const players=rosterNow().sort((a,b)=>(a.numero??999)-(b.numero??999)||a.nome.localeCompare(b.nome,'it'));
+    players.forEach(p=>{const opt=el('option','',`${p.numero??'–'} · ${p.nome}`);opt.value=p.nome;menu.append(opt);});
+    if(value&&!players.some(p=>C.normalize(p.nome)===C.normalize(value))){const missing=el('option','',`⚠ Fuori rosa: ${value}`);missing.value=value;menu.append(missing);}
+    const match=players.find(p=>C.normalize(p.nome)===C.normalize(value));menu.value=match?.nome||value||'';
+    menu.addEventListener('change',()=>{
+      const row=menu.closest('.lineup-row');
+      if(row){const player=findPlayer(menu.value);if(player){row.querySelector('[data-field="numero"]').value=player.numero??'';
+        const role=row.querySelector('[data-field="reparto"]');if(role)role.value=C.roleCode(player.ruolo);}
+        updateCounts();renderPitchPreview();}
+    });
+    return menu;
   }
-  function eventRow(parent,e={}){
+  function lineupRow(parent,p={},bench=false){
+    const row=makeRow(parent,bench?'bench-row lineup-row':'lineup-row',bench?'↳':'•');
+    const name=rosterSelect(p.nome||'','nome','Giocatore della rosa');row.append(name);
+    const number=inp(p.numero??'','number','numero','N°');number.min=0;number.max=99;number.setAttribute('aria-label','Numero di maglia');row.append(number);
+    if(bench){
+      row.append(pick(p.reparto||'C',[['P','P · Portiere'],['D','D · Difensore'],['C','C · Centrocampo'],['A','A · Attaccante']],'reparto'));
+    }else{
+      const slots=C.formationSlots($('match-module').value).slots;
+      const choices=[['','— Posizione —'],...slots.map(t=>[t.id,t.id+' · '+t.label])];
+      const position=pick(p.posizione||'',choices,'posizione');position.setAttribute('aria-label','Posizione in campo');
+      row.append(position);
+    }
+    const vote=inp(p.voto??'','number','voto','Voto');vote.min=0;vote.max=10;vote.step='.5';vote.setAttribute('aria-label','Voto in pagella');row.append(vote);
+    if(bench){const entrance=inp(p.entrato??'','text','entrato','Min. ingresso');entrance.setAttribute('aria-label','Minuto ingresso');row.append(entrance);}
+    const note=inp(p.nota||'','text','nota','Nota facoltativa');note.setAttribute('aria-label','Nota pagella');row.append(note,del());
+    updateCounts();return row;
+  }
+  function eventRow(parent,event={}){
     const row=makeRow(parent,'event-row');
-    const min=inp(e.minuto??'','text','minuto','45+2');min.setAttribute('aria-label','Minuto');row.append(min);
-    row.append(pick(e.tipo||'gol',[['gol','⚽ Gol'],['giallo','🟨 Ammonizione'],['rosso','🟥 Espulsione'],['sostituzione','⇄ Cambio'],['autogol','Autogol']],'tipo'));
-    const player=inp(e.giocatore||e.esce||'','text','giocatore','Marcatore / Esce');player.setAttribute('list','player-names');player.setAttribute('aria-label','Giocatore oppure esce');row.append(player);
-    const second=inp(e.assist||e.entra||'','text','secondo','Assist / Entra');second.setAttribute('list','player-names');second.setAttribute('aria-label','Assist oppure entra');row.append(second);
-    row.append(pick(e.squadra||'Montanino',[['Montanino','Montanino'],['Avversario','Avversario']],'squadra'));row.append(del());
+    const minute=inp(event.minuto??'','text','minuto','45+2');minute.setAttribute('aria-label','Minuto episodio');row.append(minute);
+    const type=pick(event.tipo||'gol',[['gol','⚽ Gol'],['giallo','🟨 Ammonizione'],['rosso','🟥 Espulsione'],['sostituzione','⇄ Cambio'],['autogol','Autogol']],'tipo');row.append(type);
+    const person=el('div','event-picker');const second=el('div','event-picker');row.append(person,second);
+    const team=pick(event.squadra||'Montanino',[['Montanino','Montanino'],['Avversario','Avversario']],'squadra');row.append(team,del());
+    function makeField(holder,field,value,label,own){
+      const current=holder.querySelector('[data-field]');if(current)value=current.value;
+      holder.replaceChildren();
+      const control=own?rosterSelect(value,field,label):inp(value,'text',field,label);
+      control.setAttribute('aria-label',label);holder.append(control);
+    }
+    const update=()=>{
+      const own=team.value==='Montanino';const oldA=person.querySelector('[data-field]')?.value??(event.giocatore||event.esce||'');
+      const oldB=second.querySelector('[data-field]')?.value??(event.assist||event.entra||'');
+      makeField(person,'giocatore',oldA,type.value==='sostituzione'?'Giocatore che esce':'Giocatore coinvolto',own);
+      if(['gol','sostituzione'].includes(type.value)){
+        second.hidden=false;makeField(second,'secondo',oldB,type.value==='gol'?'Assist (facoltativo)':'Giocatore che entra',own);
+      }else{second.hidden=true;second.replaceChildren();}
+    };
+    team.addEventListener('change',update);
+    type.addEventListener('change',update);
+    update();return row;
+  }
+  function refreshRosterChoices(){
+    document.querySelectorAll('.lineup-row select[data-field="nome"],.event-row select[data-field="giocatore"],.event-row select[data-field="secondo"]').forEach(old=>{
+      const next=rosterSelect(old.value,old.dataset.field,old.getAttribute('aria-label')||'Seleziona giocatore');
+      next.className=old.className;old.replaceWith(next);
+    });
+  }
+  function renderPitchPreview(){
+    const root=$('admin-pitch');if(!root)return;
+    const layout=C.formationSlots($('match-module').value),players=arr('starters-list').map(r=>rowDataLineup(r,false)).filter(Boolean);
+    const assigned=C.assignFormation(layout.module,players,rosterNow(),true),bySlot=new Map(assigned.map(p=>[p.posizione,p]));
+    root.replaceChildren();
+    const badge=el('div','preview-module','MODULO '+layout.module);root.append(badge);
+    for(const line of layout.rows){
+      const group=el('div','preview-line');group.setAttribute('aria-label',line.label);
+      for(const slot of line.slots){
+        const person=bySlot.get(slot.id),card=el('div','preview-player'+(!person?' empty':''));
+        card.append(el('span','preview-shirt',person?.numero??'·'),el('span','preview-player-name',person?.nome||slot.id));group.append(card);
+      }
+      root.append(group);
+    }
+  }
+  function organizeFormation(){
+    const current=arr('starters-list').map(r=>rowDataLineup(r,false)).filter(Boolean);
+    const organized=C.assignFormation($('match-module').value,current,rosterNow(),false);
+    const slots=C.formationSlots($('match-module').value).slots;
+    const assignments=new Map(organized.map(p=>[p.posizione,p]));
+    $('starters-list').replaceChildren();
+    slots.forEach(slot=>lineupRow($('starters-list'),assignments.get(slot.id)||{posizione:slot.id}));
+    updateCounts();renderPitchPreview();markDirty();
   }
   function rowDataLineup(row,bench){
     const name=read(row,'nome');if(!name)return null;
-    const rawNumber=read(row,'numero'), rawVote=read(row,'voto');
-    const p={nome:name,numero:rawNumber===''?null:Number(rawNumber),reparto:read(row,'reparto'),voto:rawVote===''?null:Number(rawVote),nota:read(row,'nota')};
+    const rawNumber=read(row,'numero'),rawVote=read(row,'voto');
+    const pos=read(row,'posizione');
+    const role=bench?read(row,'reparto'):pos.startsWith('P')?'P':pos.startsWith('D')?'D':pos.startsWith('A')?'A':'C';
+    const p={nome:name,numero:rawNumber===''?null:Number(rawNumber),reparto:role,voto:rawVote===''?null:Number(rawVote),nota:read(row,'nota')};
+    if(!bench&&pos)p.posizione=pos;
     if(bench){const entrato=read(row,'entrato');if(entrato)p.entrato=entrato;}
     return p;
   }
-  function updateCounts(){$('starter-count').textContent=arr('starters-list').length+'/11';}
+  function updateCounts(){
+    const filled=arr('starters-list').filter(r=>read(r,'nome')).length;
+    $('starter-count').textContent=filled+'/11';
+  }
   function showMatch(id){
     activeMatchId=id;const m=draft.calendario.find(x=>x.id===id);if(!m)return;
     $('match-select').value=id;
-    [['match-date',m.data||''],['match-time',m.ora||''],['match-field',m.campo||''],['match-home',m.casa||''],['match-away',m.ospite||''],['match-goals-home',m.golCasa??''],['match-goals-away',m.golOspite??'']].forEach(([id,v])=>$(id).value=v);
+    [['match-date',m.data||''],['match-time',m.ora||''],['match-field',m.campo||''],['match-home',m.casa||''],['match-away',m.ospite||''],['match-goals-home',m.golCasa??''],['match-goals-away',m.golOspite??'']].forEach(([k,v])=>$(k).value=v);
     const d=(draft.dettagliPartite||{})[id]||{};
-    $('match-module').value=d.modulo||'';$('match-notes').value=d.note||'';
+    $('match-module').value=C.isValidModule(d.modulo||'')?d.modulo:'4-3-3';
+    $('match-notes').value=d.note||'';
     $('match-complete').checked=!!d.datiCompleti;$('events-complete').checked=!!d.eventiCompleti;
-    $('starters-list').replaceChildren();C.list(d.titolari).forEach(p=>lineupRow($('starters-list'),p));
+    $('starters-list').replaceChildren();
+    const assigned=C.assignFormation($('match-module').value,C.list(d.titolari),rosterNow(),true);
+    assigned.forEach(p=>lineupRow($('starters-list'),p));
     $('bench-list').replaceChildren();C.list(d.panchina).forEach(p=>lineupRow($('bench-list'),p,true));
     $('events-list').replaceChildren();C.list(d.eventi).forEach(e=>eventRow($('events-list'),e));
-    updateCounts();
+    updateCounts();renderPitchPreview();updateStatsPreview();
   }
   function captureMatch(){
     if(!activeMatchId)return;
     const m=draft.calendario.find(x=>x.id===activeMatchId);if(!m)return;
     const home=$('match-goals-home').value,away=$('match-goals-away').value;
-    if((home==='') !== (away===''))throw Error('Inserisci entrambi i punteggi oppure lasciali entrambi vuoti.');
-    for(const x of [home,away])if(x!==''&&(!Number.isInteger(Number(x))||Number(x)<0))throw Error('I gol devono essere numeri interi non negativi.');
-    m.data=$('match-date').value||null;m.ora=$('match-time').value||null;m.campo=$('match-field').value.trim()||null;
-    m.casa=$('match-home').value.trim();m.ospite=$('match-away').value.trim();
-    if(!m.casa||!m.ospite)throw Error('Inserisci entrambe le squadre.');
-    m.golCasa=home===''?null:Number(home);m.golOspite=away===''?null:Number(away);
+    if((home==='')!==(away===''))throw Error('Inserisci entrambi i punteggi oppure lasciali entrambi vuoti.');
+    for(const n of [home,away])if(n!==''&&(!Number.isInteger(Number(n))||Number(n)<0))throw Error('I gol devono essere numeri interi non negativi.');
     const titolari=arr('starters-list').map(r=>rowDataLineup(r,false)).filter(Boolean);
     const panchina=arr('bench-list').map(r=>rowDataLineup(r,true)).filter(Boolean);
     const events=arr('events-list').map(r=>{
@@ -73,25 +153,54 @@
       const ev={minuto:read(r,'minuto'),tipo,squadra:read(r,'squadra')};
       if(tipo==='sostituzione'){ev.esce=p;ev.entra=secondo;}else{ev.giocatore=p;if(tipo==='gol'&&secondo)ev.assist=secondo;}
       return ev;
-    }).filter(x=>x.tipo);
+    }).filter(e=>e.tipo);
     const names=[...titolari,...panchina].map(p=>C.normalize(p.nome));
     if(new Set(names).size!==names.length)throw Error('Un giocatore compare due volte tra titolari e panchina.');
     if(titolari.length>11)throw Error('Non puoi inserire più di 11 titolari.');
+    const slots=C.formationSlots($('match-module').value).slots;
+    const slotIds=slots.map(s=>s.id),chosen=titolari.map(p=>p.posizione);
+    if(chosen.some(id=>!slotIds.includes(id))||new Set(chosen).size!==chosen.length)throw Error('Ogni titolare deve avere una posizione diversa del modulo. Premi “Prepara / riordina 11 posizioni”.');
+    const available=new Set(rosterNow().map(p=>C.normalize(p.nome)));
     for(const p of [...titolari,...panchina]){
-      if(p.voto!==null && (!Number.isFinite(p.voto)||p.voto<0||p.voto>10))throw Error('I voti devono essere compresi tra 0 e 10.');
+      if(!available.has(C.normalize(p.nome)))throw Error('Il giocatore '+p.nome+' non è presente nella rosa. Selezionalo dal menu.');
+      if(p.voto!==null&&(!Number.isFinite(p.voto)||p.voto<0||p.voto>10||p.voto*2%1!==0))throw Error('I voti devono essere da 0 a 10, con incrementi di 0,5.');
       if(p.numero!==null&&(!Number.isInteger(p.numero)||p.numero<0||p.numero>99))throw Error('Numero maglia non valido.');
     }
     const complete=$('match-complete').checked,eventsComplete=$('events-complete').checked;
-    if((complete||eventsComplete) && (titolari.length!==11 || !C.played(m)))throw Error('Per confermare la completezza servono 11 titolari e un risultato finale.');
-    if(complete && titolari.some(p=>p.voto===null))throw Error('Per completare le pagelle assegna un voto a tutti gli 11 titolari.');
-    if(eventsComplete && events.some(e=>e.tipo==='sostituzione' ? !e.esce||!e.entra : !e.giocatore))throw Error('Ci sono episodi incompleti: inserisci i nomi dei giocatori.');
-    const base=draft.dettagliPartite ||= {};
-    base[activeMatchId]={modulo:$('match-module').value.trim()||null,titolari,panchina,eventi:events,note:$('match-notes').value.trim(),datiCompleti:complete,eventiCompleti:eventsComplete};
-    if(complete&&eventsComplete){
-      const ownCount=events.filter(e=>e.tipo==='gol'&&C.normalize(e.squadra)==='montanino').length;
-      const ownScore=m.casa==='Montanino'?m.golCasa:m.golOspite;
-      if(ownCount>ownScore)throw Error('Hai registrato più gol del Montanino rispetto al risultato finale.');
+    const hasResult=home!==''&&away!=='';
+    if((complete||eventsComplete)&&!hasResult)throw Error('Per confermare una sezione serve un risultato finale.');
+    if(complete){
+      if(titolari.length!==11)throw Error('Per confermare la formazione servono 11 titolari.');
+      if(titolari.some(p=>p.voto===null))throw Error('Per completare le pagelle assegna un voto a tutti gli 11 titolari.');
+      const keeper=titolari.find(p=>p.posizione==='P1');
+      if(!keeper||C.roleCode(findPlayer(keeper.nome)?.ruolo)!=='P')throw Error('Nella posizione P1 devi selezionare un portiere presente nella rosa.');
     }
+    if(eventsComplete){
+      for(const e of events){
+        const first=e.tipo==='sostituzione'?e.esce:e.giocatore;
+        if(!first||(e.tipo==='sostituzione'&&!e.entra))throw Error('Completa i giocatori di ogni episodio prima di confermare gli eventi.');
+        if(e.squadra==='Montanino'){
+          if(!available.has(C.normalize(first))||(e.tipo==='sostituzione'&&!available.has(C.normalize(e.entra)))||(e.assist&&!available.has(C.normalize(e.assist))))throw Error('Un episodio del Montanino contiene un nome non presente in rosa.');
+        }
+      }
+      const goals=events.filter(e=>e.tipo==='gol'&&e.squadra==='Montanino').length;
+      const ownScore=m.casa==='Montanino'?Number(home):Number(away);
+      if(goals>ownScore)throw Error('I gol registrati per il Montanino superano quelli del risultato finale.');
+    }
+    m.data=$('match-date').value||null;m.ora=$('match-time').value||null;m.campo=$('match-field').value.trim()||null;
+    m.casa=$('match-home').value.trim();m.ospite=$('match-away').value.trim();
+    if(!m.casa||!m.ospite)throw Error('Inserisci entrambe le squadre.');
+    m.golCasa=hasResult?Number(home):null;m.golOspite=hasResult?Number(away):null;
+    (draft.dettagliPartite ||= {})[activeMatchId]={modulo:$('match-module').value,titolari,panchina,eventi:events,note:$('match-notes').value.trim(),datiCompleti:complete,eventiCompleti:eventsComplete};
+  }
+  function updateStatsPreview(){
+    const box=$('admin-stats-preview');if(!box)return;
+    const temp=C.copy(draft);
+    try{
+      const prepared=C.prepare(temp),c=prepared._statsCoverage;
+      const parts=[`${c.formations}/${c.played} formazioni e pagelle verificate`,`${c.events}/${c.played} cronologie episodi verificate`];
+      box.textContent=parts.join(' · ');
+    }catch(e){box.textContent='Statistiche in attesa di dati validi.';}
   }
   function fillPlayers(){
     const node=$('players-list');node.replaceChildren();
@@ -111,9 +220,62 @@
     const pg=inp(t.giocate??0,'number','giocate');pg.min=0;pg.setAttribute('aria-label','Partite giocate');
     const pt=inp(t.punti??0,'number','punti');pt.min=0;pt.setAttribute('aria-label','Punti');r.append(name,pg,pt);
   });}
-  function fillStaff(){const node=$('staff-editor-list');node.replaceChildren();C.list(draft.staff).forEach(x=>staffRow(x));}
-  function staffRow(s={}){const r=makeRow($('staff-editor-list'),'staff-entity');
-    r.append(inp(s.gruppo||'Staff tecnico','text','gruppo','Gruppo'),inp(s.nome||'','text','nome','Nome cognome'),inp(s.ruolo||'','text','ruolo','Incarico'),inp(s.foto||'','text','foto','foto.png (facoltativo)'),del());}
+  // I gruppi personalizzati sono salvati come staffGruppi nel payload JSON già esistente.
+  // Nessuna nuova tabella SQL e nessuna migrazione del database.
+  const DEFAULT_STAFF_GROUPS=['Dirigenza','Staff tecnico','Comunicazione'];
+  const cleanGroup=value=>String(value||'').trim().replace(/\s+/g,' ');
+  const groupKey=value=>cleanGroup(value).toLocaleLowerCase('it');
+  function staffGroups(){
+    const options=new Map();
+    for(const name of [...DEFAULT_STAFF_GROUPS,...C.list(draft.staffGruppi),...C.list(draft.staff).map(s=>s.gruppo)]){
+      const value=cleanGroup(name);if(value&&!options.has(groupKey(value)))options.set(groupKey(value),value);
+    }
+    // Gruppi modificati e non ancora salvati sono anch'essi validi.
+    document.querySelectorAll('#staff-editor-list select[data-field="gruppo"]').forEach(s=>{
+      const value=cleanGroup(s.value);if(value&&!options.has(groupKey(value)))options.set(groupKey(value),value);
+    });
+    return [...options.values()];
+  }
+  function groupPicker(value='Staff tecnico'){
+    const choices=staffGroups();const selected=cleanGroup(value)||'Staff tecnico';
+    if(!choices.some(g=>groupKey(g)===groupKey(selected)))choices.push(selected);
+    const menu=pick(selected,choices.map(g=>[g,g]),'gruppo');
+    menu.setAttribute('aria-label','Gruppo della persona');
+    return menu;
+  }
+  function refreshStaffGroupMenus(){
+    const options=staffGroups();
+    for(const current of document.querySelectorAll('#staff-editor-list select[data-field="gruppo"]')){
+      const previous=current.value;
+      current.replaceChildren();
+      for(const name of options){const option=el('option','',name);option.value=name;current.append(option);}
+      current.value=options.find(x=>groupKey(x)===groupKey(previous))||options[0]||'';
+    }
+  }
+  function renderStaffGroupTags(){
+    const root=$('staff-group-tags');if(!root)return;
+    root.replaceChildren();
+    for(const name of staffGroups()){
+      const chip=el('span','staff-group-chip',name);
+      const count=C.list(draft.staff).filter(s=>groupKey(s.gruppo)===groupKey(name)).length;
+      chip.title=count?`${count} persone attualmente salvate in questo gruppo`:'Gruppo disponibile';
+      root.append(chip);
+    }
+  }
+  function fillStaff(){
+    const node=$('staff-editor-list');node.replaceChildren();
+    C.list(draft.staff).forEach(x=>staffRow(x));
+    refreshStaffGroupMenus();renderStaffGroupTags();
+  }
+  function staffRow(s={}){
+    const r=makeRow($('staff-editor-list'),'staff-entity');
+    const group=groupPicker(s.gruppo||'Staff tecnico');
+    const name=inp(s.nome||'','text','nome','Nome cognome');name.setAttribute('aria-label','Nome della persona');
+    const role=inp(s.ruolo||'','text','ruolo','Incarico');role.setAttribute('aria-label','Incarico');
+    const photo=inp(s.foto||'','text','foto','staff-01.webp (file già caricato)');photo.setAttribute('aria-label','Nome file della foto');
+    r.append(group,name,role,photo,del());
+    return r;
+  }
   function fillSponsors(){const node=$('sponsors-editor-list');node.replaceChildren();C.list(draft.sponsor).forEach(x=>sponsorRow(x));
     ['instagram','facebook','tiktok'].forEach(k=>$('social-'+k).value=(draft.social||{})[k]||'');}
   function sponsorRow(s={}){const r=makeRow($('sponsors-editor-list'),'sponsor-entity');
@@ -122,7 +284,9 @@
     draft.giocatori=arr('players-list').map(r=>({nome:read(r,'nome'),numero:read(r,'numero')===''?null:Number(read(r,'numero')),ruolo:read(r,'ruolo')})).filter(p=>p.nome);
     if(new Set(draft.giocatori.map(p=>C.normalize(p.nome))).size!==draft.giocatori.length)throw Error('La rosa contiene due giocatori con lo stesso nome.');
     draft.classifica=arr('standings-list').map(r=>({squadra:read(r,'squadra'),giocate:Number(read(r,'giocate')||0),punti:Number(read(r,'punti')||0)})).filter(t=>t.squadra);
-    draft.staff=arr('staff-editor-list').map(r=>({gruppo:read(r,'gruppo'),nome:read(r,'nome'),ruolo:read(r,'ruolo'),...(read(r,'foto')?{foto:read(r,'foto')}:{})})).filter(s=>s.nome);
+    draft.staff=arr('staff-editor-list').map(r=>({gruppo:read(r,'gruppo')||'Staff tecnico',nome:read(r,'nome'),ruolo:read(r,'ruolo'),...(read(r,'foto')?{foto:read(r,'foto')}:{})})).filter(s=>s.nome);
+    // L'elenco dedicato mantiene anche i gruppi creati che non hanno ancora membri.
+    draft.staffGruppi=staffGroups();
     draft.sponsor=arr('sponsors-editor-list').map(r=>({nome:read(r,'nome'),categoria:read(r,'categoria'),logo:read(r,'logo'),sito:read(r,'sito')})).filter(s=>s.nome);
     draft.social=Object.fromEntries(['instagram','facebook','tiktok'].map(k=>[k,$('social-'+k).value.trim()]));
     for(const item of draft.sponsor){if(item.sito && !/^https?:\/\//i.test(item.sito))throw Error('I link sponsor devono iniziare con https:// oppure essere vuoti.');}
@@ -170,7 +334,7 @@
       } else {
         localStorage.setItem('montanino-demo-v3',JSON.stringify(value));
       }
-      synced();msg(online?'Modifiche salvate su Supabase. Apri il sito pubblico e ricaricalo.':'Modifiche salvate soltanto in questo browser. Per pubblicarle online configura Supabase.');
+      synced();updateStatsPreview();msg(online?'Modifiche salvate su Supabase. Apri il sito pubblico e ricaricalo.':'Modifiche salvate soltanto in questo browser. Per pubblicarle online configura Supabase.');
     }catch(err){msg('Salvataggio non riuscito: '+err.message,true);}finally{busy=false;$('save-all').disabled=$('save-bottom').disabled=false;}
   }
   function exportJSON(){let data;try{data=captureAll();}catch(e){msg(e.message,true);return;}
@@ -190,11 +354,38 @@
     document.querySelectorAll('[data-panel]').forEach(n=>n.classList.toggle('active',n===b));
     document.querySelectorAll('[data-editor-panel]').forEach(n=>n.hidden=n.dataset.editorPanel!==b.dataset.panel);
   }));
-  $('add-starter').addEventListener('click',()=>{if(arr('starters-list').length>=11){msg('Massimo 11 titolari.',true);return;}lineupRow($('starters-list'));markDirty();});
+  $('match-module').addEventListener('change',organizeFormation);
+  $('prepare-formation').addEventListener('click',organizeFormation);
+  $('starters-list').addEventListener('change',renderPitchPreview);
+  $('starters-list').addEventListener('input',renderPitchPreview);
+  $('add-starter').addEventListener('click',()=>{
+    if(arr('starters-list').length>=11){msg('Ci sono già 11 posizioni. Per cambiare il modulo usa “Prepara / riordina”.',true);return;}
+    const occupied=new Set(arr('starters-list').map(r=>read(r,'posizione')));
+    const slot=C.formationSlots($('match-module').value).slots.find(t=>!occupied.has(t.id));
+    lineupRow($('starters-list'),{posizione:slot?.id||''});markDirty();renderPitchPreview();
+  });
   $('add-bench').addEventListener('click',()=>{lineupRow($('bench-list'),{},true);markDirty();});
   $('add-event').addEventListener('click',()=>{eventRow($('events-list'));markDirty();});
-  $('add-player').addEventListener('click',()=>{playerRow();markDirty();});
+  $('add-player').addEventListener('click',()=>{playerRow();markDirty();refreshRosterChoices();});
+  $('players-list').addEventListener('input',refreshRosterChoices);
+  $('players-list').addEventListener('change',refreshRosterChoices);
+  $('players-list').addEventListener('click',e=>{if(e.target.closest('.delete-row'))setTimeout(refreshRosterChoices,0);});
   $('add-staff').addEventListener('click',()=>{staffRow();markDirty();});
+  $('add-staff-group-form').addEventListener('submit',e=>{
+    e.preventDefault();
+    const input=$('new-staff-group');const name=cleanGroup(input.value);
+    if(!name){msg('Scrivi il nome del nuovo gruppo.',true);input.focus();return;}
+    if(name.length>48){msg('Il nome del gruppo non può superare 48 caratteri.',true);return;}
+    if(staffGroups().some(g=>groupKey(g)===groupKey(name))){
+      msg('Il gruppo «'+name+'» è già presente.',true);input.focus();return;
+    }
+    draft.staffGruppi=[...C.list(draft.staffGruppi),name];
+    refreshStaffGroupMenus();renderStaffGroupTags();
+    input.value='';markDirty();msg('Gruppo «'+name+'» aggiunto ai menu. Premi Salva modifiche per pubblicarlo.');
+  });
+  $('staff-editor-list').addEventListener('change',e=>{
+    if(e.target?.matches('select[data-field="gruppo"]'))renderStaffGroupTags();
+  });
   $('add-sponsor').addEventListener('click',()=>{sponsorRow();markDirty();});
   $('save-all').addEventListener('click',save);$('save-bottom').addEventListener('click',save);$('export-json').addEventListener('click',exportJSON);
   $('import-json').addEventListener('click',()=>$('import-file').click());
