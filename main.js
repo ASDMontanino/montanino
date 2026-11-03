@@ -228,7 +228,7 @@
     button.className = 'roster-card reveal'; button.type = 'button';
     button.setAttribute('aria-label', 'Apri fotografia: ' + (item.titolo || `Gruppo ${i + 1}`));
     const photo = document.createElement('img');
-    photo.src = 'assets/img/' + encodeURIComponent(item.foto || '');
+    photo.src = 'assets/img/' + encodeURIComponent(item.foto || '') + '?v=20261103';
     photo.alt = item.titolo || `Foto di gruppo ${i+1} del Montanino`;
     photo.loading = 'lazy'; photo.decoding = 'async';
     const overlay = document.createElement('span'); overlay.className='roster-overlay';
@@ -247,7 +247,7 @@
   function showPhoto(i) {
     if (!photos.length) return;
     active = (i + photos.length) % photos.length;
-    big.src = 'assets/img/' + encodeURIComponent(photos[active].foto);
+    big.src = 'assets/img/' + encodeURIComponent(photos[active].foto) + '?v=20261103';
     big.alt = photos[active].titolo || 'Foto della rosa';
     label.textContent = `${photos[active].titolo || 'ROSA'} — ${active+1} / ${photos.length}`;
   }
