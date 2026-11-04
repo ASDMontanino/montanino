@@ -1,4 +1,4 @@
-/* A.S.D. MONTANINO — funzioni condivise V3.1.
+/* A.S.D. MONTANINO — funzioni condivise V3.4.
    Compatibile con i JSON V3.0 già salvati su Supabase. */
 (function(){
   'use strict';
@@ -81,7 +81,7 @@
         for(const e of events){
           if(e.squadra&&normalize(e.squadra)!=='montanino')continue;
           const t=normalize(e.tipo),p=ensure(e.giocatore);
-          if(p&&t==='gol')p.gol++;
+          if(p&&['gol','gol_rigore','gol(rigore)'].includes(t))p.gol++;
           if(p&&t==='giallo')p.gialli++;
           if(p&&t==='rosso')p.rossi++;
           if(t==='gol'&&e.assist){const a=ensure(e.assist);if(a)a.assist++;}

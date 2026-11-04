@@ -1,4 +1,4 @@
-/* A.S.D. MONTANINO — amministrazione V3.3
+/* A.S.D. MONTANINO — amministrazione V3.4
    Modalità prova: localStorage, NON pubblica. Modalità online: Supabase Auth + RLS. */
 (async function(){
   'use strict';
@@ -11,7 +11,7 @@
   const el=(tag,cls='',text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
   const inp=(value='',kind='text',field='',placeholder='')=>{const n=el('input');n.type=kind;n.value=value??'';n.placeholder=placeholder;n.dataset.field=field;return n;};
   const pick=(value,items,field)=>{const s=el('select');s.dataset.field=field;items.forEach(([val,label])=>{const o=el('option','',label);o.value=val;s.append(o)});s.value=value||'';return s;};
-  const del=()=>{const b=el('button','delete-row','×');b.type='button';b.setAttribute('aria-label','Rimuovi riga');b.title='Rimuovi riga';b.onclick=()=>{if(confirm('Rimuovere questa riga?')){b.closest('.editor-row')?.remove();markDirty();updateCounts();renderPitchPreview();}};return b;};
+  const del=()=>{const b=el('button','delete-row','×');b.type='button';b.setAttribute('aria-label','Rimuovi riga');b.title='Rimuovi riga';b.onclick=()=>{if(confirm('Rimuovere questa riga?')){b.closest('.editor-row')?.remove();markDirty();updateCounts();renderPitchPreview();refreshMatchSubstitutionChoices();}};return b;};
   const read=(row,field)=>row.querySelector(`[data-field="${field}"]`)?.value?.trim()||'';
   const arr=selector=>[...$(selector).querySelectorAll('.editor-row')];
   const markDirty=()=>{dirty=true;$('save-status').textContent='Modifiche non salvate';$('save-note').textContent='Premi Salva per aggiornare i dati.';};
@@ -57,22 +57,85 @@
     const note=inp(p.nota||'','text','nota','Nota facoltativa');note.setAttribute('aria-label','Nota pagella');row.append(note,del());
     updateCounts();return row;
   }
+  // I cambi del Montanino accettano soltanto titolari in campo e riserve non ancora entrate.
+  const eventMinuteValue=value=>{
+    const m=/^(\d+)(?:\+(\d+))?$/.exec(String(value||'').trim());
+    return m?Number(m[1])*100+Number(m[2]||0):Number.POSITIVE_INFINITY;
+  };
+  function orderedOwnSubRows(){
+    return arr('events-list').map((row,index)=>({row,index})).filter(x=>read(x.row,'tipo')==='sostituzione'&&read(x.row,'squadra')==='Montanino')
+      .sort((a,b)=>eventMinuteValue(read(a.row,'minuto'))-eventMinuteValue(read(b.row,'minuto'))||a.index-b.index).map(x=>x.row);
+  }
+  function availableSubPlayers(row,field){
+    const fromList=id=>arr(id).map(r=>({nome:read(r,'nome'),numero:read(r,'numero')})).filter(p=>p.nome);
+    const starters=fromList('starters-list'),bench=fromList('bench-list');
+    const onPitch=new Set(starters.map(p=>C.normalize(p.nome)));
+    const benchNames=new Set(bench.map(p=>C.normalize(p.nome)));
+    const entered=new Set();
+    for(const previous of orderedOwnSubRows()){
+      if(previous===row)break;
+      const out=C.normalize(read(previous,'giocatore')),incoming=C.normalize(read(previous,'secondo'));
+      if(out&&incoming&&onPitch.has(out)&&benchNames.has(incoming)&&!entered.has(incoming)){
+        onPitch.delete(out);onPitch.add(incoming);entered.add(incoming);
+      }
+    }
+    const pool=field==='giocatore'?[...starters,...bench].filter(p=>onPitch.has(C.normalize(p.nome))):
+      bench.filter(p=>!entered.has(C.normalize(p.nome))&&!onPitch.has(C.normalize(p.nome)));
+    const unique=new Set();
+    return pool.filter(p=>{const key=C.normalize(p.nome);if(unique.has(key))return false;unique.add(key);return true;});
+  }
+  function substitutionSelect(value='',field='giocatore',label='Giocatore del cambio',row){
+    const menu=el('select','roster-choice match-sub-choice');menu.dataset.field=field;menu.setAttribute('aria-label',label);
+    const candidates=availableSubPlayers(row,field);
+    const blank=el('option','',field==='giocatore'?'— Esce (in campo) —':'— Entra (dalla panchina) —');
+    blank.value='';menu.append(blank);
+    for(const p of candidates){
+      const option=el('option','',(p.numero||'–')+' · '+p.nome);option.value=p.nome;menu.append(option);
+    }
+    if(value&&!candidates.some(p=>C.normalize(p.nome)===C.normalize(value))){
+      // Mantieni i vecchi dati incompleti visibili, senza rimpiazzarli silenziosamente.
+      const invalid=el('option','', '⚠ Da verificare: '+value);invalid.value=value;menu.append(invalid);
+    }
+    const found=candidates.find(p=>C.normalize(p.nome)===C.normalize(value));
+    menu.value=found?.nome||value||'';
+    menu.title=field==='giocatore'?'Solo chi è attualmente in campo':'Solo riserve non ancora entrate';
+    return menu;
+  }
+  function refreshMatchSubstitutionChoices(){
+    for(const row of orderedOwnSubRows()){
+      for(const field of ['giocatore','secondo']){
+        const old=row.querySelector('select[data-field="'+field+'"]');if(!old)continue;
+        const next=substitutionSelect(old.value,field,old.getAttribute('aria-label')||'Giocatore del cambio',row);
+        old.replaceWith(next);
+      }
+    }
+  }
   function eventRow(parent,event={}){
     const row=makeRow(parent,'event-row');
     const minute=inp(event.minuto??'','text','minuto','45+2');minute.setAttribute('aria-label','Minuto episodio');row.append(minute);
-    const type=pick(event.tipo||'gol',[['gol','⚽ Gol'],['giallo','🟨 Ammonizione'],['rosso','🟥 Espulsione'],['sostituzione','⇄ Cambio'],['autogol','Autogol']],'tipo');row.append(type);
+    const eventType=event.tipo==='gol(rigore)'?'gol_rigore':event.tipo;
+    const type=pick(eventType||'gol',[
+      ['gol','⚽ Gol'],['gol_rigore','⚽ Gol (rigore)'],
+      ['rigore_parato','🧤 Rigore parato'],['rigore_sbagliato','✕ Rigore sbagliato'],
+      ['giallo','🟨 Ammonizione'],['rosso','🟥 Espulsione'],
+      ['sostituzione','⇄ Cambio'],['autogol','Autogol'],['rigore','Rigore (precedente)']
+    ],'tipo');row.append(type);
     const person=el('div','event-picker');const second=el('div','event-picker');row.append(person,second);
     const team=pick(event.squadra||'Montanino',[['Montanino','Montanino'],['Avversario','Avversario']],'squadra');row.append(team,del());
     function makeField(holder,field,value,label,own){
       const current=holder.querySelector('[data-field]');if(current)value=current.value;
       holder.replaceChildren();
-      const control=own?rosterSelect(value,field,label):inp(value,'text',field,label);
+      const control=own?(type.value==='sostituzione'?substitutionSelect(value,field,label,row):rosterSelect(value,field,label)):inp(value,'text',field,label);
       control.setAttribute('aria-label',label);holder.append(control);
     }
     const update=()=>{
-      const own=team.value==='Montanino';const oldA=person.querySelector('[data-field]')?.value??(event.giocatore||event.esce||'');
+      const own=team.value==='Montanino';
+      const oldA=person.querySelector('[data-field]')?.value??(event.giocatore||event.esce||'');
       const oldB=second.querySelector('[data-field]')?.value??(event.assist||event.entra||'');
-      makeField(person,'giocatore',oldA,type.value==='sostituzione'?'Giocatore che esce':'Giocatore coinvolto',own);
+      const label=type.value==='sostituzione'?'Giocatore che esce':
+        type.value==='rigore_parato'?'Portiere che para':
+        type.value==='rigore_sbagliato'?'Giocatore che sbaglia':'Giocatore coinvolto';
+      makeField(person,'giocatore',oldA,label,own);
       if(['gol','sostituzione'].includes(type.value)){
         second.hidden=false;makeField(second,'secondo',oldB,type.value==='gol'?'Assist (facoltativo)':'Giocatore che entra',own);
       }else{second.hidden=true;second.replaceChildren();}
@@ -83,8 +146,11 @@
   }
   function refreshRosterChoices(){
     document.querySelectorAll('.lineup-row select[data-field="nome"],.event-row select[data-field="giocatore"],.event-row select[data-field="secondo"]').forEach(old=>{
-      const next=rosterSelect(old.value,old.dataset.field,old.getAttribute('aria-label')||'Seleziona giocatore');
-      next.className=old.className;old.replaceWith(next);
+      const row=old.closest('.event-row');
+      const restricted=row&&read(row,'tipo')==='sostituzione'&&read(row,'squadra')==='Montanino';
+      const next=restricted?substitutionSelect(old.value,old.dataset.field,old.getAttribute('aria-label')||'Giocatore del cambio',row):
+        rosterSelect(old.value,old.dataset.field,old.getAttribute('aria-label')||'Seleziona giocatore');
+      old.replaceWith(next);
     });
   }
   function renderPitchPreview(){
@@ -109,7 +175,7 @@
     const assignments=new Map(organized.map(p=>[p.posizione,p]));
     $('starters-list').replaceChildren();
     slots.forEach(slot=>lineupRow($('starters-list'),assignments.get(slot.id)||{posizione:slot.id}));
-    updateCounts();renderPitchPreview();markDirty();
+    updateCounts();renderPitchPreview();refreshMatchSubstitutionChoices();markDirty();
   }
   function rowDataLineup(row,bench){
     const name=read(row,'nome');if(!name)return null;
@@ -138,7 +204,7 @@
     assigned.forEach(p=>lineupRow($('starters-list'),p));
     $('bench-list').replaceChildren();C.list(d.panchina).forEach(p=>lineupRow($('bench-list'),p,true));
     $('events-list').replaceChildren();C.list(d.eventi).forEach(e=>eventRow($('events-list'),e));
-    updateCounts();renderPitchPreview();updateStatsPreview();
+    updateCounts();renderPitchPreview();refreshMatchSubstitutionChoices();updateStatsPreview();
   }
   function captureMatch(){
     if(!activeMatchId)return;
@@ -176,6 +242,18 @@
       if(!keeper||C.roleCode(findPlayer(keeper.nome)?.ruolo)!=='P')throw Error('Nella posizione P1 devi selezionare un portiere presente nella rosa.');
     }
     if(eventsComplete){
+      // Controlla che ogni cambio sia possibile al momento dell'episodio.
+      const playing=new Set(titolari.map(p=>C.normalize(p.nome)));
+      const reserves=new Set(panchina.map(p=>C.normalize(p.nome)));
+      const entered=new Set();
+      const orderedChanges=events.map((event,index)=>({event,index})).filter(x=>x.event.tipo==='sostituzione'&&x.event.squadra==='Montanino')
+        .sort((a,b)=>eventMinuteValue(a.event.minuto)-eventMinuteValue(b.event.minuto)||a.index-b.index);
+      for(const {event:e} of orderedChanges){
+        const out=C.normalize(e.esce),incoming=C.normalize(e.entra);
+        if(!playing.has(out))throw Error('Cambio non valido: '+(e.esce||'giocatore in uscita')+' non risulta in campo. Controlla i titolari e i cambi precedenti.');
+        if(!reserves.has(incoming)||entered.has(incoming)||playing.has(incoming))throw Error('Cambio non valido: '+(e.entra||'giocatore in entrata')+' deve essere una riserva non ancora entrata.');
+        playing.delete(out);playing.add(incoming);entered.add(incoming);
+      }
       for(const e of events){
         const first=e.tipo==='sostituzione'?e.esce:e.giocatore;
         if(!first||(e.tipo==='sostituzione'&&!e.entra))throw Error('Completa i giocatori di ogni episodio prima di confermare gli eventi.');
@@ -183,7 +261,7 @@
           if(!available.has(C.normalize(first))||(e.tipo==='sostituzione'&&!available.has(C.normalize(e.entra)))||(e.assist&&!available.has(C.normalize(e.assist))))throw Error('Un episodio del Montanino contiene un nome non presente in rosa.');
         }
       }
-      const goals=events.filter(e=>e.tipo==='gol'&&e.squadra==='Montanino').length;
+      const goals=events.filter(e=>['gol','gol_rigore','gol(rigore)'].includes(e.tipo)&&e.squadra==='Montanino').length;
       const ownScore=m.casa==='Montanino'?Number(home):Number(away);
       if(goals>ownScore)throw Error('I gol registrati per il Montanino superano quelli del risultato finale.');
     }
@@ -356,15 +434,18 @@
   }));
   $('match-module').addEventListener('change',organizeFormation);
   $('prepare-formation').addEventListener('click',organizeFormation);
-  $('starters-list').addEventListener('change',renderPitchPreview);
+  $('starters-list').addEventListener('change',()=>{renderPitchPreview();refreshMatchSubstitutionChoices();});
   $('starters-list').addEventListener('input',renderPitchPreview);
+  $('bench-list').addEventListener('change',refreshMatchSubstitutionChoices);
+  $('events-list').addEventListener('change',refreshMatchSubstitutionChoices);
+  $('events-list').addEventListener('input',e=>{if(e.target.matches('[data-field="minuto"]'))refreshMatchSubstitutionChoices();});
   $('add-starter').addEventListener('click',()=>{
     if(arr('starters-list').length>=11){msg('Ci sono già 11 posizioni. Per cambiare il modulo usa “Prepara / riordina”.',true);return;}
     const occupied=new Set(arr('starters-list').map(r=>read(r,'posizione')));
     const slot=C.formationSlots($('match-module').value).slots.find(t=>!occupied.has(t.id));
-    lineupRow($('starters-list'),{posizione:slot?.id||''});markDirty();renderPitchPreview();
+    lineupRow($('starters-list'),{posizione:slot?.id||''});markDirty();renderPitchPreview();refreshMatchSubstitutionChoices();
   });
-  $('add-bench').addEventListener('click',()=>{lineupRow($('bench-list'),{},true);markDirty();});
+  $('add-bench').addEventListener('click',()=>{lineupRow($('bench-list'),{},true);markDirty();refreshMatchSubstitutionChoices();});
   $('add-event').addEventListener('click',()=>{eventRow($('events-list'));markDirty();});
   $('add-player').addEventListener('click',()=>{playerRow();markDirty();refreshRosterChoices();});
   $('players-list').addEventListener('input',refreshRosterChoices);

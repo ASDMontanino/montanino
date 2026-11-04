@@ -1,5 +1,5 @@
 /* =====================================================================
-   A.S.D. MONTANINO / V3.1 — MATCH REPORT
+   A.S.D. MONTANINO / V3.4 — MATCH REPORT
    Nessun servizio esterno: legge SITE_DATA.dettagliPartite in data.js.
    Non inventa dati sportivi e non modifica i risultati del campionato.
    ===================================================================== */
@@ -28,8 +28,8 @@
     if(role.includes('att'))return 'A';
     return 'C';
   };
-  const labelFor = ev => ({ gol:'GOL', giallo:'AMMONIZIONE', rosso:'ESPULSIONE', sostituzione:'CAMBIO', autogol:'AUTOGOL', rigore:'RIGORE' }[String(ev.tipo||'').toLowerCase()] || String(ev.tipo||'EPISODIO').toUpperCase());
-  const markerFor = ev => ({gol:'⚽',giallo:'▰',rosso:'▰',sostituzione:'⇄',autogol:'⚽',rigore:'⚽'})[String(ev.tipo||'').toLowerCase()]||'•';
+  const labelFor = ev => ({ gol:'GOL', gol_rigore:'GOL (RIGORE)', 'gol(rigore)':'GOL (RIGORE)', rigore_parato:'RIGORE PARATO', rigore_sbagliato:'RIGORE SBAGLIATO', giallo:'AMMONIZIONE', rosso:'ESPULSIONE', sostituzione:'CAMBIO', autogol:'AUTOGOL', rigore:'RIGORE' }[String(ev.tipo||'').toLowerCase()] || String(ev.tipo||'EPISODIO').toUpperCase());
+  const markerFor = ev => ({gol:'⚽',gol_rigore:'⚽','gol(rigore)':'⚽',rigore_parato:'🧤',rigore_sbagliato:'✕',giallo:'▰',rosso:'▰',sostituzione:'⇄',autogol:'⚽',rigore:'⚽'})[String(ev.tipo||'').toLowerCase()]||'•';
 
   // DEMO VISIVA: persone ed eventi segnaposto, MAI salvati o mescolati con i risultati reali.
   function demoMatch(){
@@ -103,7 +103,7 @@
       const list=make('ol','md-event-list');
       [...evs].sort((a,b)=>(parseInt(a.minuto,10)||0)-(parseInt(b.minuto,10)||0)).forEach(ev=>{
         const type=String(ev.tipo||'').toLowerCase();
-        const row=make('li','md-event md-event-'+(type==='giallo'?'yellow':type==='rosso'?'red':type==='gol'?'goal':'neutral'));
+        const row=make('li','md-event md-event-'+(type==='giallo'?'yellow':type==='rosso'?'red':['gol','gol_rigore','gol(rigore)'].includes(type)?'goal':'neutral'));
         row.append(make('span','md-event-minute',minuteLabel(ev.minuto)),make('span','md-event-icon',markerFor(ev)));
         const detail=make('div','md-event-info');
         detail.append(make('strong','',labelFor(ev)));
@@ -124,7 +124,7 @@
     const key=normal(name);
     if(!key)return null;
     const own=events.filter(e=>!e.squadra || normal(e.squadra)==='montanino');
-    const n=own.filter(e=>type==='assist' ? String(e.tipo).toLowerCase()==='gol' && normal(e.assist)===key : String(e.tipo).toLowerCase()===type && normal(e.giocatore)===key).length;
+    const n=own.filter(e=>{const eventType=String(e.tipo||'').toLowerCase();return type==='assist' ? eventType==='gol'&&normal(e.assist)===key : (type==='gol'?['gol','gol_rigore','gol(rigore)'].includes(eventType):eventType===type)&&normal(e.giocatore)===key;}).length;
     return n;
   }
   function drawGrades(holder, v){
