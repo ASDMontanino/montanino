@@ -222,6 +222,15 @@
   });
 
   const photos = Array.isArray(SITE_DATA.galleria) ? SITE_DATA.galleria : [];
+  
+if (!photos.some(item => item.foto === 'rosa-08.webp')) {
+  photos.push({
+    titolo: 'LA NOSTRA ROSA / 08',
+    sottotitolo: 'PORTIERI · BANCHETTI E MADRUCCI',
+    foto: 'rosa-08.webp'
+  });
+}
+
   const gallery = $('roster');
   photos.forEach((item, i) => {
     const button = document.createElement('button');
