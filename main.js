@@ -222,14 +222,19 @@
   });
 
   const photos = Array.isArray(SITE_DATA.galleria) ? SITE_DATA.galleria : [];
-  
-if (!photos.some(item => item.foto === 'rosa-08.webp')) {
-  photos.push({
-    titolo: 'LA NOSTRA ROSA / 08',
-    sottotitolo: 'PORTIERI · BANCHETTI E MADRUCCI',
-    foto: 'rosa-08.webp'
-  });
-}
+  // Mantiene la foto dei portieri in ogni caso, anche se Supabase conserva le prime sette.
+  const portieri = photos.find(item => /^rosa-08\.(?:png|webp)$/i.test(String(item.foto || '')));
+  if (portieri) {
+    portieri.foto = 'rosa-08.png';
+    portieri.titolo ||= 'LA NOSTRA ROSA / 08';
+    portieri.sottotitolo ||= 'PORTIERI · BANCHETTI E MADRUCCI';
+  } else {
+    photos.push({
+      titolo: 'LA NOSTRA ROSA / 08',
+      sottotitolo: 'PORTIERI · BANCHETTI E MADRUCCI',
+      foto: 'rosa-08.png'
+    });
+  }
 
   const gallery = $('roster');
   photos.forEach((item, i) => {
@@ -237,7 +242,7 @@ if (!photos.some(item => item.foto === 'rosa-08.webp')) {
     button.className = 'roster-card reveal'; button.type = 'button';
     button.setAttribute('aria-label', 'Apri fotografia: ' + (item.titolo || `Gruppo ${i + 1}`));
     const photo = document.createElement('img');
-    photo.src = 'assets/img/' + encodeURIComponent(item.foto || '') + '?v=20261103';
+    photo.src = 'assets/img/' + encodeURIComponent(item.foto || '') + '?v=20261104';
     photo.alt = item.titolo || `Foto di gruppo ${i+1} del Montanino`;
     photo.loading = 'lazy'; photo.decoding = 'async';
     const overlay = document.createElement('span'); overlay.className='roster-overlay';
@@ -256,7 +261,7 @@ if (!photos.some(item => item.foto === 'rosa-08.webp')) {
   function showPhoto(i) {
     if (!photos.length) return;
     active = (i + photos.length) % photos.length;
-    big.src = 'assets/img/' + encodeURIComponent(photos[active].foto) + '?v=20261103';
+    big.src = 'assets/img/' + encodeURIComponent(photos[active].foto) + '?v=20261104';
     big.alt = photos[active].titolo || 'Foto della rosa';
     label.textContent = `${photos[active].titolo || 'ROSA'} — ${active+1} / ${photos.length}`;
   }
