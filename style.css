@@ -489,3 +489,26 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 .section-staff .staff-details span{font-size:11px;letter-spacing:.04em}
 @media(max-width:950px){.section-staff .staff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:575px){.section-staff .staff-grid{grid-template-columns:1fr}.section-staff .staff-group-heading{gap:10px}.section-staff .staff-group-count{width:100%;margin:0}.section-staff .staff-card-media{max-height:none}}
+
+
+/* V3.5 — Calendario compatto: mostra i risultati e apre le partite future solo su richiesta. */
+.calendar-upcoming-list{display:grid;gap:9px;min-width:0}
+.calendar-upcoming-list[hidden]{display:none}
+.calendar-future-toggle{
+  width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;
+  gap:22px;margin-top:12px;padding:22px 26px;background:linear-gradient(112deg,#123824,#0b2014);
+  border:1px solid #387b4d;color:#effff3;cursor:pointer;transition:background .2s,border-color .2s,transform .2s;
+}
+.calendar-future-toggle:hover{border-color:#70e998;background:linear-gradient(112deg,#1a4b2e,#0c2517);transform:translateY(-1px)}
+.calendar-future-toggle:focus-visible{outline:2px solid #83efae;outline-offset:3px}
+.calendar-future-toggle-copy{display:flex;flex-direction:column;gap:6px;min-width:0}
+.calendar-future-kicker{color:#80dea0;font:800 10px var(--body);letter-spacing:.19em}
+.calendar-future-toggle-copy strong{font:900 clamp(21px,2.45vw,33px)/.98 var(--title);letter-spacing:.025em}
+.calendar-future-toggle-copy small{font-size:10px;letter-spacing:.08em;font-weight:700;color:#9abbaa}
+.calendar-future-indicator{display:grid;place-items:center;flex:none;width:47px;height:47px;background:#37c875;color:#062012;font:800 32px/1 var(--title)}
+.calendar-future-toggle.is-expanded{margin-bottom:4px;border-color:#5ac982}
+@media(max-width:560px){
+  .calendar-future-toggle{padding:18px;gap:10px}
+  .calendar-future-indicator{width:40px;height:40px;font-size:27px}
+  .calendar-future-toggle-copy strong{font-size:clamp(21px,6vw,27px)}
+}

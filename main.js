@@ -60,35 +60,69 @@
   const addLink = (parent,label,url,cls) => {
     const a=create('a',cls,label); a.href=url;a.target='_blank';a.rel='noopener noreferrer';parent.appendChild(a);return a;
   };
-  function renderCalendar(filter='tutte'){
-    if (!calendarNode) return;
+  let calendarFilter='tutte';
+  let futureExpanded=false;
+  function renderCalendar(filter=calendarFilter){
+    if(!calendarNode)return;
+    calendarFilter=filter;
     calendarNode.replaceChildren();
     const rows=calendar.filter(m=>filter==='tutte'||(filter==='giocate'&&isPlayed(m))||m.fase===filter);
-    rows.forEach(m=>{
+    const playedRows=rows.filter(isPlayed);
+    const futureRows=rows.filter(m=>!isPlayed(m));
+    const makeFixtureCard=m=>{
       const card=create('article','fixture-card reveal');
-      const left=create('div','fixture-count');left.append(create('span','fixture-round',`${m.fase.toUpperCase()} / ${String(m.giornata).padStart(2,'0')}`),create('span','fixture-id',m.id));
+      const left=create('div','fixture-count');left.append(create('span','fixture-round',m.fase.toUpperCase()+' / '+String(m.giornata).padStart(2,'0')),create('span','fixture-id',m.id));
       const middle=create('div','fixture-main');
       middle.appendChild(create('p','fixture-when',dateLabel(m)));
       const names=create('div','fixture-names');
       const h=create('strong',m.casa==='Montanino'?'is-ours':'',m.casa);
-      const separator=create('span',isPlayed(m)?'fixture-score':'fixture-versus',isPlayed(m)?`${m.golCasa} : ${m.golOspite}`:'VS');
+      const separator=create('span',isPlayed(m)?'fixture-score':'fixture-versus',isPlayed(m)?m.golCasa+' : '+m.golOspite:'VS');
       const a=create('strong',m.ospite==='Montanino'?'is-ours':'',m.ospite);
       names.append(h,separator,a);middle.appendChild(names);
-      const loc=create('div','fixture-field',m.campo || 'CAMPO DA CONFERMARE');middle.appendChild(loc);
+      const loc=create('div','fixture-field',m.campo||'CAMPO DA CONFERMARE');middle.appendChild(loc);
       const side=create('div','fixture-side');
       side.appendChild(create('span','fixture-state '+(isPlayed(m)?'played':'upcoming'),isPlayed(m)?'FINALE':m.data?'PROGRAMMATA':'DA DEFINIRE'));
-      if(m.campo){ addLink(side,'DOVE SI GIOCA ↗','https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(m.campo),'fixture-map'); }
+      if(m.campo)addLink(side,'DOVE SI GIOCA ↗','https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(m.campo),'fixture-map');
       if(m.data&&m.ora&&!isPlayed(m)){
         const b=create('button','fixture-ics','+ CALENDARIO');b.type='button';
         b.addEventListener('click',()=>downloadICS(m));side.appendChild(b);
       }
       card.append(left,middle,side);
-      // Tabellino completo associato all'ID della partita (anche dopo i filtri).
-      if (window.MontaninoTabellini) window.MontaninoTabellini.attach(card,m,side);
-      calendarNode.appendChild(card);
-    });
+      if(window.MontaninoTabellini)window.MontaninoTabellini.attach(card,m,side);
+      return card;
+    };
+    playedRows.forEach(m=>calendarNode.appendChild(makeFixtureCard(m)));
+    if(futureRows.length){
+      const total=futureRows.length;
+      const singular=total===1;
+      const toggle=create('button','calendar-future-toggle');
+      toggle.type='button';
+      toggle.id='calendar-future-toggle';
+      toggle.setAttribute('aria-controls','calendar-future-list');
+      const labelGroup=create('span','calendar-future-toggle-copy');
+      labelGroup.append(create('span','calendar-future-kicker','LE PROSSIME GIORNATE'));
+      const title=create('strong');
+      const sub=create('small','',singular?'1 INCONTRO RESTANTE':total+' INCONTRI RESTANTI');
+      labelGroup.append(title,sub);
+      const indicator=create('span','calendar-future-indicator');indicator.setAttribute('aria-hidden','true');
+      toggle.append(labelGroup,indicator);
+      const upcoming=create('div','calendar-upcoming-list');upcoming.id='calendar-future-list';
+      upcoming.hidden=!futureExpanded;
+      futureRows.forEach(m=>upcoming.appendChild(makeFixtureCard(m)));
+      const sync=()=>{
+        toggle.setAttribute('aria-expanded',String(futureExpanded));
+        title.textContent=futureExpanded?'RIDUCI IL CALENDARIO':'MOSTRA '+total+' '+(singular?'PARTITA DA GIOCARE':'PARTITE DA GIOCARE');
+        indicator.textContent=futureExpanded?'−':'+';
+        upcoming.hidden=!futureExpanded;
+        toggle.classList.toggle('is-expanded',futureExpanded);
+      };
+      toggle.addEventListener('click',()=>{
+        futureExpanded=!futureExpanded;sync();
+      });
+      calendarNode.append(toggle,upcoming);
+      sync();
+    }
     if(!rows.length)calendarNode.appendChild(create('p','editorial-empty','NESSUNA PARTITA IN QUESTA SEZIONE.'));
-    // Gli elementi inseriti dopo il caricamento devono diventare visibili anche con l’effetto reveal.
     calendarNode.querySelectorAll('.reveal').forEach(el=>el.classList.add('is-visible'));
   }
   function downloadICS(m){
@@ -107,12 +141,28 @@
   }
   document.querySelectorAll('[data-calendar-filter]').forEach(btn=>btn.addEventListener('click',()=>{
     document.querySelectorAll('[data-calendar-filter]').forEach(b=>{const on=b===btn;b.classList.toggle('is-active',on);b.setAttribute('aria-pressed',String(on));});
+    // Le viste Andata e Ritorno mantengono il comportamento completo del filtro.
+    futureExpanded=!['tutte','giocate'].includes(btn.dataset.calendarFilter);
     renderCalendar(btn.dataset.calendarFilter);
   }));
   renderCalendar();
-  // Attiva un tabellino raggiunto da un link diretto (anche dall'ultimo risultato).
-  window.addEventListener('hashchange', () => window.MontaninoTabellini?.openFromHash());
-  requestAnimationFrame(() => window.MontaninoTabellini?.openFromHash());
+  // Un link diretto a una partita resta raggiungibile anche dentro il calendario chiuso.
+  const openLinkedMatch=()=>{
+    const hash=decodeURIComponent(location.hash.slice(1));
+    if(/^partita-[AR]\d{2}$/.test(hash)){
+      let card=document.getElementById(hash);
+      if(!card){
+        document.querySelector('[data-calendar-filter="tutte"]')?.click();
+        card=document.getElementById(hash);
+      }
+      if(card?.closest('#calendar-future-list')?.hidden){
+        document.getElementById('calendar-future-toggle')?.click();
+      }
+    }
+    window.MontaninoTabellini?.openFromHash();
+  };
+  window.addEventListener('hashchange',openLinkedMatch);
+  requestAnimationFrame(openLinkedMatch);
 
   const coverage=SITE_DATA._statsCoverage||{formations:0,events:0,played:0};
   const coverageEl=$('stats-coverage');
