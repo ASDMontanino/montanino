@@ -512,3 +512,54 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
   .calendar-future-indicator{width:40px;height:40px;font-size:27px}
   .calendar-future-toggle-copy strong{font-size:clamp(21px,6vw,27px)}
 }
+
+
+/* V3.5.1 — "La maglia prima di tutto": foto protagonista solo su smartphone. */
+@media (max-width: 768px) {
+  #identita.story-banner {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: #07140d;
+  }
+  #identita.story-banner::after {
+    content: none;
+  }
+  #identita .story-image {
+    position: relative;
+    inset: auto;
+    flex: none;
+    width: 100%;
+    height: clamp(380px, 112vw, 520px);
+    min-height: 0;
+    opacity: 1;
+    overflow: hidden;
+  }
+  #identita .story-image img {
+    position: absolute;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 70%;
+  }
+  #identita .story-image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent 67%, rgba(7,20,13,.3) 84%, #07140d 100%);
+  }
+  #identita .story-text {
+    position: relative;
+    z-index: 2;
+    min-height: 0;
+    margin-top: -20px;
+    padding: 22px var(--pad) 62px;
+    background: #07140d;
+  }
+  #identita .story-script {
+    bottom: -3%;
+    opacity: .65;
+  }
+}
