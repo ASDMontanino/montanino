@@ -1,0 +1,11 @@
+A.S.D. MONTANINO — GALLERIA FOTO PARTITE
+
+Questa cartella contiene le fotografie degli incontri.
+Per aggiungerle:
+1. Carica qui i file JPG, JPEG, PNG, WebP o AVIF direttamente dal repository GitHub.
+2. Apri admin.html, sezione 06 · GALLERIA FOTO.
+3. Scegli la partita e inserisci il nome esatto del file (es. partita-a01-01.webp), oppure usa l'inserimento multiplo.
+4. Premi SALVA MODIFICHE per pubblicare il collegamento su Supabase.
+5. Le foto saranno visibili soltanto su galleria.html, raggiungibile dal menu del sito.
+
+Non aggiungere credenziali o chiavi private. Preferisci immagini compresse WebP per il caricamento veloce.

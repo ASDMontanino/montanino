@@ -27,5 +27,5 @@
     }
   }
   SITE_DATA=window.MontaninoCommon.prepare(SITE_DATA);
-  try{await addScript('main.js?v=20261105-calendar');}catch(e){console.error('Impossibile caricare main.js',e);}
+  try{await addScript('main.js?v=20261106');}catch(e){console.error('Impossibile caricare main.js',e);}
 })();

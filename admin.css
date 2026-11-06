@@ -38,3 +38,10 @@
 #staff-editor-list .staff-entity>select{width:100%}
 @media(max-width:1000px){#staff-editor-list .staff-entity{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:550px){.staff-add-group-controls{grid-template-columns:1fr}.staff-add-group-controls button{width:100%}#staff-editor-list .staff-entity{grid-template-columns:1fr}}
+
+
+/* V3.6 — Campi per foto delle partite, adattivi su smartphone. */
+.match-gallery-list .editor-row{grid-template-columns:minmax(175px,1.2fr) minmax(170px,1.2fr) minmax(180px,2fr) 36px}
+.match-gallery-list .editor-row input,.match-gallery-list .editor-row select{min-width:0;margin:0}
+@media(max-width:900px){.match-gallery-list .editor-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.match-gallery-list .editor-row{grid-template-columns:1fr}}

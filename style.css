@@ -563,3 +563,21 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
     opacity: .65;
   }
 }
+
+
+/* V3.6 — MVP e navigazione verso la Galleria separata. */
+.nav-gallery{display:inline-flex;align-items:center;justify-content:center;flex:none;padding:10px 12px;border:1px solid #4a9a63;background:#103a21;color:#b9ffd1;font:900 10px var(--body);letter-spacing:.09em;white-space:nowrap;transition:background .2s,color .2s}
+.nav-gallery:hover,.nav-gallery.is-current{background:var(--green);color:var(--black)}
+.md-mvp{display:flex;align-items:center;gap:16px;margin:17px 0 24px;padding:16px 19px;border:1px solid #4b965e;background:linear-gradient(120deg,#16432b,#0a281a);min-height:93px}
+.md-mvp-symbol{display:grid;place-items:center;width:57px;height:57px;flex:none;background:#63e091;color:#0d2414;font-size:29px}
+.md-mvp-text{display:flex;flex-direction:column;gap:4px;min-width:0}
+.md-mvp-text small{color:#8be0a6;font-size:10px;font-weight:900;letter-spacing:.14em}
+.md-mvp-text strong{font:900 clamp(25px,3.8vw,40px)/1 var(--title);overflow-wrap:anywhere}
+.md-mvp-text span{font-size:10px;color:#b7d7bd;letter-spacing:.1em}
+.md-mvp-photo{width:75px;height:85px;object-fit:cover;flex:none;border:1px solid #4d9864}
+.md-mvp-compact{display:block;color:#e0ffe4;border:1px solid #367b4b;padding:6px 10px;background:#1a3f28;font:900 10px var(--body);letter-spacing:.05em}
+.player-stat-table .player-mvp-cell{font-weight:900;color:#a0ffc1}
+@media(min-width:1101px){.stat-highlights{grid-template-columns:repeat(5,minmax(0,1fr))}.stat-highlight{padding:22px 15px}.stat-highlight strong{font-size:clamp(48px,4.2vw,70px)}}
+@media(min-width:851px) and (max-width:1100px){.stat-highlights{grid-template-columns:repeat(3,minmax(0,1fr))}.nav{gap:6px}.nav-gallery{padding:9px 7px;font-size:9px}}
+@media(max-width:850px){.nav-gallery{display:flex;justify-content:space-between;padding:14px 13px;margin-top:9px;font-size:12px}}
+@media(max-width:560px){.md-mvp{gap:11px;padding:12px}.md-mvp-symbol{width:44px;height:44px;font-size:23px}.md-mvp-photo{width:60px;height:70px}.md-mvp-text strong{font-size:25px}}

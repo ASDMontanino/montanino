@@ -1,5 +1,5 @@
 /* =====================================================================
-   A.S.D. MONTANINO / V3.4 — MATCH REPORT
+   A.S.D. MONTANINO / V3.6 — MATCH REPORT
    Nessun servizio esterno: legge SITE_DATA.dettagliPartite in data.js.
    Non inventa dati sportivi e non modifica i risultati del campionato.
    ===================================================================== */
@@ -14,7 +14,7 @@
   };
   const appendText = (node,cls,text) => node.appendChild(make('span',cls,text));
   const safeArray = (v) => Array.isArray(v)?v:[];
-  const hasData = (v) => !!v && (safeArray(v.titolari).length>0 || safeArray(v.panchina).length>0 || safeArray(v.eventi).length>0 || !!v.modulo || !!v.note);
+  const hasData = (v) => !!v && (safeArray(v.titolari).length>0 || safeArray(v.panchina).length>0 || safeArray(v.eventi).length>0 || !!v.modulo || !!v.note || !!v.mvp);
   const isPlayed = (m) => Number.isInteger(m.golCasa) && Number.isInteger(m.golOspite);
   const rate = v => v===null || v===undefined || v==='' ? '—' : (typeof v==='number' ? String(v).replace('.',',') : String(v));
   const normal = name => String(name||'').trim().toLocaleLowerCase('it');
@@ -167,6 +167,22 @@
     const descriptor=isDemo?'DEMO · DATI NON REALI':v.datiCompleti===true?'TABELLINO COMPLETO':'TABELLINO IN COMPILAZIONE';
     header.append(left,make('span','md-status'+(isDemo?' md-is-demo':''),descriptor));
     panel.append(header);
+    if(!isDemo && v.mvp){
+      const mvp=make('div','md-mvp');
+      const badge=make('span','md-mvp-symbol','★');
+      const copy=make('div','md-mvp-text');
+      copy.append(make('small','', 'PLAYER OF THE MATCH'),make('strong','',v.mvp),make('span','', 'MVP DELLA PARTITA'));
+      mvp.append(badge,copy);
+      const imageFile=String(v.mvpFoto||'');
+      if(/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(imageFile)&&!imageFile.includes('..')){
+        const photo=make('img','md-mvp-photo');
+        photo.src='assets/img/'+encodeURIComponent(imageFile);
+        photo.alt='Foto MVP '+v.mvp;photo.loading='lazy';
+        photo.onerror=()=>photo.remove();
+        mvp.prepend(photo);
+      }
+      panel.append(mvp);
+    }
     if(!hasData(v) && !isDemo){
       const empty=make('div','md-report-empty');
       empty.append(make('strong','','FORMAZIONE E VOTI IN ARRIVO.'),make('p','','Il risultato è disponibile, ma i dati individuali non sono ancora stati forniti. Nessun nome, voto o cartellino è stato inventato.'));
@@ -191,6 +207,7 @@
   function attach(card,m,side){
     if(!side || !card || !m || !m.id)return;
     const details=(SITE_DATA.dettagliPartite||{})[m.id]||{};
+    if(isPlayed(m)&&details.mvp)side.append(make('span','md-mvp-compact','★ MVP · '+details.mvp));
     if(!isPlayed(m) && !hasData(details)) return;
     card.id='partita-'+m.id;
     const panel=make('div','md-report'); panel.id='tabellino-'+m.id;

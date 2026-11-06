@@ -1,0 +1,54 @@
+/* A.S.D. MONTANINO — Archivio fotografico 2026/27 */
+.match-gallery-page{background:#06130b;min-height:65vh}
+.match-gallery-hero{min-height:500px;position:relative;display:flex;align-items:center;overflow:hidden;background:radial-gradient(circle at 82% 37%,#1b5c31 0%,#113e23 26%,#07160e 65%,#060e09 100%);border-bottom:1px solid #346444}
+.match-gallery-hero:before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(120deg,transparent 0 120px,#66df7c08 121px 123px)}
+.match-gallery-hero-inner{position:relative;z-index:2;padding:86px var(--pad) 64px;width:min(100%,970px)}
+.gallery-eyebrow{font:900 11px var(--body);letter-spacing:.25em;color:#83e6a7;margin:0 0 19px}
+.match-gallery-hero h1{font:900 clamp(85px,12vw,177px)/.79 var(--title);margin:0;letter-spacing:-.02em}
+.match-gallery-hero h1 em{color:#34d27a;font-style:normal}
+.gallery-intro{font-size:14px;line-height:1.8;color:#c4e0cd;max-width:410px;margin:32px 0 0}
+.gallery-hero-bottom{display:flex;gap:25px;flex-wrap:wrap;margin-top:42px;font:900 10px var(--body);letter-spacing:.14em;color:#8bdaa5}
+.gallery-hero-crest{position:absolute;z-index:1;right:-4%;top:9%;width:clamp(320px,38vw,630px);opacity:.13;transform:rotate(10deg);filter:drop-shadow(0 14px 45px #000)}
+.gallery-hero-crest img{width:100%}
+.match-gallery-content{padding:85px var(--pad) 115px;max-width:1600px;margin:0 auto}
+.gallery-section-top{display:flex;justify-content:space-between;align-items:end;gap:28px;flex-wrap:wrap;margin-bottom:38px}
+.gallery-section-top h2{font:900 clamp(50px,6.1vw,97px)/.9 var(--title);margin:0;letter-spacing:-.01em}
+.gallery-section-top h2 span{color:#39cf7e}
+.gallery-filter-label{display:flex;flex-direction:column;gap:8px;color:#8fcfa1;font-size:10px;font-weight:900;letter-spacing:.12em}
+.gallery-filter-label select{font:800 13px var(--body);padding:13px 38px 13px 14px;border:1px solid #438258;min-height:46px;min-width:240px;color:#f2fff5;background:#112b1c;cursor:pointer;max-width:100%}
+.gallery-message{color:#92bfa0;font-size:14px;line-height:1.7}
+.gallery-match-groups{display:grid;gap:60px}
+.gallery-match-group{min-width:0}
+.gallery-group-head{border-bottom:1px solid #295539;padding-bottom:19px;margin-bottom:24px;display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.gallery-group-kicker{font:900 10px var(--body);letter-spacing:.2em;color:#6bd492;display:block;margin-bottom:10px}
+.gallery-group-title{font:900 clamp(27px,3.5vw,49px)/1 var(--title);margin:0;text-transform:uppercase;overflow-wrap:anywhere}
+.gallery-group-date{font:800 11px var(--body);letter-spacing:.06em;color:#94b9a0}
+.gallery-photo-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.gallery-photo-card{position:relative;display:block;aspect-ratio:4/3;background:linear-gradient(150deg,#1d4b31,#071a10);border:1px solid #28573a;overflow:hidden;text-align:left;cursor:zoom-in;color:#fff;padding:0}
+.gallery-photo-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+.gallery-photo-card:hover img{transform:scale(1.065)}
+.gallery-photo-card:focus-visible{outline:3px solid #80eeb2;outline-offset:4px}
+.gallery-photo-card:after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(transparent,#000b);pointer-events:none}
+.gallery-photo-caption{position:absolute;bottom:13px;left:13px;right:13px;z-index:1;font:800 11px var(--body);line-height:1.35;text-shadow:0 2px 5px #000a}
+.gallery-photo-placeholder{display:grid;place-items:center;position:absolute;inset:0;padding:20px;color:#b5dec2;font:800 12px var(--body);text-align:center}
+.gallery-empty{border:1px solid #397a4a;background:radial-gradient(circle at 80% 10%,#1a5b31,#092316 62%);padding:clamp(35px,7vw,86px);min-height:310px}
+.gallery-empty-symbol{font-size:45px;color:#68e898}
+.gallery-empty h3{font:900 clamp(44px,6.5vw,88px)/.91 var(--title);margin:19px 0}
+.gallery-empty p{max-width:480px;color:#b7d9c2;line-height:1.8}
+.gallery-back-link,.gallery-bottom-back{display:inline-block;font:900 11px var(--body);letter-spacing:.1em;color:#86f4aa;margin-top:18px}
+.gallery-bottom-back{margin-top:49px;border-bottom:1px solid #5ccf87;padding-bottom:8px}
+.gallery-back-link:hover,.gallery-bottom-back:hover{color:#fff}
+.gallery-footer{background:#050c07}
+.gallery-lightbox{position:fixed;inset:0;z-index:2000;background:#010704f5;display:flex;align-items:center;justify-content:center;padding:60px 72px}
+.gallery-lightbox figure{margin:0;max-width:min(1100px,100%);display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.gallery-lightbox figure img{object-fit:contain;width:auto;max-width:100%;max-height:78vh}
+.gallery-lightbox figcaption{font:800 12px var(--body);color:#d7ffdf;text-align:center;line-height:1.5}
+.gallery-lightbox button{position:absolute;z-index:1;background:#164b2d;border:1px solid #65c984;color:white;display:grid;place-items:center;width:42px;height:48px;font-size:30px}
+.gallery-lightbox button:hover{background:#29864b}
+.gallery-lightbox-close{top:22px;right:26px}
+.gallery-lightbox-prev{left:18px;top:50%;transform:translateY(-50%)}
+.gallery-lightbox-next{right:18px;top:50%;transform:translateY(-50%)}
+@media(max-width:1100px){.gallery-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.match-gallery-hero{min-height:430px}.gallery-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gallery-hero-crest{width:340px;right:-12%}.match-gallery-content{padding-top:60px}}
+@media(max-width:560px){.match-gallery-hero{min-height:430px}.match-gallery-hero-inner{padding:68px 22px 45px}.match-gallery-hero h1{font-size:clamp(72px,18vw,112px)}.gallery-intro{font-size:12px;max-width:285px}.gallery-hero-bottom{font-size:9px;margin-top:32px}.gallery-hero-crest{top:28%;right:-30%;width:290px;opacity:.08}.match-gallery-content{padding:55px 20px 80px}.gallery-section-top{align-items:stretch;margin-bottom:25px}.gallery-section-top h2{font-size:clamp(44px,12vw,72px)}.gallery-filter-label select{width:100%}.gallery-photo-grid{gap:8px}.gallery-photo-card{aspect-ratio:3/4}.gallery-photo-caption{font-size:10px;bottom:9px;left:9px}.gallery-match-groups{gap:45px}.gallery-lightbox{padding:75px 47px}.gallery-lightbox button{width:34px;height:43px}.gallery-lightbox-prev{left:4px}.gallery-lightbox-next{right:4px}.gallery-lightbox-close{top:13px;right:12px}}
+@media(prefers-reduced-motion:reduce){.gallery-photo-card img{transition:none}}

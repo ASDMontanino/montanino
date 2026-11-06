@@ -179,6 +179,7 @@
   set('stat-goals-total',events||!coverage.played?sum('gol'):'—');
   set('stat-assists-total',events||!coverage.played?sum('assist'):'—');
   set('stat-apps-total',formations||!coverage.played?sum('presenze'):'—');
+  set('stat-mvp-total',sum('mvp'));
   const statsBody=$('player-stats');
   function renderStats(order='gol'){
     if(!statsBody)return;
@@ -188,7 +189,7 @@
     [...players].sort((a,b)=>intVal(b[order])-intVal(a[order])||String(a.nome).localeCompare(String(b.nome),'it'))
       .forEach(p=>{
         const tr=create('tr');const showLineups=formations||!coverage.played,showEvents=events||!coverage.played;
-        const values=[p.numero??'—',p.nome||'—',p.ruolo||'—',showLineups?(p.presenze??0):'—',showEvents?(p.gol??0):'—',showEvents?(p.assist??0):'—',showEvents?(p.gialli??0):'—',showEvents?(p.rossi??0):'—',showLineups?(p.mediaVoto??'—'):'—'];
+        const values=[p.numero??'—',p.nome||'—',p.ruolo||'—',showLineups?(p.presenze??0):'—',showEvents?(p.gol??0):'—',showEvents?(p.assist??0):'—',showEvents?(p.gialli??0):'—',showEvents?(p.rossi??0):'—',p.mvp??0,showLineups?(p.mediaVoto??'—'):'—'];
         values.forEach((v,i)=>{const td=create('td',i===1?'player-name-cell':'',String(v));tr.appendChild(td)});statsBody.appendChild(tr);
       });
   }

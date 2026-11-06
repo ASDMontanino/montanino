@@ -1,4 +1,4 @@
-/* A.S.D. MONTANINO — amministrazione V3.4
+/* A.S.D. MONTANINO — amministrazione V3.6
    Modalità prova: localStorage, NON pubblica. Modalità online: Supabase Auth + RLS. */
 (async function(){
   'use strict';
@@ -191,6 +191,36 @@
     const filled=arr('starters-list').filter(r=>read(r,'nome')).length;
     $('starter-count').textContent=filled+'/11';
   }
+
+  // MVP indipendente da pagelle ed episodi. Le foto sono facoltative.
+  function refreshMvpChoices(selected){
+    const menu=$('match-mvp');if(!menu)return;
+    const current=selected===undefined?menu.value:selected;
+    menu.replaceChildren();
+    const blank=el('option','', '— Da assegnare —');blank.value='';menu.append(blank);
+    const roster=rosterNow().sort((a,b)=>(a.numero??999)-(b.numero??999)||a.nome.localeCompare(b.nome,'it'));
+    roster.forEach(p=>{const o=el('option','',(p.numero??'–')+' · '+p.nome);o.value=p.nome;menu.append(o);});
+    const selectedPlayer=roster.find(p=>C.normalize(p.nome)===C.normalize(current));
+    if(current&&!selectedPlayer){const old=el('option','', '⚠ Da verificare: '+current);old.value=current;menu.append(old);}
+    menu.value=selectedPlayer?.nome||current||'';
+  }
+  function isSafePhotoFile(file){
+    return /^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(file)&&!file.includes('..');
+  }
+  function matchPhotoRow(data={}){
+    const row=makeRow($('match-gallery-list'),'match-gallery-row');
+    const games=C.list(draft.calendario).map(m=>[m.id,m.id+' · '+m.casa+' - '+m.ospite]);
+    const game=pick(data.partita||games[0]?.[0]||'',games,'partita');game.setAttribute('aria-label','Partita della fotografia');
+    const file=inp(data.file||'','text','file','foto-01.webp');file.setAttribute('aria-label','Nome del file assets/img/partite');
+    const caption=inp(data.didascalia||'','text','didascalia','Didascalia facoltativa');caption.setAttribute('aria-label','Didascalia');
+    row.append(game,file,caption,del());return row;
+  }
+  function fillMatchGallery(){
+    const root=$('match-gallery-list');root.replaceChildren();
+    C.list(draft.fotoPartite).forEach(x=>matchPhotoRow(x));
+    const bulk=$('gallery-bulk-match');bulk.replaceChildren();
+    C.list(draft.calendario).forEach(m=>{const o=el('option','',m.id+' · '+m.casa+' - '+m.ospite);o.value=m.id;bulk.append(o);});
+  }
   function showMatch(id){
     activeMatchId=id;const m=draft.calendario.find(x=>x.id===id);if(!m)return;
     $('match-select').value=id;
@@ -198,6 +228,8 @@
     const d=(draft.dettagliPartite||{})[id]||{};
     $('match-module').value=C.isValidModule(d.modulo||'')?d.modulo:'4-3-3';
     $('match-notes').value=d.note||'';
+    refreshMvpChoices(d.mvp||'');
+    $('match-mvp-photo').value=d.mvpFoto||'';
     $('match-complete').checked=!!d.datiCompleti;$('events-complete').checked=!!d.eventiCompleti;
     $('starters-list').replaceChildren();
     const assigned=C.assignFormation($('match-module').value,C.list(d.titolari),rosterNow(),true);
@@ -227,6 +259,11 @@
     const slotIds=slots.map(s=>s.id),chosen=titolari.map(p=>p.posizione);
     if(chosen.some(id=>!slotIds.includes(id))||new Set(chosen).size!==chosen.length)throw Error('Ogni titolare deve avere una posizione diversa del modulo. Premi “Prepara / riordina 11 posizioni”.');
     const available=new Set(rosterNow().map(p=>C.normalize(p.nome)));
+    const mvp=$('match-mvp').value.trim(),mvpFoto=$('match-mvp-photo').value.trim();
+    if(mvp&&!available.has(C.normalize(mvp)))throw Error('Scegli l’MVP dall’elenco della rosa.');
+    if(mvp&&(home===''||away===''))throw Error('Puoi assegnare l’MVP soltanto a una partita conclusa.');
+    if(mvpFoto&&!mvp)throw Error('Seleziona prima il giocatore MVP.');
+    if(mvpFoto&&!isSafePhotoFile(mvpFoto))throw Error('Nome file foto MVP non valido: usa per esempio mvp-01.webp.');
     for(const p of [...titolari,...panchina]){
       if(!available.has(C.normalize(p.nome)))throw Error('Il giocatore '+p.nome+' non è presente nella rosa. Selezionalo dal menu.');
       if(p.voto!==null&&(!Number.isFinite(p.voto)||p.voto<0||p.voto>10||p.voto*2%1!==0))throw Error('I voti devono essere da 0 a 10, con incrementi di 0,5.');
@@ -269,7 +306,7 @@
     m.casa=$('match-home').value.trim();m.ospite=$('match-away').value.trim();
     if(!m.casa||!m.ospite)throw Error('Inserisci entrambe le squadre.');
     m.golCasa=hasResult?Number(home):null;m.golOspite=hasResult?Number(away):null;
-    (draft.dettagliPartite ||= {})[activeMatchId]={modulo:$('match-module').value,titolari,panchina,eventi:events,note:$('match-notes').value.trim(),datiCompleti:complete,eventiCompleti:eventsComplete};
+    (draft.dettagliPartite ||= {})[activeMatchId]={...((draft.dettagliPartite||{})[activeMatchId]||{}),modulo:$('match-module').value,titolari,panchina,eventi:events,note:$('match-notes').value.trim(),datiCompleti:complete,eventiCompleti:eventsComplete,mvp,mvpFoto};
   }
   function updateStatsPreview(){
     const box=$('admin-stats-preview');if(!box)return;
@@ -367,13 +404,23 @@
     draft.staffGruppi=staffGroups();
     draft.sponsor=arr('sponsors-editor-list').map(r=>({nome:read(r,'nome'),categoria:read(r,'categoria'),logo:read(r,'logo'),sito:read(r,'sito')})).filter(s=>s.nome);
     draft.social=Object.fromEntries(['instagram','facebook','tiktok'].map(k=>[k,$('social-'+k).value.trim()]));
+    draft.fotoPartite=arr('match-gallery-list').map(r=>({partita:read(r,'partita'),file:read(r,'file'),didascalia:read(r,'didascalia')})).filter(x=>x.file);
+    const validMatches=new Set(C.list(draft.calendario).map(m=>m.id));
+    const photoKeys=new Set();
+    for(const photo of draft.fotoPartite){
+      if(!validMatches.has(photo.partita))throw Error('Fotografia della Galleria con partita non valida.');
+      if(!isSafePhotoFile(photo.file))throw Error('Nome file foto non valido: '+photo.file+'. Inserisci solo il nome, senza cartelle.');
+      const key=photo.partita+'|'+photo.file.toLocaleLowerCase('it');
+      if(photoKeys.has(key))throw Error('Foto duplicata per '+photo.partita+': '+photo.file);
+      photoKeys.add(key);
+    }
     for(const item of draft.sponsor){if(item.sito && !/^https?:\/\//i.test(item.sito))throw Error('I link sponsor devono iniziare con https:// oppure essere vuoti.');}
     for(const [key,url] of Object.entries(draft.social))if(url&&!/^https:\/\//i.test(url))throw Error('Il link '+key+' deve iniziare con https://');
   }
   function captureAll(){captureMatch();captureOther();return C.copy(draft);}
   function render(){
     $('match-select').replaceChildren();C.list(draft.calendario).forEach(m=>{const o=el('option','',`${m.id} · ${m.fase} ${m.giornata} · ${m.casa} – ${m.ospite}`);o.value=m.id;$('match-select').append(o);});
-    fillPlayers();fillStandings();fillStaff();fillSponsors();
+    fillPlayers();fillStandings();fillStaff();fillSponsors();fillMatchGallery();
     const id=activeMatchId&&draft.calendario.some(m=>m.id===activeMatchId)?activeMatchId:draft.calendario[0]?.id;
     if(id)showMatch(id);
   }
@@ -447,10 +494,10 @@
   });
   $('add-bench').addEventListener('click',()=>{lineupRow($('bench-list'),{},true);markDirty();refreshMatchSubstitutionChoices();});
   $('add-event').addEventListener('click',()=>{eventRow($('events-list'));markDirty();});
-  $('add-player').addEventListener('click',()=>{playerRow();markDirty();refreshRosterChoices();});
-  $('players-list').addEventListener('input',refreshRosterChoices);
-  $('players-list').addEventListener('change',refreshRosterChoices);
-  $('players-list').addEventListener('click',e=>{if(e.target.closest('.delete-row'))setTimeout(refreshRosterChoices,0);});
+  $('add-player').addEventListener('click',()=>{playerRow();markDirty();refreshRosterChoices();refreshMvpChoices();});
+  $('players-list').addEventListener('input',()=>{refreshRosterChoices();refreshMvpChoices();});
+  $('players-list').addEventListener('change',()=>{refreshRosterChoices();refreshMvpChoices();});
+  $('players-list').addEventListener('click',e=>{if(e.target.closest('.delete-row'))setTimeout(()=>{refreshRosterChoices();refreshMvpChoices();},0);});
   $('add-staff').addEventListener('click',()=>{staffRow();markDirty();});
   $('add-staff-group-form').addEventListener('submit',e=>{
     e.preventDefault();
@@ -468,6 +515,21 @@
     if(e.target?.matches('select[data-field="gruppo"]'))renderStaffGroupTags();
   });
   $('add-sponsor').addEventListener('click',()=>{sponsorRow();markDirty();});
+  $('add-match-photo').addEventListener('click',()=>{matchPhotoRow();markDirty();});
+  $('add-match-photos-bulk').addEventListener('click',()=>{
+    const partita=$('gallery-bulk-match').value;
+    const files=$('gallery-bulk-files').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    if(!partita||!files.length){msg('Seleziona una partita e scrivi almeno un nome file.',true);return;}
+    if(files.some(f=>!isSafePhotoFile(f))){msg('Uno dei nomi non è valido: usa solo nomi di immagini, senza cartelle.',true);return;}
+    const known=new Set(arr('match-gallery-list').map(row=>read(row,'partita')+'|'+read(row,'file').toLocaleLowerCase('it')));
+    let added=0;
+    for(const file of files){
+      const key=partita+'|'+file.toLocaleLowerCase('it');
+      if(!known.has(key)){matchPhotoRow({partita,file});known.add(key);added++;}
+    }
+    $('gallery-bulk-files').value='';if(added)markDirty();
+    msg(added+' foto aggiunte all’elenco. Per pubblicarle, premi Salva modifiche.');
+  });
   $('save-all').addEventListener('click',save);$('save-bottom').addEventListener('click',save);$('export-json').addEventListener('click',exportJSON);
   $('import-json').addEventListener('click',()=>$('import-file').click());
   $('import-file').addEventListener('change',async e=>{

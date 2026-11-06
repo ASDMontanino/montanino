@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07140d">
+  <meta name="description" content="Galleria ufficiale A.S.D. Montanino: le fotografie delle partite, ordinate per incontro.">
+  <meta property="og:title" content="Galleria partite | A.S.D. Montanino">
+  <meta property="og:description" content="Tutti gli scatti delle partite biancoverdi.">
+  <meta property="og:image" content="assets/img/stemma.webp">
+  <title>Galleria partite | A.S.D. Montanino</title>
+  <link rel="icon" href="assets/img/stemma.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261106">
+  <link rel="stylesheet" href="galleria.css?v=20261106">
+  <script src="data.js" defer></script>
+  <script src="config.js" defer></script>
+  <script src="galleria.js?v=20261106" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#gallery-main">Vai alle fotografie</a>
+<header class="header" id="header">
+  <a href="index.html#home" class="brand" aria-label="Montanino — torna alla home">
+    <img src="assets/img/stemma.webp" alt="" width="51" height="54">
+    <span class="brand-name"><span>A.S.D.</span><strong>MONTANINO</strong></span>
+  </a>
+  <nav id="nav" class="nav" aria-label="Navigazione principale">
+    <a class="nav-link" href="index.html#home">HOME</a>
+    <a class="nav-link" href="index.html#partite">PARTITE</a>
+    <a class="nav-link" href="index.html#calendario">CALENDARIO</a>
+    <a class="nav-link" href="index.html#classifica">CLASSIFICA</a>
+    <a class="nav-link" href="index.html#rosa">ROSA</a>
+    <a class="nav-link" href="index.html#statistiche">STATISTICHE</a>
+    <a class="nav-link" href="index.html#staff">STAFF</a>
+    <a class="nav-link" href="index.html#sponsor">SPONSOR</a>
+    <a class="nav-gallery is-current" href="galleria.html" aria-current="page">GALLERIA ↗</a>
+    <a class="nav-instagram" href="https://www.instagram.com/asd_montanino/" target="_blank" rel="noopener noreferrer" aria-label="Instagram del Montanino">IG ↗</a>
+  </nav>
+  <button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Apri menu"><span></span><span></span><span></span></button>
+</header>
+<main id="gallery-main" class="match-gallery-page">
+  <section class="match-gallery-hero">
+    <div class="match-gallery-hero-inner">
+      <p class="gallery-eyebrow">THE GREEN ARCHIVE / 2026—27</p>
+      <h1>SCATTI.<br><em>EMOZIONI.</em><br>PARTITE.</h1>
+      <p class="gallery-intro">Ogni partita ha una storia. Qui raccogliamo le fotografie dal campo, una giornata alla volta.</p>
+      <div class="gallery-hero-bottom"><span id="gallery-photo-total">0 FOTOGRAFIE</span><span>VERDE. BIANCO. NERO.</span></div>
+    </div>
+    <div class="gallery-hero-crest" aria-hidden="true"><img src="assets/img/stemma.webp" alt=""></div>
+  </section>
+  <section class="match-gallery-content" aria-labelledby="gallery-heading">
+    <div class="gallery-section-top">
+      <div><p class="gallery-eyebrow">IL NOSTRO ARCHIVIO</p><h2 id="gallery-heading">LE FOTO <span>DELLE GARE.</span></h2></div>
+      <label class="gallery-filter-label" for="gallery-match-filter">FILTRA PER PARTITA
+        <select id="gallery-match-filter"><option value="tutte">TUTTE LE PARTITE</option></select>
+      </label>
+    </div>
+    <p id="gallery-loading" class="gallery-message" role="status">Caricamento della galleria...</p>
+    <div id="gallery-items" class="gallery-match-groups" aria-live="polite"></div>
+    <div id="gallery-empty" class="gallery-empty" hidden>
+      <span class="gallery-empty-symbol" aria-hidden="true">✦</span>
+      <h3>LA NOSTRA STORIA,<br>IN ARRIVO.</h3>
+      <p>Le prime fotografie delle partite saranno pubblicate qui, senza appesantire la homepage.</p>
+      <a href="index.html#partite" class="gallery-back-link">TORNA AL MATCH CENTER ↗</a>
+    </div>
+    <a href="index.html#home" class="gallery-bottom-back">← TORNA AL SITO</a>
+  </section>
+</main>
+<footer class="footer gallery-footer">
+  <div class="footer-top"><div class="footer-brand"><img src="assets/img/stemma.webp" alt="" width="72" height="76"><div><strong>A.S.D. MONTANINO</strong><span>VERDE. BIANCO. NERO.</span></div></div><div class="footer-links"><a href="index.html#partite">PARTITE</a><a href="index.html#rosa">ROSA</a><a href="index.html#statistiche">STATISTICHE</a><a href="galleria.html">GALLERIA</a><a href="index.html#sponsor">SPONSOR</a></div></div>
+  <div class="footer-bottom"><span>© 2026 A.S.D. MONTANINO</span><span>ARCHIVIO FOTOGRAFICO UFFICIALE</span><a href="index.html">HOME ↑</a></div>
+</footer>
+<div id="gallery-lightbox" class="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Foto della partita" hidden>
+  <button id="gallery-lightbox-close" type="button" class="gallery-lightbox-close" aria-label="Chiudi la fotografia">×</button>
+  <button id="gallery-lightbox-prev" type="button" class="gallery-lightbox-nav gallery-lightbox-prev" aria-label="Foto precedente">‹</button>
+  <figure><img id="gallery-lightbox-img" alt=""><figcaption id="gallery-lightbox-caption"></figcaption></figure>
+  <button id="gallery-lightbox-next" type="button" class="gallery-lightbox-nav gallery-lightbox-next" aria-label="Foto successiva">›</button>
+</div>
+</body>
+</html>
