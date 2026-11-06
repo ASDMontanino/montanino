@@ -207,7 +207,6 @@
   function attach(card,m,side){
     if(!side || !card || !m || !m.id)return;
     const details=(SITE_DATA.dettagliPartite||{})[m.id]||{};
-    if(isPlayed(m)&&details.mvp)side.append(make('span','md-mvp-compact','★ MVP · '+details.mvp));
     if(!isPlayed(m) && !hasData(details)) return;
     card.id='partita-'+m.id;
     const panel=make('div','md-report'); panel.id='tabellino-'+m.id;
