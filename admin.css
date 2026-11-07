@@ -45,3 +45,15 @@
 .match-gallery-list .editor-row input,.match-gallery-list .editor-row select{min-width:0;margin:0}
 @media(max-width:900px){.match-gallery-list .editor-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.match-gallery-list .editor-row{grid-template-columns:1fr}}
+
+/* V3.7 — Ordinamento manuale della classifica UISP */
+.standing-column-labels{display:grid;grid-template-columns:46px minmax(170px,1.8fr) 100px 100px 94px;align-items:center;gap:9px;padding:0 10px 8px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.1em}
+#standings-list .editor-row.standing-entity{grid-template-columns:46px minmax(170px,1.8fr) 100px 100px 94px;min-width:0}
+.standing-rank{color:var(--green);font:900 25px 'Barlow Condensed',sans-serif;letter-spacing:.02em;text-align:center;font-variant-numeric:tabular-nums}
+.standing-move-buttons{display:flex;justify-content:center;gap:6px;align-items:center}
+.standing-move-buttons button{width:40px;height:40px;border:1px solid #3b8556;border-radius:6px;background:#173d29;color:#b9ffd0;font-size:22px;font-weight:800;line-height:1}
+.standing-move-buttons button:hover:not(:disabled){background:#2e6c47;color:white}
+.standing-move-buttons button:disabled{opacity:.26;cursor:not-allowed}
+.standings-hint{margin-top:14px}
+@media(max-width:850px){.standing-column-labels{display:none}#standings-list .editor-row.standing-entity{grid-template-columns:48px minmax(125px,1fr) 80px 80px;gap:9px}#standings-list .standing-move-buttons{grid-column:2/-1;justify-content:flex-start}#standings-list .standing-rank{grid-row:1/3}}
+@media(max-width:540px){#standings-list .editor-row.standing-entity{grid-template-columns:48px minmax(0,1fr) minmax(0,1fr)}#standings-list .standing-entity input[data-field="squadra"]{grid-column:2/4}#standings-list .standing-rank{grid-row:1/3}#standings-list .standing-move-buttons{grid-column:2/4}}
