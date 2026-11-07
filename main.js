@@ -33,7 +33,8 @@
 
   const standings = $('standings');
   const list = Array.isArray(SITE_DATA.classifica) ? SITE_DATA.classifica : [];
-  [...list].sort((a,b) => Number(b.punti||0) - Number(a.punti||0)).forEach((team, i) => {
+  // La posizione è gestita manualmente dal pannello admin, anche in caso di pari punti.
+  list.forEach((team, i) => {
     const tr = document.createElement('tr');
     if ((team.squadra || '').toLocaleLowerCase('it') === 'montanino') tr.classList.add('highlight');
     const columns = [String(i+1).padStart(2,'0'), team.squadra, team.giocate, team.punti];
