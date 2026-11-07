@@ -330,11 +330,63 @@
     const number=inp(p.numero??'','number','numero','Numero');number.min=0;number.max=99;number.setAttribute('aria-label','Numero maglia');r.append(number);
     r.append(pick(p.ruolo||'Centrocampista',[['Portiere','Portiere'],['Difensore','Difensore'],['Centrocampista','Centrocampista'],['Attaccante','Attaccante']],'ruolo'),del());
   }
-  function fillStandings(){const node=$('standings-list');node.replaceChildren();C.list(draft.classifica).forEach(t=>{
-    const r=makeRow(node,'standing-entity');const name=inp(t.squadra,'text','squadra');name.setAttribute('aria-label','Squadra');
-    const pg=inp(t.giocate??0,'number','giocate');pg.min=0;pg.setAttribute('aria-label','Partite giocate');
-    const pt=inp(t.punti??0,'number','punti');pt.min=0;pt.setAttribute('aria-label','Punti');r.append(name,pg,pt);
-  });}
+  // L'ordine delle righe è l'ordine ufficiale mostrato nel sito pubblico.
+  // Le frecce non alterano punti o partite: modificano soltanto la posizione.
+  function refreshStandingPositions(){
+    const rows=arr('standings-list');
+    rows.forEach((row,index)=>{
+      const number=row.querySelector('.standing-rank');
+      if(number)number.textContent=String(index+1).padStart(2,'0');
+      const up=row.querySelector('[data-standings-move="-1"]');
+      const down=row.querySelector('[data-standings-move="1"]');
+      if(up)up.disabled=index===0;
+      if(down)down.disabled=index===rows.length-1;
+    });
+  }
+  function moveStandingRow(row,direction){
+    const list=$('standings-list');
+    if(direction===-1){
+      const previous=row.previousElementSibling;
+      if(!previous)return;
+      list.insertBefore(row,previous);
+    }else if(direction===1){
+      const next=row.nextElementSibling;
+      if(!next)return;
+      list.insertBefore(next,row);
+    }else return;
+    refreshStandingPositions();
+    markDirty();
+  }
+  function sortStandingsByPoints(){
+    const list=$('standings-list');
+    // Sort stabile: a pari punti conserva l'ordine già scelto manualmente.
+    const rows=arr('standings-list').sort((a,b)=>Number(read(b,'punti')||0)-Number(read(a,'punti')||0));
+    rows.forEach(row=>list.append(row));
+    refreshStandingPositions();
+    markDirty();
+    msg('Classifica ordinata per punti. Puoi ancora scambiare le squadre con le frecce; premi Salva per pubblicare.');
+  }
+  function fillStandings(){
+    const node=$('standings-list');node.replaceChildren();
+    C.list(draft.classifica).forEach(t=>{
+      const r=makeRow(node,'standing-entity');
+      const rank=el('span','standing-rank');rank.setAttribute('aria-label','Posizione in classifica');
+      const name=inp(t.squadra||'','text','squadra','Squadra');name.setAttribute('aria-label','Squadra');
+      const pg=inp(t.giocate??0,'number','giocate');pg.min=0;pg.setAttribute('aria-label','Partite giocate');
+      const pt=inp(t.punti??0,'number','punti');pt.min=0;pt.setAttribute('aria-label','Punti');
+      const controls=el('div','standing-move-buttons');
+      for(const [direction,glyph,label] of [[-1,'↑','Sposta su'],[1,'↓','Sposta giù']]){
+        const b=el('button','standing-move',glyph);b.type='button';
+        b.dataset.standingsMove=String(direction);
+        b.setAttribute('aria-label',label+' '+(t.squadra||'squadra')+' in classifica');
+        b.title=label+' di una posizione';
+        b.addEventListener('click',()=>moveStandingRow(r,direction));
+        controls.append(b);
+      }
+      r.append(rank,name,pg,pt,controls);
+    });
+    refreshStandingPositions();
+  }
   // I gruppi personalizzati sono salvati come staffGruppi nel payload JSON già esistente.
   // Nessuna nuova tabella SQL e nessuna migrazione del database.
   const DEFAULT_STAFF_GROUPS=['Dirigenza','Staff tecnico','Comunicazione'];
@@ -495,6 +547,7 @@
   $('add-bench').addEventListener('click',()=>{lineupRow($('bench-list'),{},true);markDirty();refreshMatchSubstitutionChoices();});
   $('add-event').addEventListener('click',()=>{eventRow($('events-list'));markDirty();});
   $('add-player').addEventListener('click',()=>{playerRow();markDirty();refreshRosterChoices();refreshMvpChoices();});
+  $('sort-standings-points').addEventListener('click',sortStandingsByPoints);
   $('players-list').addEventListener('input',()=>{refreshRosterChoices();refreshMvpChoices();});
   $('players-list').addEventListener('change',()=>{refreshRosterChoices();refreshMvpChoices();});
   $('players-list').addEventListener('click',e=>{if(e.target.closest('.delete-row'))setTimeout(()=>{refreshRosterChoices();refreshMvpChoices();},0);});
