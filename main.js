@@ -52,6 +52,87 @@
     return new Intl.DateTimeFormat('it-IT',{day:'2-digit',month:'short',year:'numeric',timeZone:'Europe/Rome'}).format(d).toUpperCase();
   };
   const calendar = Array.isArray(SITE_DATA.calendario) ? SITE_DATA.calendario : [];
+
+  // ANTEPRIMA GALLERIA HOME — mostra in forma compatta le foto già presenti su Supabase.
+  // La galleria completa continua ad avere il proprio archivio e le proprie foto.
+  (function initHomeGallery(){
+    const section=$('foto'),rail=$('home-gallery-track');
+    if(!section||!rail)return;
+    const raw=Array.isArray(SITE_DATA.fotoPartite)?SITE_DATA.fotoPartite:[];
+    const safeFile=file=>/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(String(file||''))&&!String(file).includes('..');
+    const order=new Map(calendar.map((m,index)=>[String(m.id),index]));
+    const matches=new Map(calendar.map(m=>[String(m.id),m]));
+    const galleryPhotos=raw
+      .map((item,index)=>({...item,_index:index}))
+      .filter(item=>item&&item.partita&&safeFile(item.file)&&order.has(String(item.partita)))
+      .sort((a,b)=>order.get(String(b.partita))-order.get(String(a.partita))||a._index-b._index)
+      .slice(0,18);
+    if(!galleryPhotos.length)return;
+    section.hidden=false;
+    const prev=$('home-gallery-prev'),next=$('home-gallery-next'),counter=$('home-gallery-counter');
+    galleryPhotos.forEach((item)=>{
+      const match=matches.get(String(item.partita));
+      const matchName=match?match.casa+' – '+match.ospite:'PARTITA '+String(item.partita);
+      const link=document.createElement('a');link.className='home-gallery-card';
+      link.href='galleria.html';link.setAttribute('aria-label','Apri la galleria: '+(item.didascalia||matchName));
+      const img=document.createElement('img');
+      img.src='assets/img/partite/'+encodeURIComponent(item.file);
+      img.alt=String(item.didascalia||'Foto della partita '+matchName);
+      img.loading='lazy';img.decoding='async';
+      const label=document.createElement('span');label.className='home-gallery-card-label';
+      const kicker=document.createElement('small');kicker.textContent='MATCH GALLERY';
+      const title=document.createElement('strong');title.textContent=String(item.didascalia||matchName);
+      label.append(kicker,title);
+      link.append(img,label);rail.append(link);
+      img.addEventListener('error',()=>{
+        link.remove();
+        if(!rail.children.length){section.hidden=true;return;}
+        updateCounter();
+      },{once:true});
+    });
+
+    const gap=()=>parseFloat(getComputedStyle(rail).columnGap)||14;
+    const step=()=>rail.firstElementChild?rail.firstElementChild.getBoundingClientRect().width+gap():230;
+    const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
+    let userControlled=false,visible=false;
+    function updateCounter(){
+      const total=rail.children.length;
+      const index=total?Math.min(total,Math.round(rail.scrollLeft/Math.max(1,step()))+1):0;
+      counter.textContent='FOTO '+String(index).padStart(2,'0')+' / '+String(total).padStart(2,'0');
+      const overflow=rail.scrollWidth>rail.clientWidth+4;
+      prev.disabled=next.disabled=!overflow;
+    }
+    function advance(direction){
+      const max=Math.max(0,rail.scrollWidth-rail.clientWidth);
+      if(max<=4)return;
+      const left=direction>0
+        ?(rail.scrollLeft>=max-3?0:Math.min(max,rail.scrollLeft+step()))
+        :(rail.scrollLeft<=3?max:Math.max(0,rail.scrollLeft-step()));
+      rail.scrollTo({left,behavior:reduced?'instant':'smooth'});
+      updateCounter();
+    }
+    prev.addEventListener('click',()=>{userControlled=true;advance(-1);});
+    next.addEventListener('click',()=>{userControlled=true;advance(1);});
+    rail.addEventListener('pointerdown',()=>{userControlled=true;},{passive:true});
+    rail.addEventListener('keydown',event=>{
+      if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+        event.preventDefault();userControlled=true;advance(event.key==='ArrowRight'?1:-1);
+      }
+    });
+    rail.addEventListener('scroll',updateCounter,{passive:true});
+    window.addEventListener('resize',updateCounter,{passive:true});
+    if('IntersectionObserver' in window){
+      const observer=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting||false;},{threshold:0.1});
+      observer.observe(section);
+    }else visible=true;
+    if(!reduced){
+      window.setInterval(()=>{
+        if(visible&&!userControlled&&!document.hidden&&!section.matches(':hover')&&!section.contains(document.activeElement))advance(1);
+      },7000);
+    }
+    updateCounter();
+  })();
+
   const calendarNode = $('calendar-list');
   const isPlayed = (m) => Number.isInteger(m.golCasa) && Number.isInteger(m.golOspite);
   const dateLabel = (m) => m.data ? `${formatDate(m.data)}${m.ora ? ' · '+m.ora : ''}` : 'DATA DA DEFINIRE';
