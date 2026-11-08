@@ -620,3 +620,22 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
   .home-gallery-arrows button{height:40px;width:43px}
 }
 @media(prefers-reduced-motion:reduce){.home-gallery-card img,.home-gallery-arrows button{transition:none}}
+
+
+/* V3.9 — scorrimento fotografico continuo e automatico nella home */
+.home-gallery-track{display:block;overflow:hidden;scroll-snap-type:none;scroll-padding:0;padding:2px 0 0;touch-action:auto;scrollbar-width:none}
+.home-gallery-track::-webkit-scrollbar{display:none}
+.home-gallery-marquee{display:flex;align-items:stretch;gap:14px;width:max-content;animation:home-gallery-auto-slide var(--home-gallery-duration,55s) linear infinite;will-change:transform}
+.home-gallery-sequence{display:flex;flex:none;gap:14px;width:max-content}
+.home-gallery-sequence .home-gallery-card{scroll-snap-align:none}
+.home-gallery-sequence[aria-hidden="true"] .home-gallery-card{pointer-events:none}
+@keyframes home-gallery-auto-slide{to{transform:translate3d(var(--home-gallery-distance,-1200px),0,0)}}
+.home-gallery-track:focus-within .home-gallery-marquee{animation-play-state:paused}
+@media(max-width:680px){
+  .home-gallery-track{gap:0;padding-bottom:0}
+  .home-gallery-marquee,.home-gallery-sequence{gap:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .home-gallery-marquee{animation:none!important;will-change:auto}
+  .home-gallery-track{overflow-x:auto;touch-action:pan-x}
+}
