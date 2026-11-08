@@ -53,84 +53,89 @@
   };
   const calendar = Array.isArray(SITE_DATA.calendario) ? SITE_DATA.calendario : [];
 
-  // ANTEPRIMA GALLERIA HOME — mostra in forma compatta le foto già presenti su Supabase.
-  // La galleria completa continua ad avere il proprio archivio e le proprie foto.
+  // ANTEPRIMA GALLERIA HOME — movimento continuo, una piccola selezione dal database.
+  // Le immagini sono le stesse della galleria completa: non vengono duplicate nei dati.
   (function initHomeGallery(){
     const section=$('foto'),rail=$('home-gallery-track');
     if(!section||!rail)return;
-    const raw=Array.isArray(SITE_DATA.fotoPartite)?SITE_DATA.fotoPartite:[];
+    const list=Array.isArray(SITE_DATA.fotoPartite)?SITE_DATA.fotoPartite:[];
     const safeFile=file=>/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(String(file||''))&&!String(file).includes('..');
     const order=new Map(calendar.map((m,index)=>[String(m.id),index]));
     const matches=new Map(calendar.map(m=>[String(m.id),m]));
-    const galleryPhotos=raw
+    const photos=list
       .map((item,index)=>({...item,_index:index}))
-      .filter(item=>item&&item.partita&&safeFile(item.file)&&order.has(String(item.partita)))
+      .filter(item=>item.partita&&safeFile(item.file)&&order.has(String(item.partita)))
       .sort((a,b)=>order.get(String(b.partita))-order.get(String(a.partita))||a._index-b._index)
-      .slice(0,18);
-    if(!galleryPhotos.length)return;
+      .slice(0,10);
+    if(!photos.length)return;
     section.hidden=false;
-    const prev=$('home-gallery-prev'),next=$('home-gallery-next'),counter=$('home-gallery-counter');
-    galleryPhotos.forEach((item)=>{
+    const motion=document.createElement('div');motion.className='home-gallery-marquee';
+    const originals=document.createElement('div');originals.className='home-gallery-sequence';
+    const duplicates=document.createElement('div');duplicates.className='home-gallery-sequence';
+    duplicates.setAttribute('aria-hidden','true');
+    motion.append(originals,duplicates);rail.replaceChildren(motion);
+
+    function makeCard(item){
       const match=matches.get(String(item.partita));
-      const matchName=match?match.casa+' – '+match.ospite:'PARTITA '+String(item.partita);
+      const name=match?match.casa+' – '+match.ospite:'PARTITA '+String(item.partita);
       const link=document.createElement('a');link.className='home-gallery-card';
-      link.href='galleria.html';link.setAttribute('aria-label','Apri la galleria: '+(item.didascalia||matchName));
+      link.href='galleria.html';link.dataset.file=String(item.file);
+      link.setAttribute('aria-label','Apri tutte le foto: '+(item.didascalia||name));
       const img=document.createElement('img');
       img.src='assets/img/partite/'+encodeURIComponent(item.file);
-      img.alt=String(item.didascalia||'Foto della partita '+matchName);
+      img.alt=String(item.didascalia||'Foto della partita '+name);
       img.loading='lazy';img.decoding='async';
       const label=document.createElement('span');label.className='home-gallery-card-label';
       const kicker=document.createElement('small');kicker.textContent='MATCH GALLERY';
-      const title=document.createElement('strong');title.textContent=String(item.didascalia||matchName);
-      label.append(kicker,title);
-      link.append(img,label);rail.append(link);
+      const title=document.createElement('strong');title.textContent=String(item.didascalia||name);
+      label.append(kicker,title);link.append(img,label);
       img.addEventListener('error',()=>{
-        link.remove();
-        if(!rail.children.length){section.hidden=true;return;}
-        updateCounter();
+        for(const card of motion.querySelectorAll('.home-gallery-card')){
+          if(card.dataset.file===item.file)card.remove();
+        }
+        if(!originals.childElementCount){section.hidden=true;return;}
+        configureLoop();
       },{once:true});
-    });
+      return link;
+    }
+    photos.forEach(item=>originals.append(makeCard(item)));
 
-    const gap=()=>parseFloat(getComputedStyle(rail).columnGap)||14;
-    const step=()=>rail.firstElementChild?rail.firstElementChild.getBoundingClientRect().width+gap():230;
-    const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
-    let userControlled=false,visible=false;
-    function updateCounter(){
-      const total=rail.children.length;
-      const index=total?Math.min(total,Math.round(rail.scrollLeft/Math.max(1,step()))+1):0;
-      counter.textContent='FOTO '+String(index).padStart(2,'0')+' / '+String(total).padStart(2,'0');
-      const overflow=rail.scrollWidth>rail.clientWidth+4;
-      prev.disabled=next.disabled=!overflow;
+    function decorativeCopy(card){
+      const copy=card.cloneNode(true);
+      copy.removeAttribute('href');copy.removeAttribute('aria-label');
+      copy.setAttribute('aria-hidden','true');copy.tabIndex=-1;
+      const image=copy.querySelector('img');if(image){image.alt='';image.loading='lazy';}
+      return copy;
     }
-    function advance(direction){
-      const max=Math.max(0,rail.scrollWidth-rail.clientWidth);
-      if(max<=4)return;
-      const left=direction>0
-        ?(rail.scrollLeft>=max-3?0:Math.min(max,rail.scrollLeft+step()))
-        :(rail.scrollLeft<=3?max:Math.max(0,rail.scrollLeft-step()));
-      rail.scrollTo({left,behavior:reduced?'instant':'smooth'});
-      updateCounter();
-    }
-    prev.addEventListener('click',()=>{userControlled=true;advance(-1);});
-    next.addEventListener('click',()=>{userControlled=true;advance(1);});
-    rail.addEventListener('pointerdown',()=>{userControlled=true;},{passive:true});
-    rail.addEventListener('keydown',event=>{
-      if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
-        event.preventDefault();userControlled=true;advance(event.key==='ArrowRight'?1:-1);
+
+    function configureLoop(){
+      // Un unico ciclo comprende almeno tutta la larghezza del dispositivo.
+      const firstBatch=[...originals.children].filter(card=>!card.hasAttribute('aria-hidden'));
+      if(!firstBatch.length)return;
+      originals.querySelectorAll('[aria-hidden="true"]').forEach(card=>card.remove());
+      const minimum=rail.clientWidth+firstBatch[0].getBoundingClientRect().width+22;
+      let i=0;
+      while(originals.scrollWidth<minimum && i<40){
+        originals.append(decorativeCopy(firstBatch[i%firstBatch.length]));
+        i++;
       }
-    });
-    rail.addEventListener('scroll',updateCounter,{passive:true});
-    window.addEventListener('resize',updateCounter,{passive:true});
-    if('IntersectionObserver' in window){
-      const observer=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting||false;},{threshold:0.1});
-      observer.observe(section);
-    }else visible=true;
-    if(!reduced){
-      window.setInterval(()=>{
-        if(visible&&!userControlled&&!document.hidden&&!section.matches(':hover')&&!section.contains(document.activeElement))advance(1);
-      },7000);
+      duplicates.replaceChildren();
+      [...originals.children].forEach(card=>duplicates.append(decorativeCopy(card)));
+      const gap=parseFloat(getComputedStyle(motion).columnGap)||14;
+      const distance=originals.getBoundingClientRect().width+gap;
+      if(distance<=0)return;
+      motion.style.setProperty('--home-gallery-distance',distance+'px');
+      motion.style.setProperty('--home-gallery-duration',Math.max(24,distance/38).toFixed(1)+'s');
+      // Un cambio di dimensioni riparte dalla prima foto evitando spazi vuoti.
+      motion.style.animation='none';
+      void motion.offsetWidth;
+      motion.style.animation='';
     }
-    updateCounter();
+    requestAnimationFrame(configureLoop);
+    if(typeof ResizeObserver!=='undefined'){
+      const observer=new ResizeObserver(()=>configureLoop());
+      observer.observe(rail);
+    }else window.addEventListener('resize',configureLoop,{passive:true});
   })();
 
   const calendarNode = $('calendar-list');
