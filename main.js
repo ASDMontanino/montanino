@@ -197,13 +197,11 @@
       window.setInterval(()=>{
         if(document.hidden||section.hidden)return;
         const slots=shuffle(selected.map((item,slot)=>item?slot:-1).filter(slot=>slot!==-1));
+        const reserved=new Set();
         for(const slot of slots.slice(0,Math.min(2,slots.length))){
-          const next=alternative();
+          const next=shuffle(pool.filter(p=>!failed.has(p.key)&&!reserved.has(p.key)&&!selected.some(s=>s?.key===p.key)))[0];
           if(!next)break;
-          // Prenotiamo subito la foto per non selezionarla due volte nello stesso ciclo.
-          const before=selected[slot];selected[slot]=next;
-          // updateSlot controlla il cambio, quindi ripristiniamo fino al caricamento.
-          selected[slot]=before;
+          reserved.add(next.key);
           updateSlot(slot,next);
         }
       },20000);
