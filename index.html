@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261106">
+  <link rel="stylesheet" href="style.css?v=20261108">
   <script src="data.js" defer></script>
   <script src="tabellini.js?v=20261106b" defer></script>
   <script src="config.js" defer></script>
@@ -77,6 +77,25 @@
       <article class="match-card match-last reveal" aria-labelledby="last-title"><div class="match-card-top"><span class="match-label">ULTIMO INCONTRO</span><span class="match-kind" id="last-competition">RISULTATI</span></div><h3 id="last-title">FULL TIME</h3><div class="match-date" id="last-date">DA AGGIORNARE</div><div class="match-teams"><strong id="last-home">MONTANINO</strong><span class="last-score" id="last-score">— : —</span><strong id="last-away">DA DEFINIRE</strong></div><div class="match-footer"><span id="last-status">RISULTATO IN AGGIORNAMENTO</span><span class="ft-badge">FT</span></div><a id="last-report-link" class="match-report-cta" href="#calendario" hidden>APRI TABELLINO E VOTI <span aria-hidden="true">↗</span></a></article>
     </div>
     <div class="match-notice"><span>ⓘ</span> RISULTATI E DATE CONFERMATE DA <a href="https://gestionalecalcionuovo.uisp.it/AREZZO/25/57" target="_blank" rel="noopener noreferrer">UISP AREZZO</a>, CONSULTAZIONE DEL 30/10/2026. LE MODIFICHE DEL CLUB SARANNO VISIBILI DOPO IL SALVATAGGIO DAL PANNELLO ADMIN.</div>
+  </section>
+
+  <section class="section section-home-gallery" id="foto" aria-labelledby="home-gallery-title" hidden>
+    <div class="home-gallery-header">
+      <div class="home-gallery-intro">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> DAL CAMPO / PHOTO STORIES</p>
+        <h2 id="home-gallery-title">SCATTI <span>BIANCOVERDI.</span></h2>
+        <p class="home-gallery-subtitle">Un assaggio delle nostre partite, un'immagine alla volta.</p>
+      </div>
+      <div class="home-gallery-controls">
+        <div class="home-gallery-arrows" aria-label="Controlli delle fotografie">
+          <button type="button" id="home-gallery-prev" aria-label="Fotografie precedenti">←</button>
+          <button type="button" id="home-gallery-next" aria-label="Fotografie successive">→</button>
+        </div>
+        <a class="home-gallery-all" href="galleria.html">TUTTA LA GALLERIA <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+    <div id="home-gallery-track" class="home-gallery-track" tabindex="0" aria-label="Anteprima delle fotografie delle partite, scorri orizzontalmente"></div>
+    <div class="home-gallery-footer"><span id="home-gallery-counter" aria-live="off"></span><span>SCORRI CON IL DITO O USA LE FRECCE</span></div>
   </section>
 
   <section class="section section-calendar" id="calendario" aria-labelledby="calendar-title">
