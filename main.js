@@ -53,21 +53,35 @@
   };
   const calendar = Array.isArray(SITE_DATA.calendario) ? SITE_DATA.calendario : [];
 
-  // ANTEPRIMA GALLERIA HOME — movimento continuo, una piccola selezione dal database.
-  // Le immagini sono le stesse della galleria completa: non vengono duplicate nei dati.
+  // ANTEPRIMA GALLERIA HOME — scorrimento continuo con fotografie casuali a rotazione.
+  // Tutte le foto provengono dalla stessa galleria Supabase, senza duplicare i dati.
   (function initHomeGallery(){
     const section=$('foto'),rail=$('home-gallery-track');
     if(!section||!rail)return;
-    const list=Array.isArray(SITE_DATA.fotoPartite)?SITE_DATA.fotoPartite:[];
+    const raw=Array.isArray(SITE_DATA.fotoPartite)?SITE_DATA.fotoPartite:[];
     const safeFile=file=>/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(String(file||''))&&!String(file).includes('..');
-    const order=new Map(calendar.map((m,index)=>[String(m.id),index]));
     const matches=new Map(calendar.map(m=>[String(m.id),m]));
-    const photos=list
-      .map((item,index)=>({...item,_index:index}))
-      .filter(item=>item.partita&&safeFile(item.file)&&order.has(String(item.partita)))
-      .sort((a,b)=>order.get(String(b.partita))-order.get(String(a.partita))||a._index-b._index)
-      .slice(0,10);
-    if(!photos.length)return;
+    const seen=new Set();
+    const pool=raw.filter(p=>{
+      if(!p||!p.partita||!matches.has(String(p.partita))||!safeFile(p.file))return false;
+      const key=String(p.partita)+'|'+String(p.file).toLowerCase();
+      if(seen.has(key))return false;
+      seen.add(key);return true;
+    }).map(p=>({...p,key:String(p.partita)+'|'+String(p.file).toLowerCase()}));
+    if(!pool.length)return;
+
+    // Estrazione casuale a ogni apertura; lasciamo una foto fuori per le successive rotazioni.
+    const shuffle=items=>{
+      const shuffled=[...items];
+      for(let i=shuffled.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+      }
+      return shuffled;
+    };
+    const initialCount=Math.min(10,pool.length>1?pool.length-1:1);
+    const selected=shuffle(pool).slice(0,initialCount);
+    const failed=new Set();
     section.hidden=false;
     const motion=document.createElement('div');motion.className='home-gallery-marquee';
     const originals=document.createElement('div');originals.className='home-gallery-sequence';
@@ -75,30 +89,30 @@
     duplicates.setAttribute('aria-hidden','true');
     motion.append(originals,duplicates);rail.replaceChildren(motion);
 
-    function makeCard(item){
+    const photoSrc=item=>'assets/img/partite/'+encodeURIComponent(item.file);
+    const photoInfo=item=>{
       const match=matches.get(String(item.partita));
       const name=match?match.casa+' – '+match.ospite:'PARTITA '+String(item.partita);
+      return {name,caption:String(item.didascalia||name),alt:String(item.didascalia||'Foto della partita '+name)};
+    };
+    const alternative=()=>shuffle(pool.filter(p=>!failed.has(p.key)&&!selected.some(s=>s?.key===p.key)))[0];
+
+    function makeCard(item,slot){
+      const info=photoInfo(item);
       const link=document.createElement('a');link.className='home-gallery-card';
-      link.href='galleria.html';link.dataset.file=String(item.file);
-      link.setAttribute('aria-label','Apri tutte le foto: '+(item.didascalia||name));
+      link.dataset.slot=String(slot);
+      link.href='galleria.html';
+      link.setAttribute('aria-label','Apri tutte le foto: '+info.caption);
       const img=document.createElement('img');
-      img.src='assets/img/partite/'+encodeURIComponent(item.file);
-      img.alt=String(item.didascalia||'Foto della partita '+name);
+      img.src=photoSrc(item);img.alt=info.alt;
       img.loading='lazy';img.decoding='async';
       const label=document.createElement('span');label.className='home-gallery-card-label';
       const kicker=document.createElement('small');kicker.textContent='MATCH GALLERY';
-      const title=document.createElement('strong');title.textContent=String(item.didascalia||name);
+      const title=document.createElement('strong');title.textContent=info.caption;
       label.append(kicker,title);link.append(img,label);
-      img.addEventListener('error',()=>{
-        for(const card of motion.querySelectorAll('.home-gallery-card')){
-          if(card.dataset.file===item.file)card.remove();
-        }
-        if(!originals.childElementCount){section.hidden=true;return;}
-        configureLoop();
-      },{once:true});
+      img.addEventListener('error',()=>{if(selected[slot]?.key===item.key)missingPhoto(slot,item);},{once:true});
       return link;
     }
-    photos.forEach(item=>originals.append(makeCard(item)));
 
     function decorativeCopy(card){
       const copy=card.cloneNode(true);
@@ -109,15 +123,14 @@
     }
 
     function configureLoop(){
-      // Un unico ciclo comprende almeno tutta la larghezza del dispositivo.
+      // Replichiamo la sequenza per coprire anche gli schermi larghi senza vuoti.
       const firstBatch=[...originals.children].filter(card=>!card.hasAttribute('aria-hidden'));
-      if(!firstBatch.length)return;
+      if(!firstBatch.length){section.hidden=true;return;}
       originals.querySelectorAll('[aria-hidden="true"]').forEach(card=>card.remove());
       const minimum=rail.clientWidth+firstBatch[0].getBoundingClientRect().width+22;
       let i=0;
-      while(originals.scrollWidth<minimum && i<40){
-        originals.append(decorativeCopy(firstBatch[i%firstBatch.length]));
-        i++;
+      while(originals.scrollWidth<minimum&&i<40){
+        originals.append(decorativeCopy(firstBatch[i%firstBatch.length]));i++;
       }
       duplicates.replaceChildren();
       [...originals.children].forEach(card=>duplicates.append(decorativeCopy(card)));
@@ -126,16 +139,75 @@
       if(distance<=0)return;
       motion.style.setProperty('--home-gallery-distance',(-distance)+'px');
       motion.style.setProperty('--home-gallery-duration',Math.max(24,distance/38).toFixed(1)+'s');
-      // Un cambio di dimensioni riparte dalla prima foto evitando spazi vuoti.
       motion.style.animation='none';
       void motion.offsetWidth;
       motion.style.animation='';
     }
+
+    function missingPhoto(slot,item){
+      failed.add(item.key);
+      const replacement=alternative();
+      if(replacement){
+        updateSlot(slot,replacement,false);
+      }else{
+        selected[slot]=null;
+        motion.querySelectorAll('.home-gallery-card[data-slot="'+slot+'"]').forEach(card=>card.remove());
+        configureLoop();
+      }
+    }
+
+    function updateSlot(slot,item,fade=true){
+      if(!item||selected[slot]?.key===item.key)return;
+      // Precarichiamo prima di toccare gli scatti visibili: niente flash o foto rotte.
+      const loader=new Image();
+      loader.onload=()=>{
+        const cards=[...motion.querySelectorAll('.home-gallery-card[data-slot="'+slot+'"]')];
+        if(!cards.length)return;
+        const info=photoInfo(item);
+        const change=()=>{
+          selected[slot]=item;
+          cards.forEach(card=>{
+            const img=card.querySelector('img');
+            img.src=photoSrc(item);
+            img.alt=card.hasAttribute('aria-hidden')?'':info.alt;
+            const title=card.querySelector('.home-gallery-card-label strong');
+            if(title)title.textContent=info.caption;
+            if(!card.hasAttribute('aria-hidden'))card.setAttribute('aria-label','Apri tutte le foto: '+info.caption);
+            img.classList.remove('is-switching');
+          });
+        };
+        if(fade){
+          cards.forEach(card=>card.querySelector('img')?.classList.add('is-switching'));
+          window.setTimeout(change,280);
+        }else change();
+      };
+      loader.onerror=()=>{failed.add(item.key);};
+      loader.src=photoSrc(item);
+    }
+
+    selected.forEach((item,slot)=>originals.append(makeCard(item,slot)));
     requestAnimationFrame(configureLoop);
     if(typeof ResizeObserver!=='undefined'){
       const observer=new ResizeObserver(()=>configureLoop());
       observer.observe(rail);
     }else window.addEventListener('resize',configureLoop,{passive:true});
+
+    // Due fotografie casuali si rinnovano ogni 20 secondi, senza fermare il nastro.
+    if(pool.length>1){
+      window.setInterval(()=>{
+        if(document.hidden||section.hidden)return;
+        const slots=shuffle(selected.map((item,slot)=>item?slot:-1).filter(slot=>slot!==-1));
+        for(const slot of slots.slice(0,Math.min(2,slots.length))){
+          const next=alternative();
+          if(!next)break;
+          // Prenotiamo subito la foto per non selezionarla due volte nello stesso ciclo.
+          const before=selected[slot];selected[slot]=next;
+          // updateSlot controlla il cambio, quindi ripristiniamo fino al caricamento.
+          selected[slot]=before;
+          updateSlot(slot,next);
+        }
+      },20000);
+    }
   })();
 
   const calendarNode = $('calendar-list');
