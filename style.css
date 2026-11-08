@@ -581,3 +581,42 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 @media(min-width:851px) and (max-width:1100px){.stat-highlights{grid-template-columns:repeat(3,minmax(0,1fr))}.nav{gap:6px}.nav-gallery{padding:9px 7px;font-size:9px}}
 @media(max-width:850px){.nav-gallery{display:flex;justify-content:space-between;padding:14px 13px;margin-top:9px;font-size:12px}}
 @media(max-width:560px){.md-mvp{gap:11px;padding:12px}.md-mvp-symbol{width:44px;height:44px;font-size:23px}.md-mvp-photo{width:60px;height:70px}.md-mvp-text strong{font-size:25px}}
+
+
+/* V3.8 — Anteprima compatta e scorrevole delle foto delle partite nella home */
+.section-home-gallery{background:linear-gradient(180deg,#0a1d11 0%,#0c2417 50%,#08190f 100%);padding-top:clamp(55px,6vw,86px);padding-bottom:clamp(65px,6vw,93px);border-top:1px solid #28563a;border-bottom:1px solid #275438}
+.home-gallery-header{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;margin-bottom:26px;flex-wrap:wrap}
+.section-home-gallery h2{font:900 clamp(46px,5.8vw,76px)/.92 var(--title);letter-spacing:-.015em;margin:0}
+.section-home-gallery h2 span{color:var(--green)}
+.home-gallery-intro .eyebrow{margin-bottom:14px}
+.home-gallery-subtitle{color:#aecfb8;font-size:12px;line-height:1.65;letter-spacing:.02em;margin:13px 0 0}
+.home-gallery-controls{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.home-gallery-arrows{display:flex;gap:8px}
+.home-gallery-arrows button{height:44px;width:48px;border:1px solid #4f9c67;background:#143d27;color:#d3ffe0;display:grid;place-items:center;border-radius:4px;font:700 24px var(--body);transition:background .2s ease,border-color .2s ease}
+.home-gallery-arrows button:hover:not(:disabled){background:#2a7849;border-color:#8be2a5}
+.home-gallery-arrows button:focus-visible,.home-gallery-card:focus-visible,.home-gallery-all:focus-visible{outline:2px solid #9affb9;outline-offset:3px}
+.home-gallery-arrows button:disabled{opacity:.3;cursor:not-allowed}
+.home-gallery-all{font:900 11px var(--body);letter-spacing:.09em;color:#a8f3bd;display:inline-flex;gap:11px;align-items:center;min-height:44px;text-decoration:none;border-bottom:1px solid #4a9365}
+.home-gallery-all:hover{color:white;border-bottom-color:white}
+.home-gallery-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:2px;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#3b925b #0a1c11;padding:2px 2px 14px;min-width:0;touch-action:pan-x pan-y}
+.home-gallery-card{position:relative;flex:0 0 clamp(198px,19vw,252px);aspect-ratio:16/10;min-width:0;overflow:hidden;display:block;scroll-snap-align:start;background:linear-gradient(135deg,#1b5032,#081b10);border:1px solid #39734e;border-radius:4px;text-decoration:none;color:#fff}
+.home-gallery-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .42s ease,filter .42s ease}
+.home-gallery-card::after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(0deg,#021208e8,transparent);pointer-events:none}
+.home-gallery-card-label{position:absolute;z-index:1;left:12px;right:10px;bottom:12px;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.home-gallery-card-label small{font:900 8px var(--body);letter-spacing:.15em;color:#8cf5ad}
+.home-gallery-card-label strong{font:900 clamp(13px,1.15vw,16px)/1.13 var(--title);letter-spacing:.03em;color:white;text-transform:uppercase;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.home-gallery-card:hover img{transform:scale(1.06);filter:saturate(1.12)}
+.home-gallery-footer{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-top:8px;font:800 10px var(--body);letter-spacing:.14em;color:#85b99a}
+#home-gallery-counter{color:#9df0b5;font-variant-numeric:tabular-nums}
+@media(max-width:680px){
+  .section-home-gallery{padding-top:56px;padding-bottom:63px}
+  .home-gallery-header{align-items:flex-start;gap:20px}
+  .section-home-gallery h2{font-size:clamp(43px,10.6vw,65px)}
+  .home-gallery-controls{width:100%;justify-content:space-between}
+  .home-gallery-card{flex-basis:208px;aspect-ratio:5/3.7}
+  .home-gallery-track{gap:11px;scrollbar-width:none}
+  .home-gallery-track::-webkit-scrollbar{display:none}
+  .home-gallery-footer{font-size:8px;letter-spacing:.06em}
+  .home-gallery-arrows button{height:40px;width:43px}
+}
+@media(prefers-reduced-motion:reduce){.home-gallery-card img,.home-gallery-arrows button{transition:none}}
