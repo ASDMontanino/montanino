@@ -639,3 +639,9 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
   .home-gallery-marquee{animation:none!important;will-change:auto}
   .home-gallery-track{overflow-x:auto;touch-action:pan-x}
 }
+
+
+/* V3.10 — cambio casuale delicato, senza fermare lo scorrimento. */
+.home-gallery-card img{transition:transform .42s ease,filter .42s ease,opacity .28s ease}
+.home-gallery-card img.is-switching{opacity:.15}
+@media(prefers-reduced-motion:reduce){.home-gallery-card img{transition:none!important}}
