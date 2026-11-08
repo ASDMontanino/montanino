@@ -124,7 +124,7 @@
       const gap=parseFloat(getComputedStyle(motion).columnGap)||14;
       const distance=originals.getBoundingClientRect().width+gap;
       if(distance<=0)return;
-      motion.style.setProperty('--home-gallery-distance',distance+'px');
+      motion.style.setProperty('--home-gallery-distance',(-distance)+'px');
       motion.style.setProperty('--home-gallery-duration',Math.max(24,distance/38).toFixed(1)+'s');
       // Un cambio di dimensioni riparte dalla prima foto evitando spazi vuoti.
       motion.style.animation='none';
