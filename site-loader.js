@@ -27,5 +27,5 @@
     }
   }
   SITE_DATA=window.MontaninoCommon.prepare(SITE_DATA);
-  try{await addScript('main.js?v=20261107');}catch(e){console.error('Impossibile caricare main.js',e);}
+  try{await addScript('main.js?v=20261108');}catch(e){console.error('Impossibile caricare main.js',e);}
 })();
