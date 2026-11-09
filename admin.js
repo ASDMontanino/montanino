@@ -464,7 +464,7 @@
     const photoKeys=new Set();
     for(const photo of draft.fotoPartite){
       if(!validMatches.has(photo.partita))throw Error('Fotografia della Galleria con partita non valida.');
-      if(!isSafePhotoFile(photo.file))throw Error('Nome file foto non valido: '+photo.file+'. Inserisci solo il nome, senza cartelle.');
+      if(!isSafePhotoFile(photo.file))throw Error('Nome file foto non valido: '+photo.file+'. Usa il nome GitHub o il riferimento Supabase sb: originale.');
       const key=photo.partita+'|'+photo.file.toLocaleLowerCase('it');
       if(photoKeys.has(key))throw Error('Foto duplicata per '+photo.partita+': '+photo.file);
       photoKeys.add(key);
@@ -526,7 +526,9 @@
     try{const {data,error}=await sb.auth.signInWithPassword({email:$('login-email').value.trim(),password:$('login-password').value});if(error)throw error;await enter(data.user);}catch(err){msg('Accesso non riuscito: '+err.message,true);}finally{btn.disabled=false;$('login-password').value='';}
   });
   $('logout').addEventListener('click',async()=>{if(dirty&&!confirm('Hai modifiche non salvate. Vuoi uscire?'))return;await sb.auth.signOut();location.reload();});
-  $('editor').addEventListener('input',markDirty);$('editor').addEventListener('change',markDirty);
+  // Selezionare le foto o la partita nell'upload non modifica i dati pubblicati.
+  const editorChanged=event=>{if(!event.target.closest('.gallery-uploader'))markDirty();};
+  $('editor').addEventListener('input',editorChanged);$('editor').addEventListener('change',editorChanged);
   $('match-select').addEventListener('change',e=>{
     const previous=activeMatchId;
     try{captureMatch();showMatch(e.target.value);}catch(err){msg(err.message,true);$('match-select').value=previous;}
