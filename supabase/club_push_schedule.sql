@@ -1,7 +1,5 @@
--- Run after storing the worker secret in Vault as montanino_push_worker.
--- Set the same value in the Edge Function as CLUB_PUSH_WORKER_SECRET.
 create extension if not exists pg_cron;
-create extension if not exists pg_net;
+create extension if not exists pg_net with schema extensions;
 
 select cron.schedule(
   'montanino-club-push',
@@ -13,6 +11,11 @@ select cron.schedule(
       body := '{}'::jsonb,
       timeout_milliseconds := 45000
     )
-    from vault.decrypted_secrets where name = 'montanino_push_worker';
+    from vault.decrypted_secrets
+    where name = 'montanino_push_worker'
+      and (
+        not exists (select 1 from vault.secrets where name = 'montanino_push_vapid') or
+        exists (select 1 from public.club_push_jobs where next_attempt <= now())
+      );
   $job$
 );

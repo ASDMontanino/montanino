@@ -1,5 +1,5 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
-const CACHE_NAME = 'montanino-shell-20261109-push-a1';
+const CACHE_NAME = 'montanino-shell-20261109-push-pilot';
 const SHELL = [
   './index.html',
   './galleria.html',
@@ -80,7 +80,7 @@ self.addEventListener('fetch', event => {
 });
 
 function pushDestination(path) {
-  const allowed = /^index\.html#partita-[AR]\d{2}$|^galleria\.html\?partita=[AR]\d{2}$/;
+  const allowed = /^(?:index\.html#partita-[AR]\d{2}|galleria\.html\?partita=[AR]\d{2}|notifiche\.html\?prova=1)$/;
   return new URL(allowed.test(path) ? path : 'index.html', self.registration.scope).href;
 }
 

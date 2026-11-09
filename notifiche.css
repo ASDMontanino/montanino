@@ -39,3 +39,15 @@
 .push-actions button:disabled { opacity: .45; cursor: default; }
 .push-secondary { padding: 11px 13px; min-height: 44px; background: transparent; border: 1px solid var(--line); color: var(--white); }
 .push-note { margin-top: 24px; font-size: .85rem; }
+
+.push-page .push-pilot { flex-wrap: wrap; justify-content: space-between; margin-bottom: 16px; }
+.push-page .push-pilot input {
+  height: 42px;
+  width: min(100%, 16ch);
+  background: var(--black);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--white);
+  padding: 8px;
+  font: 1rem monospace;
+}

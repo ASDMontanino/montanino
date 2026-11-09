@@ -9,20 +9,16 @@ pubblicazioni online. Le convocazioni richiedono una funzione separata.
 
 ### Attivazione su Supabase
 
-1. Genera una coppia VAPID con `npx web-push@3.6.7 generate-vapid-keys` e un token
-   per il worker con `openssl rand -hex 32`. Conserva la coppia VAPID tra i deploy.
-2. Aggiungi i segreti Edge `CLUB_PUSH_VAPID_PUBLIC`, `CLUB_PUSH_VAPID_PRIVATE`,
-   `CLUB_PUSH_VAPID_SUBJECT` (un recapito reale in formato `mailto:`) e
-   `CLUB_PUSH_WORKER_SECRET`. Inserisci lo stesso token worker in Vault come
-   `montanino_push_worker`. Le chiavi private e il token restano in Supabase.
-3. Applica `supabase/migrations/20261109212500_club_push.sql` e distribuisci
+1. Applica `supabase/migrations/20261109212500_club_push.sql` e distribuisci
    `club-push` con `supabase functions deploy club-push --no-verify-jwt`.
-   Il worker verifica il token dedicato. Le chiamate del browser riguardano
-   soltanto l’iscrizione corrente e non possono inviare avvisi.
-4. Esegui `supabase/club_push_schedule.sql` nel progetto del club. Cron chiama
-   il worker ogni minuto. Prima del rilascio prova l’iscrizione e la consegna
-   su un dispositivo autorizzato, con una pubblicazione di test in un progetto
-   separato o prima di aprire le iscrizioni al pubblico.
+   Il worker autentica le chiamate con un token creato dalla migrazione e conservato in Vault.
+2. Esegui `supabase/club_push_schedule.sql` nel progetto del club. Il worker genera
+   la coppia VAPID al primo avvio e la conserva in Vault. Cron controlla la coda ogni minuto.
+3. Per il collaudo, apri `notifiche.html?prova=1` dall’app pubblica installata.
+   Recupera il codice `montanino_push_pilot` in Vault e condividilo con chi prova.
+   La prima iscrizione di ogni dispositivo autorizzato riceve un avviso di prova.
+4. Dopo aver verificato la consegna, aggiorna `montanino_push_pilot` in Vault al
+   valore `off` per aprire le iscrizioni pubbliche.
 
 Per mettere in pausa la consegna, disattiva il job `montanino-club-push`.
 I lavori non consegnati scadono dopo sei ore.

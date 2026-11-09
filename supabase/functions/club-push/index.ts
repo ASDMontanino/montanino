@@ -1,17 +1,12 @@
 import { createClient } from "npm:@supabase/supabase-js@2.110.0";
 import webPush from "npm:web-push@3.6.7";
-import { ECDH, timingSafeEqual } from "node:crypto";
+import { ECDH } from "node:crypto";
 
 const allowedOrigin = Deno.env.get("CLUB_PUSH_ORIGIN") || "https://asdmontanino.github.io";
-const workerSecret = Deno.env.get("CLUB_PUSH_WORKER_SECRET") || "";
-const vapid = {
-  subject: Deno.env.get("CLUB_PUSH_VAPID_SUBJECT") || "",
-  publicKey: Deno.env.get("CLUB_PUSH_VAPID_PUBLIC") || "",
-  privateKey: Deno.env.get("CLUB_PUSH_VAPID_PRIVATE") || "",
-};
-const configured = Boolean(vapid.subject && vapid.publicKey && vapid.privateKey && workerSecret.length >= 32);
+const vapidSubject = Deno.env.get("CLUB_PUSH_VAPID_SUBJECT") || allowedOrigin + "/montanino/";
 const categories = new Set(["calendar", "result", "photos"]);
-const encoder = new TextEncoder();
+
+type VapidKeys = { publicKey: string; privateKey: string };
 
 type Job = {
   job_id: string;
@@ -60,7 +55,7 @@ function database() {
   });
 }
 
-async function send(db: ReturnType<typeof database>, job: Job) {
+async function send(db: ReturnType<typeof database>, job: Job, keys: VapidKeys) {
   let status = 400;
   if (validEndpoint(job.endpoint)) {
     try {
@@ -68,7 +63,7 @@ async function send(db: ReturnType<typeof database>, job: Job) {
         endpoint: job.endpoint,
         keys: { p256dh: job.p256dh, auth: job.auth_secret },
       }, JSON.stringify(job.message), {
-        vapidDetails: vapid,
+        vapidDetails: { subject: vapidSubject, ...keys },
         TTL: job.ttl,
         urgency: job.message.tag.startsWith("calendar-") ? "high" : "normal",
         topic: job.message.tag,
@@ -108,13 +103,13 @@ async function send(db: ReturnType<typeof database>, job: Job) {
   return sent ? "sent" : remove ? "failed" : "retry";
 }
 
-async function dispatch(db: ReturnType<typeof database>) {
+async function dispatch(db: ReturnType<typeof database>, keys: VapidKeys) {
   const totals: Record<string, number> = {};
   for (let batch = 0; batch < 4; batch++) {
     const { data, error } = await db.rpc("club_push_claim", { p_limit: 24 });
     if (error) throw new Error("job_claim");
     const jobs = data as Job[];
-    const outcomes = await Promise.allSettled(jobs.map(job => send(db, job)));
+    const outcomes = await Promise.allSettled(jobs.map(job => send(db, job, keys)));
     for (const outcome of outcomes) {
       const key = outcome.status === "fulfilled" ? outcome.value : "job_error";
       totals[key] = (totals[key] || 0) + 1;
@@ -128,15 +123,22 @@ async function dispatch(db: ReturnType<typeof database>) {
 Deno.serve(async request => {
   const worker = request.headers.get("x-club-push-worker");
   if (worker !== null) {
-    const supplied = encoder.encode(worker);
-    const expected = encoder.encode(workerSecret);
-    if (expected.length < 32 || supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
-      return json({ error: "forbidden" }, 403);
-    }
+    if (!/^[0-9a-f-]{72}$/.test(worker)) return json({ error: "forbidden" }, 403);
     if (request.method !== "POST") return json({ error: "method" }, 405);
-    if (!configured) return json({ error: "not_configured" }, 503);
     try {
-      return await dispatch(database());
+      const db = database();
+      const initial = await db.rpc("club_push_runtime", { p_worker: worker });
+      if (initial.error) throw new Error("worker_config");
+      if (initial.data === null) return json({ error: "forbidden" }, 403);
+      let keys = initial.data as VapidKeys;
+      if (!keys.privateKey) {
+        const setup = await db.rpc("club_push_runtime", {
+          p_worker: worker, p_keys: webPush.generateVAPIDKeys(),
+        });
+        if (setup.error || !setup.data?.privateKey) throw new Error("worker_setup");
+        keys = setup.data;
+      }
+      return await dispatch(db, keys);
     } catch {
       console.error("Club push dispatch failed");
       return json({ error: "dispatch_failed" }, 500);
@@ -145,8 +147,11 @@ Deno.serve(async request => {
 
   if (request.headers.get("origin") !== allowedOrigin) return json({ error: "origin" }, 403);
   if (request.method === "OPTIONS") return json({});
-  if (!configured) return json({ error: "not_configured" }, 503);
-  if (request.method === "GET") return json({ publicKey: vapid.publicKey });
+  if (request.method === "GET") {
+    const { data, error } = await database().rpc("club_push_runtime");
+    if (error || !data?.publicKey) return json({ error: "not_configured" }, 503);
+    return json({ publicKey: data.publicKey, pilot: data.pilot === true });
+  }
   if (request.method !== "POST") return json({ error: "method" }, 405);
 
   const reader = request.body?.getReader();
@@ -172,7 +177,7 @@ Deno.serve(async request => {
     return json({ error: "body" }, 400);
   }
 
-  const { action, endpoint, auth, p256dh, topics } = input;
+  const { action, endpoint, auth, p256dh, topics, pilot } = input;
   if (!validEndpoint(endpoint) || typeof auth !== "string" || !/^[\w-]{22}$/.test(auth)) {
     return json({ error: "subscription" }, 400);
   }
@@ -196,9 +201,11 @@ Deno.serve(async request => {
     }
     const { data, error } = await db.rpc("club_push_save", {
       p_endpoint: endpoint, p_p256dh: p256dh, p_auth: auth, p_topics: [...new Set(topics)],
+      p_pilot: typeof pilot === "string" && /^[0-9a-f]{16}$/.test(pilot) ? pilot : null,
     });
     if (error) throw new Error("subscription_save");
-    if (!data) return json({ error: "subscription_conflict" }, 409);
+    if (data === "pilot") return json({ error: "pilot_code" }, 403);
+    if (data !== "ok") return json({ error: "subscription_conflict" }, 409);
     return json({ topics });
   } catch {
     console.error("Club push subscription operation failed");

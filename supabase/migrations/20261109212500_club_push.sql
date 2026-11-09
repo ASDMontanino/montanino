@@ -30,21 +30,76 @@ alter table public.club_push_jobs enable row level security;
 revoke all on public.club_push_subscriptions, public.club_push_jobs from public, anon, authenticated;
 grant select, insert, update, delete on public.club_push_subscriptions, public.club_push_jobs to service_role;
 
-create function public.club_push_save(p_endpoint text, p_p256dh text, p_auth text, p_topics text[])
-returns boolean language plpgsql set search_path = '' as $$
+select vault.create_secret(gen_random_uuid()::text || gen_random_uuid()::text, 'montanino_push_worker');
+select vault.create_secret(substr(replace(gen_random_uuid()::text, '-', ''), 1, 16), 'montanino_push_pilot');
+
+create function public.club_push_runtime(p_worker text default null, p_keys jsonb default null)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  keys jsonb;
+  pilot_enabled boolean;
+begin
+  if p_worker is not null then
+    if not exists (
+      select 1 from vault.decrypted_secrets
+      where name = 'montanino_push_worker'
+        and sha256(convert_to(decrypted_secret, 'UTF8')) = sha256(convert_to(p_worker, 'UTF8'))
+    ) then
+      return null;
+    end if;
+    if p_keys is not null then
+      perform pg_advisory_xact_lock(623801, 1);
+      if not exists (select 1 from vault.secrets where name = 'montanino_push_vapid') then
+        perform vault.create_secret(p_keys::text, 'montanino_push_vapid');
+      end if;
+    end if;
+  end if;
+
+  select decrypted_secret::jsonb into keys from vault.decrypted_secrets where name = 'montanino_push_vapid';
+  if p_worker is not null then
+    return coalesce(keys, '{}'::jsonb);
+  end if;
+
+  select coalesce(decrypted_secret <> 'off', true) into pilot_enabled
+  from vault.decrypted_secrets where name = 'montanino_push_pilot';
+  return jsonb_build_object('publicKey', keys->>'publicKey', 'pilot', coalesce(pilot_enabled, true));
+end;
+$$;
+
+create function public.club_push_save(p_endpoint text, p_p256dh text, p_auth text, p_topics text[], p_pilot text)
+returns text language plpgsql security definer set search_path = '' as $$
 declare
   subscription uuid;
+  pilot_secret text;
+  is_new boolean;
 begin
+  select decrypted_secret into pilot_secret from vault.decrypted_secrets where name = 'montanino_push_pilot';
+  if pilot_secret is distinct from 'off' then
+    if pilot_secret is null or p_pilot is null or
+      sha256(convert_to(pilot_secret, 'UTF8')) <> sha256(convert_to(p_pilot, 'UTF8'))
+    then
+      return 'pilot';
+    end if;
+    perform pg_advisory_xact_lock(623801, 2);
+    is_new := not exists (select 1 from public.club_push_subscriptions where endpoint = p_endpoint);
+  end if;
+
   insert into public.club_push_subscriptions as saved (endpoint, p256dh, auth_secret, topics)
   values (p_endpoint, p_p256dh, p_auth, p_topics)
   on conflict (endpoint) do update set p256dh = excluded.p256dh, topics = excluded.topics
   where saved.auth_secret = excluded.auth_secret
   returning id into subscription;
 
-  if subscription is null then return false; end if;
+  if subscription is null then return 'conflict'; end if;
   delete from public.club_push_jobs
   where subscription_id = subscription and not (topic = any (p_topics));
-  return true;
+  if is_new then
+    insert into public.club_push_jobs (subscription_id, topic, match_id, message, expires_at)
+    values (subscription, p_topics[1], 'pilot',
+      jsonb_build_object('title', 'Prova Montanino', 'body', 'Le notifiche sono attive su questo dispositivo.',
+        'url', 'notifiche.html?prova=1', 'tag', 'pilot-welcome'), now() + interval '10 minutes');
+  end if;
+  return 'ok';
 end;
 $$;
 
@@ -199,10 +254,12 @@ begin
 end;
 $$;
 
-revoke execute on function public.club_push_save(text, text, text, text[]),
+revoke execute on function public.club_push_runtime(text, jsonb),
+  public.club_push_save(text, text, text, text[], text),
   public.club_push_preferences(text, text, boolean), public.club_push_claim(integer), public.club_push_enqueue(text, text, text, text, text),
   public.club_push_content_changed() from public, anon, authenticated;
-grant execute on function public.club_push_save(text, text, text, text[]),
+grant execute on function public.club_push_runtime(text, jsonb),
+  public.club_push_save(text, text, text, text[], text),
   public.club_push_preferences(text, text, boolean), public.club_push_claim(integer) to service_role;
 
 create trigger club_push_after_publish
