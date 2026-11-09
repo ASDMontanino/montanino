@@ -1,7 +1,7 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
 importScripts('./push-route.js?v=20261109-tap');
 
-const CACHE_NAME = 'montanino-shell-20261109-push-tap';
+const CACHE_NAME = 'montanino-shell-20261109-pull-refresh';
 const SHELL = [
   './index.html',
   './galleria.html',
@@ -9,6 +9,8 @@ const SHELL = [
   './notifiche.css',
   './notifiche.js',
   './push-route.js?v=20261109-tap',
+  './pull-refresh.css?v=20261109',
+  './pull-refresh.js?v=20261109',
   './admin-app.html',
   './admin-app.css',
   './admin-app.js',
