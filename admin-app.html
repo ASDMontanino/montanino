@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071810"><meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Montanino Admin: control room riservata per gestire partite, Matchday, giocatori, fotografie, classifica e staff.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="M. Admin">
+<title>Montanino Admin · Control Room</title>
+<link rel="icon" href="assets/img/stemma.webp" type="image/webp">
+<link rel="apple-touch-icon" href="assets/icons/montanino-192.png">
+<link rel="manifest" href="manifest-admin.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin-app.css?v=20261109-a1">
+<script src="config.js" defer></script>
+<script src="admin-app.js?v=20261109-a1" defer></script>
+</head>
+<body>
+<header class="aa-header">
+  <a href="admin-app.html" class="aa-brand" aria-label="Montanino Admin, schermata iniziale"><img src="assets/img/stemma.webp" alt="" width="43" height="47"><span><strong>MONTANINO</strong><small>ADMIN · CONTROL ROOM</small></span></a>
+  <div class="aa-header-right"><span class="aa-online-indicator" id="aa-connection"><i></i> VERIFICA</span><button type="button" id="aa-logout" class="aa-icon-button" title="Disconnettiti" aria-label="Disconnettiti" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button></div>
+</header>
+<main class="aa-shell">
+<div class="aa-status" id="aa-status" role="status" aria-live="polite">Controllo il tuo accesso…</div>
+<section class="aa-login aa-panel" id="aa-login-wrap" hidden>
+  <span class="aa-eyebrow">ACCESSO RISERVATO</span><h1>IL CLUB.<br><em>NELLE TUE MANI.</em></h1>
+  <p>Accedi con l'account amministratore del Montanino. Le modifiche vengono pubblicate su Supabase soltanto dopo il salvataggio.</p>
+  <form id="aa-login">
+    <label>EMAIL<input id="aa-email" type="email" autocomplete="username" placeholder="email@esempio.it" required></label>
+    <label>PASSWORD<input id="aa-password" type="password" autocomplete="current-password" minlength="6" required></label>
+    <button type="submit" class="aa-primary" id="aa-login-submit">ACCEDI ALLA CONTROL ROOM <span>→</span></button>
+  </form>
+</section>
+<section id="aa-dashboard" hidden>
+  <div class="aa-greeting"><span class="aa-eyebrow">STAGIONE 2026 / 2027 · AREA SOCIETÀ</span><h1>IL TUO CLUB.<br><em>IN TEMPO REALE.</em></h1><p>Gestisci ogni partita, tutta la squadra e i contenuti ufficiali da un'unica app.</p></div>
+  <section class="aa-featured" aria-labelledby="aa-next-title">
+    <div class="aa-featured-header"><span><i></i> PROSSIMO IMPEGNO</span><strong id="aa-next-status">CALENDARIO</strong></div>
+    <h2 id="aa-next-title"><span id="aa-next-home">MONTANINO</span><small>VS</small><span id="aa-next-away">DA DEFINIRE</span></h2>
+    <p id="aa-next-details">Caricamento calendario…</p>
+    <div class="aa-featured-actions"><a id="aa-next-edit" href="admin.html?app=1&amp;panel=partite" class="aa-primary">GESTISCI PARTITA <span>→</span></a><a id="aa-next-live" href="matchday.html?app=1" class="aa-ghost">APRI MATCHDAY <span>↗</span></a></div>
+  </section>
+  <section class="aa-stat-row" aria-label="Riepilogo attività club">
+    <div><span id="aa-stat-players">—</span><small>GIOCATORI</small></div>
+    <div><span id="aa-stat-matches">—</span><small>GARE GIOCATE</small></div>
+    <div><span id="aa-stat-photos">—</span><small>FOTO</small></div>
+  </section>
+  <div class="aa-section-label"><span class="aa-eyebrow">I TUOI STRUMENTI</span><strong>GESTIONE RAPIDA</strong></div>
+  <nav class="aa-actions" aria-label="Apri funzioni amministratore">
+    <a class="aa-action aa-action-live" href="matchday.html?app=1"><span class="aa-action-icon">⚡</span><strong>MATCHDAY</strong><small>Gol, cambi, cartellini live</small><span class="aa-action-arrow">↗</span></a>
+    <a class="aa-action" href="admin.html?app=1&amp;panel=partite"><span class="aa-action-icon">⚽</span><strong>PARTITE</strong><small>Risultati, formazioni, MVP</small><span class="aa-action-arrow">↗</span></a>
+    <a class="aa-action" href="admin.html?app=1&amp;panel=rosa"><span class="aa-action-icon">👥</span><strong>ROSA</strong><small>Giocatori e numeri</small><span class="aa-action-arrow">↗</span></a>
+    <a class="aa-action" href="admin.html?app=1&amp;panel=classifica"><span class="aa-action-icon">🏆</span><strong>CLASSIFICA</strong><small>Punti e posizioni</small><span class="aa-action-arrow">↗</span></a>
+    <a class="aa-action" href="admin.html?app=1&amp;panel=galleria"><span class="aa-action-icon">📷</span><strong>FOTOGRAFIE</strong><small>Caricamento automatico</small><span class="aa-action-arrow">↗</span></a>
+    <a class="aa-action" href="admin.html?app=1&amp;panel=staff"><span class="aa-action-icon">🛡</span><strong>GESTIONE</strong><small>Staff, sponsor e social</small><span class="aa-action-arrow">↗</span></a>
+  </nav>
+  <section class="aa-latest aa-panel"><div class="aa-latest-title"><span class="aa-eyebrow">ULTIMO RISULTATO</span><a href="admin.html?app=1&amp;panel=partite">TUTTE LE PARTITE ↗</a></div><div id="aa-last-game" class="aa-last-score">Nessun risultato ancora registrato.</div></section>
+  <div class="aa-install-container"><button id="aa-install" type="button" class="aa-install" hidden>＋ INSTALLA MONTANINO ADMIN</button><p id="aa-install-help" class="aa-install-help" hidden></p></div>
+</section>
+</main>
+<nav class="aa-tabs" id="aa-tabs" aria-label="Navigazione Montanino Admin" hidden>
+<a href="admin-app.html" class="selected" aria-current="page"><span>⌂</span><small>HOME</small></a>
+<a href="matchday.html?app=1"><span>⚡</span><small>LIVE</small></a>
+<a href="admin.html?app=1&amp;panel=partite"><span>⚽</span><small>PARTITE</small></a>
+<a href="admin.html?app=1&amp;panel=rosa"><span>☰</span><small>GESTIONE</small></a>
+</nav>
+<footer class="aa-footer">A.S.D. MONTANINO · AREA AMMINISTRATORI · <a href="index.html">SITO PUBBLICO ↗</a></footer>
+</body></html>

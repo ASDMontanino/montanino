@@ -1,0 +1,49 @@
+{
+  "name": "Montanino Admin — Control Room",
+  "short_name": "M. Admin",
+  "description": "App riservata per amministrare l'A.S.D. Montanino: Matchday, partite, rosa, classifica, foto e staff.",
+  "id": "./admin-app.html",
+  "start_url": "./admin-app.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07140c",
+  "theme_color": "#071810",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "assets/icons/montanino-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/montanino-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Matchday",
+      "short_name": "Live",
+      "url": "./matchday.html?app=1",
+      "icons": [
+        {
+          "src": "assets/icons/montanino-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Partite",
+      "short_name": "Partite",
+      "url": "./admin.html?app=1&panel=partite"
+    },
+    {
+      "name": "Fotografie",
+      "short_name": "Foto",
+      "url": "./admin.html?app=1&panel=galleria"
+    }
+  ]
+}
