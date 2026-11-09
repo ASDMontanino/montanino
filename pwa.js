@@ -48,7 +48,9 @@
     help = banner.querySelector('.montanino-pwa-help');
     banner.querySelector('.montanino-pwa-close').addEventListener('click', closeBanner);
 
+    let helpShown = false;
     action.addEventListener('click', async () => {
+      if (helpShown) { closeBanner(); return; }
       if (deferredInstall) {
         const prompt = deferredInstall;
         deferredInstall = null;
@@ -62,9 +64,8 @@
         'Su iPhone: apri il sito in Safari, tocca Condividi e scegli “Aggiungi alla schermata Home”.' :
         'Apri il menu ⋮ del browser e scegli “Installa app” o “Aggiungi alla schermata Home”.';
       help.hidden = false;
+      helpShown = true;
       action.textContent = 'CAPITO';
-      action.onclick = null;
-      action.addEventListener('click', closeBanner, { once: true });
     });
 
     document.body.appendChild(banner);
