@@ -7,7 +7,7 @@ FASE 1 — PROVA IL PANNELLO SENZA ACCOUNT (SOLO SUL TUO MAC)
 2. Apri admin.html in Chrome oppure con Live Server in VS Code.
 3. L'indicatore in alto dice «DEMO · SOLO QUESTO BROWSER».
 4. Vai in ROSA e inserisci prima nome, numero e ruolo dei giocatori.
-5. Torna a PARTITE, scegli una giornata, compila formazione, voti ed episodi.
+5. Torna a PARTITE, scegli una giornata, compila formazione, MVP ed episodi.
 6. Premi «SALVA MODIFICHE»: la demo usa la memoria di QUESTO browser.
 7. Torna a index.html e ricarica: sullo stesso browser e origine vedrai i dati
    di prova. Non sono online e non sono condivisi con altri dispositivi.
@@ -91,13 +91,14 @@ PRIMA DI PUBBLICARE
 
 COME FUNZIONANO I CONTEGGI
 - Le statistiche si aggiornano automaticamente SOLO se un match ha il
-  risultato, 11 titolari, «Formazione e pagelle verificate» e «Tutti gli episodi
-  verificati» spuntati.
+  risultato e, rispettivamente, 11 titolari con «Formazione e partecipanti
+   verificati» oppure una cronologia con «Tutti gli episodi verificati» spuntata.
 - I titolari ricevono una presenza; le riserve solo se hanno il minuto di
   ingresso oppure compaiono in un evento di sostituzione come entranti.
 - Ogni episodio "Gol" del Montanino vale 1 rete; un assist è assegnato al
   giocatore scelto nell'episodio gol. Cartellini secondo gli eventi registrati.
-- Le medie dei voti sono calcolate per le partite complete con voto disponibile.
+- Non sono richiesti voti: le statistiche rimangono presenze, reti, assist,
+  cartellini e riconoscimenti MVP.
 - I totali sono PARZIALI finché non sono completati tutti i tabellini disputati.
 - La CLASSIFICA GENERALE va aggiornata a mano: manca il calendario completo
   degli altri incontri del girone.

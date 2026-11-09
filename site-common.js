@@ -86,7 +86,7 @@
           if(t==='gol'&&e.assist){const a=ensure(e.assist);if(a)a.assist++;}
         }
       }
-      // Il premio MVP è indipendente dalle pagelle, ma solo per gare con risultato.
+      // Il premio MVP è indipendente dalla verifica delle formazioni, ma solo per gare con risultato.
       if(detail.mvp){const awarded=ensure(detail.mvp);if(awarded)awarded.mvp++;}
       if(hasLineup&&hasEvents)both++;
     }
