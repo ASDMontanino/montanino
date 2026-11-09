@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.110.0";
 import webPush from "npm:web-push@3.6.7";
-import { ECDH } from "node:crypto";
+import { Buffer } from "node:buffer";
+import { createECDH } from "node:crypto";
 
 const allowedOrigin = Deno.env.get("CLUB_PUSH_ORIGIN") || "https://asdmontanino.github.io";
 const vapidSubject = Deno.env.get("CLUB_PUSH_VAPID_SUBJECT") || allowedOrigin + "/montanino/";
@@ -195,7 +196,9 @@ Deno.serve(async request => {
         topics.some(topic => !categories.has(topic))) return json({ error: "preferences" }, 400);
 
     try {
-      ECDH.convertKey(p256dh, "prime256v1", "base64url");
+      const verifier = createECDH("prime256v1");
+      verifier.generateKeys();
+      verifier.computeSecret(Buffer.from(p256dh, "base64url"));
     } catch {
       return json({ error: "encryption_key" }, 400);
     }
