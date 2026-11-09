@@ -161,15 +161,64 @@
     }
   }
 
+  /* Navigazione ancorata alla posizione effettiva delle sezioni.
+     CSS scroll-padding + scroll-margin sommavano due offset e producevano
+     uno scarto importante sotto la barra superiore. */
+  const navigableSections = new Set(['home', 'partite', 'foto', 'calendario', 'identita',
+    'classifica', 'rosa', 'statistiche', 'staff', 'sponsor']);
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function scrollToSection(id, animated) {
+    if (gallery || !navigableSections.has(id)) return false;
+    const target = document.getElementById(id);
+    if (!target || target.hidden || window.getComputedStyle(target).display === 'none') return false;
+    const headerHeight = Math.ceil(top.getBoundingClientRect().height);
+    const y = Math.max(0, Math.round(
+      window.scrollY + target.getBoundingClientRect().top - headerHeight - 10
+    ));
+    window.scrollTo({ top: y, behavior: animated && !reducedMotion ? 'smooth' : 'instant' });
+    return true;
+  }
+
+  /* Valido per tab inferiori, menu Altro e scorciatoie nella dashboard. */
+  document.addEventListener('click', event => {
+    const anchor = event.target.closest?.('a[href]');
+    if (!anchor || event.defaultPrevented || event.button !== 0 ||
+        event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
+        (anchor.target && anchor.target !== '_self')) return;
+    let url;
+    try { url = new URL(anchor.href, location.href); } catch (_) { return; }
+    if (url.origin !== location.origin || url.pathname !== location.pathname || !url.hash) return;
+    let id;
+    try { id = decodeURIComponent(url.hash.slice(1)); } catch (_) { return; }
+    if (!scrollToSection(id, true)) return;
+    event.preventDefault();
+    if (location.hash !== url.hash) history.pushState(null, '', url.hash);
+    refreshActive();
+  });
+
+  /* Se si apre una sezione direttamente dalla galleria, riallinea l'arrivo
+     dopo il rendering della schermata app, senza scatti animati. */
+  const initialAnchor = location.hash;
+  if (!gallery && initialAnchor) {
+    const realignInitial = () => {
+      if (location.hash !== initialAnchor) return;
+      let id;
+      try { id = decodeURIComponent(initialAnchor.slice(1)); } catch (_) { return; }
+      requestAnimationFrame(() => requestAnimationFrame(() => scrollToSection(id, false)));
+    };
+    window.addEventListener('load', realignInitial, { once: true });
+    if (document.readyState === 'complete') realignInitial();
+  }
+
   const tabEls = [...bar.querySelectorAll('[data-app-tab]')];
   const sectionIds = ['home', 'partite', 'foto', 'calendario', 'identita', 'classifica', 'rosa', 'statistiche', 'staff', 'sponsor'];
   function selectedTab() {
     if (gallery) return 'galleria';
     let section = location.hash.replace(/^#/, '').split(/[/?]/)[0] || 'home';
-    const offset = window.scrollY + 155;
+    const offset = window.scrollY + Math.ceil(top.getBoundingClientRect().height) + 28;
     for (const id of sectionIds) {
       const element = document.getElementById(id);
-      if (element && element.getBoundingClientRect().top + window.scrollY <= offset) section = id;
+      if (element && !element.hidden && element.getBoundingClientRect().top + window.scrollY <= offset) section = id;
     }
     if (section === 'calendario' || section === 'foto') return 'partite';
     if (section === 'statistiche') return 'classifica';

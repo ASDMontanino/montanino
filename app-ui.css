@@ -2,7 +2,8 @@
    Attiva SOLO nella app installata, senza alterare il sito nel browser. */
 @media (max-width: 850px) {
   html.club-app-mode {
-    scroll-padding-top: calc(81px + env(safe-area-inset-top, 0px));
+    /* L'offset viene applicato una sola volta; niente doppio margine. */
+    scroll-padding-top: calc(76px + env(safe-area-inset-top, 0px));
     background: #060b08;
   }
   html.club-app-mode body {
@@ -18,11 +19,8 @@
     right: 15px;
     width: 40px; height: 40px; border-radius: 50%;
   }
-  html.club-app-mode .section[id],
-  html.club-app-mode .hero[id],
-  html.club-app-mode .story-banner[id] {
-    scroll-margin-top: calc(81px + env(safe-area-inset-top, 0px));
-  }
+  /* Lo scorrimento della PWA usa l'altezza reale della testata app.
+     I link nativi ereditano solo scroll-padding-top. */
   /* Testata dell'app: marchio originale, stagione e accesso al menu. */
   .club-app-bar {
     position: sticky; top: 0; z-index: 160;
