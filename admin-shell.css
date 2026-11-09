@@ -1,0 +1,45 @@
+/* Admin PWA panel shell: enabled only for ?app=1 */
+html.montanino-admin-shell body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));min-height:100vh}
+html.montanino-admin-shell .admin-header{position:sticky;top:0;z-index:32;background:#061b0ff3;padding:calc(9px + env(safe-area-inset-top,0px)) 14px 9px;gap:10px;backdrop-filter:blur(19px)}
+html.montanino-admin-shell .admin-header .admin-brand{gap:8px}
+html.montanino-admin-shell .admin-header .admin-brand strong{font-size:23px}
+html.montanino-admin-shell .admin-header .admin-brand small{font-size:8px}
+html.montanino-admin-shell .header-actions{gap:6px}
+html.montanino-admin-shell .header-actions #mode-label{display:none}
+html.montanino-admin-shell .header-actions .link-back{font-size:10px;padding:9px}
+html.montanino-admin-shell .admin-shell{padding:16px 12px 110px;max-width:940px}
+html.montanino-admin-shell .admin-intro{display:none}
+html.montanino-admin-shell .editor-top{margin-bottom:14px;padding:16px;gap:12px}
+html.montanino-admin-shell .editor-top-actions{gap:7px}
+html.montanino-admin-shell .editor-top-actions .btn-primary,html.montanino-admin-shell .editor-top-actions .btn-quiet{font-size:10px;padding:12px}
+html.montanino-admin-shell .editor-top-actions a[href*="matchday"]{display:none}
+html.montanino-admin-shell .admin-tabs{display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:5px;margin-bottom:18px}
+html.montanino-admin-shell .admin-tabs::-webkit-scrollbar{display:none}
+html.montanino-admin-shell .admin-tabs button{white-space:nowrap;flex:0 0 auto;min-width:105px;font-size:15px;padding:12px}
+html.montanino-admin-shell .pad{padding:16px}
+html.montanino-admin-shell .section-head h2{font-size:clamp(30px,8vw,44px)}
+html.montanino-admin-shell .section-head p{font-size:11px}
+html.montanino-admin-shell .subhead h4{font-size:22px}
+html.montanino-admin-shell .editor-bottom{margin-bottom:24px}
+html.montanino-admin-shell .admin-footer{padding-bottom:calc(115px + env(safe-area-inset-bottom,0px))}
+html.montanino-admin-shell .md-head{padding:calc(9px + env(safe-area-inset-top,0px)) 13px 9px}
+html.montanino-admin-shell .md-shell{padding-bottom:130px}
+html.montanino-admin-shell .md-publish-bar{bottom:calc(73px + env(safe-area-inset-bottom,0px))}
+.ma-bottom-tabs{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;justify-content:space-around;align-items:stretch;background:#07190ef5;border-top:1px solid #356548;padding:7px 5px calc(7px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(18px)}
+.ma-tab{border:0;min-width:64px;padding:6px 12px;border-radius:9px;background:transparent;color:#90ad98;text-decoration:none;display:flex;align-items:center;flex-direction:column;gap:1px;cursor:pointer}
+.ma-tab.is-current{color:#8ef0af;background:#153a23}
+.ma-tab-icon{font-size:22px;line-height:1.1;font-family:system-ui,sans-serif}
+.ma-tab small{font:900 9px/1.2 'DM Sans',sans-serif;letter-spacing:.06em}
+.ma-sheet-overlay{position:fixed;inset:0;background:#000a;z-index:109}
+.ma-sheet-overlay[hidden],.ma-sheet[hidden]{display:none}
+.ma-sheet{position:fixed;bottom:calc(60px + env(safe-area-inset-bottom,0px));left:8px;right:8px;max-height:75dvh;overflow:auto;z-index:110;background:#102719;color:#effff3;border:1px solid #3f7550;border-radius:18px;box-shadow:0 -15px 45px #0009;padding:15px}
+.ma-sheet-heading{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 17px}
+.ma-sheet-heading strong{font:900 24px 'Barlow Condensed',Impact,sans-serif}
+.ma-close{background:#1f432b;color:#fff;border:1px solid #47765a;border-radius:9px;font-size:24px;height:38px;width:39px}
+.ma-sheet-item{width:100%;display:flex;align-items:center;gap:12px;background:#142f20;border:1px solid #31533c;padding:14px;border-radius:10px;margin:7px 0;color:#f1fff4;text-align:left;font-size:19px;min-height:52px}
+.ma-sheet-item strong{flex:1;font:900 15px 'DM Sans',sans-serif}
+.ma-sheet-arrow{color:#94e6ac}
+.ma-sheet-bottom{display:block;text-align:center;color:#9ff5bd;font-weight:900;font-size:11px;padding:19px}
+.ma-bottom-tabs button:focus-visible,.ma-sheet button:focus-visible{outline:2px solid #9efdc1;outline-offset:2px}
+@media(min-width:850px){.ma-bottom-tabs{max-width:490px;left:50%;transform:translateX(-50%);border-left:1px solid #315a41;border-right:1px solid #315a41;border-radius:15px 15px 0 0}.ma-sheet{left:50%;right:auto;width:430px;transform:translateX(-50%)}}
+@media(max-width:520px){html.montanino-admin-shell .admin-header .admin-brand img{width:34px;height:40px}html.montanino-admin-shell .admin-header #logout{font-size:10px;padding:9px}html.montanino-admin-shell .admin-header{flex-wrap:wrap}html.montanino-admin-shell .editor-top-actions .btn-primary{min-width:0}}

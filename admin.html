@@ -12,6 +12,8 @@
   <script src="data.js" defer></script><script src="config.js" defer></script>
   <script src="site-common.js?v=20261109-no-voti" defer></script><script src="admin.js?v=20261109-no-voti" defer></script>
   <link rel="stylesheet" href="photo-upload.css?v=20261109">
+  <link rel="stylesheet" href="admin-shell.css?v=20261109-a1">
+  <script src="admin-shell.js?v=20261109-a1" defer></script>
   <script src="photo-upload.js?v=20261109b" defer></script>
 </head>
 <body>
@@ -25,7 +27,7 @@
     <form id="login-form"><label>Email<input required id="login-email" type="email" autocomplete="username" placeholder="email@esempio.it"></label><label>Password<input required id="login-password" type="password" autocomplete="current-password" minlength="6" placeholder="Password Supabase"></label><button class="btn-primary" type="submit">ACCEDI AL PANNELLO →</button></form>
   </section>
   <section id="editor" hidden>
-    <div class="editor-top surface"><div><p class="eyebrow">STATO DEL SITO</p><strong id="save-status">Dati caricati</strong><small id="save-note">Salva dopo aver modificato una sezione.</small></div><div class="editor-top-actions"><a class="btn-primary" href="matchday.html">⚽ APRI MATCHDAY →</a><button type="button" class="btn-quiet" id="import-json">IMPORTA BACKUP</button><input id="import-file" type="file" accept="application/json,.json" hidden><button type="button" class="btn-quiet" id="export-json">ESPORTA BACKUP</button><button type="button" class="btn-primary" id="save-all">SALVA MODIFICHE →</button></div></div>
+    <div class="editor-top surface"><div><p class="eyebrow">STATO DEL SITO</p><strong id="save-status">Dati caricati</strong><small id="save-note">Salva dopo aver modificato una sezione.</small></div><div class="editor-top-actions"><a class="btn-quiet" href="admin-app.html">📱 APP ADMIN</a><a class="btn-primary" href="matchday.html">⚽ APRI MATCHDAY →</a><button type="button" class="btn-quiet" id="import-json">IMPORTA BACKUP</button><input id="import-file" type="file" accept="application/json,.json" hidden><button type="button" class="btn-quiet" id="export-json">ESPORTA BACKUP</button><button type="button" class="btn-primary" id="save-all">SALVA MODIFICHE →</button></div></div>
     <nav class="admin-tabs" aria-label="Sezioni del pannello">
       <button type="button" class="active" data-panel="partite">01 · PARTITE</button>
       <button type="button" data-panel="rosa">02 · ROSA</button>
