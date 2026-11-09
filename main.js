@@ -59,7 +59,7 @@
     const section=$('foto'),rail=$('home-gallery-track');
     if(!section||!rail)return;
     const raw=Array.isArray(SITE_DATA.fotoPartite)?SITE_DATA.fotoPartite:[];
-    const safeFile=file=>/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(String(file||''))&&!String(file).includes('..');
+    const safeFile=file=>(/^sb:montanino-[0-9a-f]{32}\.webp$/.test(String(file||''))||(/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(String(file||''))&&!String(file).includes('..')));
     const matches=new Map(calendar.map(m=>[String(m.id),m]));
     const seen=new Set();
     const pool=raw.filter(p=>{
@@ -89,7 +89,9 @@
     duplicates.setAttribute('aria-hidden','true');
     motion.append(originals,duplicates);rail.replaceChildren(motion);
 
-    const photoSrc=item=>'assets/img/partite/'+encodeURIComponent(item.file);
+    const photoSrc=item=>String(item.file||'').startsWith('sb:') && window.MONTANINO_SUPABASE?.url
+      ? window.MONTANINO_SUPABASE.url.replace(/\/$/,'')+'/storage/v1/object/public/montanino-partite/'+encodeURIComponent(item.file.slice(3))
+      : 'assets/img/partite/'+encodeURIComponent(item.file);
     const photoInfo=item=>{
       const match=matches.get(String(item.partita));
       const name=match?match.casa+' – '+match.ospite:'PARTITA '+String(item.partita);

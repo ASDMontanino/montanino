@@ -8,9 +8,11 @@
   <link rel="icon" href="assets/img/stemma.webp" type="image/webp">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=20261107">
+  <link rel="stylesheet" href="admin.css?v=20261109-upload">
   <script src="data.js" defer></script><script src="config.js" defer></script>
-  <script src="site-common.js?v=20261106" defer></script><script src="admin.js?v=20261107" defer></script>
+  <script src="site-common.js?v=20261106" defer></script><script src="admin.js?v=20261109-upload" defer></script>
+  <link rel="stylesheet" href="photo-upload.css?v=20261109">
+  <script src="photo-upload.js?v=20261109" defer></script>
 </head>
 <body>
 <header class="admin-header"><a href="index.html" class="admin-brand"><img src="assets/img/stemma.webp" alt="Stemma Montanino"><span><strong>MONTANINO</strong><small>CONTROL ROOM · V3.3</small></span></a><div class="header-actions"><span id="mode-label" class="mode-label">CARICAMENTO…</span><a class="link-back" href="index.html">← VEDI IL SITO</a><button type="button" id="logout" class="btn-quiet" hidden>ESCI</button></div></header>
@@ -55,7 +57,28 @@
       <div class="surface pad"><div class="block-head"><div><h3>PERSONE</h3><p>Nome, incarico, gruppo e fotografia. I nuovi gruppi compaiono subito nel menu.</p></div><button type="button" id="add-staff" class="btn-add">+ MEMBRO</button></div><div id="staff-editor-list" class="entity-list"></div></div>
     </section>
     <section class="editor-panel" data-editor-panel="sponsor" hidden><div class="section-head"><h2>SPONSOR & SOCIAL</h2><p>I nuovi link saranno visibili online dopo il salvataggio. Per i loghi, inserisci il nome del file già caricato in <code>assets/img</code>.</p></div><div class="surface pad"><div class="block-head"><h3>SPONSOR</h3><button type="button" id="add-sponsor" class="btn-add">+ SPONSOR</button></div><div id="sponsors-editor-list" class="entity-list"></div><h3 class="social-heading">CANALI SOCIAL</h3><div class="form-grid"><label>Instagram<input id="social-instagram" type="url" placeholder="https://www.instagram.com/..."></label><label>Facebook<input id="social-facebook" type="url" placeholder="https://www.facebook.com/..."></label><label>TikTok<input id="social-tiktok" type="url" placeholder="https://www.tiktok.com/@..."></label></div></div></section>
-    <section class="editor-panel" data-editor-panel="galleria" hidden><div class="section-head"><h2>GALLERIA DELLE PARTITE</h2><p>Le fotografie saranno visibili solo nella pagina Galleria e non nello scorrimento della home.</p></div><div class="surface pad"><div class="block-head"><div><h3>FOTO DELLE GARE</h3><p>Carica prima le foto nella cartella <code>assets/img/partite</code> del repository GitHub, poi inserisci il nome del file.</p></div><button id="add-match-photo" type="button" class="btn-add">+ FOTO</button></div><div id="match-gallery-list" class="entity-list match-gallery-list"></div></div><div class="surface pad"><h3 class="social-heading">AGGIUNGI PIÙ FOTO INSIEME</h3><div class="form-grid two"><label>Partita<select id="gallery-bulk-match"></select></label><label>File (uno per riga)<textarea id="gallery-bulk-files" rows="5" placeholder="montanino-partita-01.webp&#10;montanino-partita-02.webp"></textarea></label></div><button id="add-match-photos-bulk" type="button" class="btn-add">+ AGGIUNGI I FILE ALL’ELENCO</button><p class="hint">Poi premi Salva modifiche per pubblicarli. Le immagini devono prima essere caricate su GitHub.</p><p><a class="link-back" href="galleria.html" target="_blank" rel="noopener noreferrer">VEDI LA GALLERIA ↗</a></p></div></section>
+    <section class="editor-panel" data-editor-panel="galleria" hidden><div class="section-head"><h2>GALLERIA DELLE PARTITE</h2><p>Carica automaticamente nuove foto o gestisci quelle già registrate: galleria e carosello Home si aggiorneranno insieme.</p></div>
+<div class="surface pad gallery-uploader">
+  <div class="block-head"><div><h3>CARICAMENTO AUTOMATICO FOTO</h3><p>Scegli una partita, seleziona fino a 60 fotografie: saranno compresse in WebP e pubblicate senza passare da GitHub.</p></div></div>
+  <div class="form-grid two">
+    <label>Partita<select id="gallery-upload-match" aria-label="Partita per il caricamento fotografico"></select></label>
+    <label>Fotografie (JPG, PNG, WebP)<input id="gallery-upload-files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"></label>
+  </div>
+  <div id="gallery-upload-drop" class="gallery-upload-drop" role="button" tabindex="0" aria-label="Trascina qui le fotografie o selezionale">
+    <strong>TRASCINA QUI LE FOTOGRAFIE</strong>
+    <span>Oppure tocca per scegliere le foto dal telefono o dal computer.</span>
+    <small id="gallery-upload-selection">Nessuna foto selezionata</small>
+  </div>
+  <div class="gallery-upload-actions">
+    <button id="gallery-upload-start" type="button" class="btn-primary">OTTIMIZZA E PUBBLICA →</button>
+    <span class="hint">Conversione WebP 84%; senza filtri o ritagli. Dimensione massima: 2560 px sul lato lungo.</span>
+  </div>
+  <progress id="gallery-upload-progress" max="100" value="0" hidden></progress>
+  <p id="gallery-upload-status" role="status" aria-live="polite">Pronto per il caricamento.</p>
+  <div id="gallery-upload-preview" class="gallery-upload-preview" aria-label="Anteprima delle fotografie caricate"></div>
+  <p class="hint">Prima del primo utilizzo esegui <code>FOTO_STORAGE_SETUP.sql</code> nel SQL Editor del tuo progetto Supabase. Le foto verranno mostrate in galleria e nel carosello Home.</p>
+</div>
+<div class="surface pad"><div class="block-head"><div><h3>FOTO DELLE GARE</h3><p>Le foto pubblicate tramite caricamento automatico sono su Supabase; quelle vecchie rimangono su GitHub.</p></div><button id="add-match-photo" type="button" class="btn-add">+ FOTO</button></div><div id="match-gallery-list" class="entity-list match-gallery-list"></div></div><div class="surface pad"><h3 class="social-heading">AGGIUNTA MANUALE DI FILE GIÀ SU GITHUB</h3><div class="form-grid two"><label>Partita<select id="gallery-bulk-match"></select></label><label>File (uno per riga)<textarea id="gallery-bulk-files" rows="5" placeholder="montanino-partita-01.webp&#10;montanino-partita-02.webp"></textarea></label></div><button id="add-match-photos-bulk" type="button" class="btn-add">+ AGGIUNGI I FILE ALL’ELENCO</button><p class="hint">Poi premi Salva modifiche per pubblicarli. Le immagini devono prima essere caricate su GitHub.</p><p><a class="link-back" href="galleria.html" target="_blank" rel="noopener noreferrer">VEDI LA GALLERIA ↗</a></p></div></section>
     <div class="editor-bottom"><button id="save-bottom" class="btn-primary" type="button">SALVA TUTTO →</button><span>Le modifiche non sono pubblicate finché non premi Salva.</span></div>
   </section>
   <section id="demo-explanation" class="surface pad" hidden><h2>MODALITÀ PROVA SUL MAC</h2><p>Il pannello è utilizzabile senza account in modalità demo. Le modifiche restano soltanto in questo browser: non sono pubblicate su Internet e non sono protette da un login. Per attivare la modalità online, segui la guida <strong>GUIDA_V3.txt</strong>.</p><p><strong>Importante:</strong> non inserire password o dati privati nella modalità demo. Usa “Esporta backup” per conservare le modifiche.</p></section>

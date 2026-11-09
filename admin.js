@@ -205,7 +205,7 @@
     menu.value=selectedPlayer?.nome||current||'';
   }
   function isSafePhotoFile(file){
-    return /^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(file)&&!file.includes('..');
+    return /^sb:montanino-[0-9a-f]{32}\.webp$/.test(file)||(/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(file)&&!file.includes('..'));
   }
   function matchPhotoRow(data={}){
     const row=makeRow($('match-gallery-list'),'match-gallery-row');
@@ -218,8 +218,11 @@
   function fillMatchGallery(){
     const root=$('match-gallery-list');root.replaceChildren();
     C.list(draft.fotoPartite).forEach(x=>matchPhotoRow(x));
-    const bulk=$('gallery-bulk-match');bulk.replaceChildren();
-    C.list(draft.calendario).forEach(m=>{const o=el('option','',m.id+' · '+m.casa+' - '+m.ospite);o.value=m.id;bulk.append(o);});
+    const bulk=$('gallery-bulk-match'),upload=$('gallery-upload-match');
+    bulk.replaceChildren();upload.replaceChildren();
+    C.list(draft.calendario).forEach(m=>{
+      for(const select of [bulk,upload]){const o=el('option','',m.id+' · '+m.casa+' - '+m.ospite);o.value=m.id;select.append(o);}
+    });
   }
   function showMatch(id){
     activeMatchId=id;const m=draft.calendario.find(x=>x.id===id);if(!m)return;
@@ -495,8 +498,8 @@
     $('save-note').textContent='Utente autenticato e autorizzato.';
   }
   async function save(){
-    if(busy)return;
-    let value;try{value=captureAll();}catch(e){msg(e.message,true);return;}
+    if(busy)return false;
+    let value;try{value=captureAll();}catch(e){msg(e.message,true);return false;}
     busy=true;$('save-all').disabled=$('save-bottom').disabled=true;
     try{
       if(online){
@@ -512,7 +515,8 @@
         localStorage.setItem('montanino-demo-v3',JSON.stringify(value));
       }
       synced();updateStatsPreview();msg(online?'Modifiche salvate su Supabase. Apri il sito pubblico e ricaricalo.':'Modifiche salvate soltanto in questo browser. Per pubblicarle online configura Supabase.');
-    }catch(err){msg('Salvataggio non riuscito: '+err.message,true);}finally{busy=false;$('save-all').disabled=$('save-bottom').disabled=false;}
+      return true;
+    }catch(err){msg('Salvataggio non riuscito: '+err.message,true);return false;}finally{busy=false;$('save-all').disabled=$('save-bottom').disabled=false;}
   }
   function exportJSON(){let data;try{data=captureAll();}catch(e){msg(e.message,true);return;}
     const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(b),a=el('a');a.href=url;a.download='montanino-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -568,6 +572,15 @@
     if(e.target?.matches('select[data-field="gruppo"]'))renderStaffGroupTags();
   });
   $('add-sponsor').addEventListener('click',()=>{sponsorRow();markDirty();});
+  window.MontaninoPhotoAdmin={
+    available:()=>online && !!sb && !$('editor').hidden && !busy,
+    client:()=>sb,
+    dirty:()=>dirty,
+    validate:()=>captureAll(),
+    current:()=>arr('match-gallery-list').map(r=>({partita:read(r,'partita'),file:read(r,'file')})),
+    add:photo=>{matchPhotoRow(photo);markDirty();},
+    save
+  };
   $('add-match-photo').addEventListener('click',()=>{matchPhotoRow();markDirty();});
   $('add-match-photos-bulk').addEventListener('click',()=>{
     const partita=$('gallery-bulk-match').value;

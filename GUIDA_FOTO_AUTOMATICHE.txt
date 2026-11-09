@@ -1,0 +1,22 @@
+GUIDA CARICAMENTO FOTO — MONTANINO
+
+PRIMA ATTIVAZIONE:
+1) Apri Supabase > progetto Montanino > SQL Editor.
+2) Copia il contenuto di FOTO_STORAGE_SETUP.sql e premi Run.
+3) Controlla che il bucket 'montanino-partite' risulti pubblico.
+
+CARICAMENTO:
+1) Entra in admin.html con il tuo account admin.
+2) Apri 06 · GALLERIA FOTO.
+3) Scegli partita e fino a 60 fotografie JPG/PNG/WebP, anche trascinandole.
+4) Premi OTTIMIZZA E PUBBLICA: conversione WebP 84% e massimo 2560 px.
+5) Dopo l'upload, il pannello pubblica automaticamente l'elenco su Supabase.
+6) Se il salvataggio dei dati fallisce, premi SALVA MODIFICHE senza ricaricare.
+
+NOTE:
+- Le foto preesistenti su GitHub restano compatibili.
+- Le nuove foto sono archiviate in Supabase Storage e visibili in Home e Galleria.
+- Solo gli utenti autorizzati in public.club_admins possono effettuare upload.
+- Non usare chiavi service_role o password nel codice client.
+- Max 25 MB/file originale; l'upload WebP compresso non può superare 10 MB.
+- Le foto HEIC vanno esportate prima in JPG.

@@ -4,8 +4,10 @@
   const $=id=>document.getElementById(id);
   const el=(tag,cls='',value)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(value!==undefined)node.textContent=String(value);return node;};
   const list=value=>Array.isArray(value)?value:[];
-  const safePhoto=file=>/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(String(file||''))&&!String(file).includes('..');
-  const photoSrc=file=>'assets/img/partite/'+encodeURIComponent(file);
+  const safePhoto=file=>(/^sb:montanino-[0-9a-f]{32}\.webp$/.test(String(file||''))||(/^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(String(file||''))&&!String(file).includes('..')));
+  const photoSrc=file=>file.startsWith('sb:')&&conf.url
+    ? conf.url.replace(/\/$/,'')+'/storage/v1/object/public/montanino-partite/'+encodeURIComponent(file.slice(3))
+    : 'assets/img/partite/'+encodeURIComponent(file);
   const menu=$('menu-toggle'),nav=$('nav');
   if(menu&&nav){
     menu.addEventListener('click',()=>{const expanded=menu.getAttribute('aria-expanded')==='true';menu.setAttribute('aria-expanded',String(!expanded));menu.classList.toggle('active',!expanded);nav.classList.toggle('open',!expanded);});
