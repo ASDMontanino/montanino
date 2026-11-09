@@ -1,11 +1,14 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
-const CACHE_NAME = 'montanino-shell-20261109-push-pilot';
+importScripts('./push-route.js?v=20261109-tap');
+
+const CACHE_NAME = 'montanino-shell-20261109-push-tap';
 const SHELL = [
   './index.html',
   './galleria.html',
   './notifiche.html',
   './notifiche.css',
   './notifiche.js',
+  './push-route.js?v=20261109-tap',
   './admin-app.html',
   './admin-app.css',
   './admin-app.js',
@@ -79,11 +82,6 @@ self.addEventListener('fetch', event => {
   })());
 });
 
-function pushDestination(path) {
-  const allowed = /^(?:index\.html#partita-[AR]\d{2}|galleria\.html\?partita=[AR]\d{2}|notifiche\.html\?prova=1)$/;
-  return new URL(allowed.test(path) ? path : 'index.html', self.registration.scope).href;
-}
-
 self.addEventListener('push', event => {
   let message = {};
   try { message = event.data?.json() || {}; } catch (_) { /* payload non leggibile */ }
@@ -97,18 +95,28 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const destination = pushDestination(event.notification.data?.path);
+  const scope = self.registration.scope;
+  const path = event.notification.data?.path;
+  const destination = MontaninoPushRoute.destination(scope, path) || new URL('index.html', scope).href;
   event.waitUntil((async () => {
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const existing = windows.find(client => client.url === destination);
-    if (existing) return existing.focus();
-    const publicPages = ['index.html', 'galleria.html', 'notifiche.html', '']
-      .map(page => new URL(page, self.registration.scope).href);
-    const publicWindow = windows.find(client => publicPages.includes(client.url.split(/[?#]/)[0]));
-    if (publicWindow) {
-      const updated = await publicWindow.navigate(destination).catch(() => null);
-      if (updated) return updated.focus();
+    await MontaninoPushRoute.remember(scope, path).catch(() => {});
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true }).catch(() => []);
+    const publicPages = ['index.html', 'galleria.html', 'notifiche.html', ''].map(page => new URL(page, scope).href);
+    const client = windows.find(window => window.url === destination) ||
+      windows.find(window => publicPages.includes(window.url.split(/[?#]/)[0]));
+
+    if (client) {
+      const focused = await client.focus().catch(() => null);
+      const updated = client.url === destination ? focused : await client.navigate(destination).catch(() => null);
+      if (updated) {
+        updated.postMessage({ type: 'MONTANINO_PUSH_ROUTE' });
+        if (updated !== focused) await updated.focus().catch(() => {});
+        return;
+      }
+      focused?.postMessage({ type: 'MONTANINO_PUSH_ROUTE' });
     }
-    return self.clients.openWindow(destination);
+
+    const opened = await self.clients.openWindow(destination).catch(() => null);
+    opened?.postMessage({ type: 'MONTANINO_PUSH_ROUTE' });
   })());
 });
