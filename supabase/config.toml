@@ -1,0 +1,4 @@
+project_id = "montanino"
+
+[functions.club-push]
+verify_jwt = false

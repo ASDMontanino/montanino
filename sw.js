@@ -1,8 +1,11 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
-const CACHE_NAME = 'montanino-shell-20261109-adminapp-a2';
+const CACHE_NAME = 'montanino-shell-20261109-push-a1';
 const SHELL = [
   './index.html',
   './galleria.html',
+  './notifiche.html',
+  './notifiche.css',
+  './notifiche.js',
   './admin-app.html',
   './admin-app.css',
   './admin-app.js',
@@ -73,5 +76,39 @@ self.addEventListener('fetch', event => {
       if (isPage) return (await caches.match('./index.html')) || Response.error();
       return Response.error();
     }
+  })());
+});
+
+function pushDestination(path) {
+  const allowed = /^index\.html#partita-[AR]\d{2}$|^galleria\.html\?partita=[AR]\d{2}$/;
+  return new URL(allowed.test(path) ? path : 'index.html', self.registration.scope).href;
+}
+
+self.addEventListener('push', event => {
+  let message = {};
+  try { message = event.data?.json() || {}; } catch (_) { /* payload non leggibile */ }
+  event.waitUntil(self.registration.showNotification(message.title || 'A.S.D. Montanino', {
+    body: message.body || 'Ci sono novità dal club.',
+    icon: new URL('assets/icons/montanino-192.png', self.registration.scope).href,
+    tag: message.tag,
+    data: { path: message.url }
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const destination = pushDestination(event.notification.data?.path);
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const existing = windows.find(client => client.url === destination);
+    if (existing) return existing.focus();
+    const publicPages = ['index.html', 'galleria.html', 'notifiche.html', '']
+      .map(page => new URL(page, self.registration.scope).href);
+    const publicWindow = windows.find(client => publicPages.includes(client.url.split(/[?#]/)[0]));
+    if (publicWindow) {
+      const updated = await publicWindow.navigate(destination).catch(() => null);
+      if (updated) return updated.focus();
+    }
+    return self.clients.openWindow(destination);
   })());
 });
