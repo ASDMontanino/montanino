@@ -4,7 +4,9 @@ import { Buffer } from "node:buffer";
 import { createECDH, createHash } from "node:crypto";
 
 const allowedOrigin = Deno.env.get("CLUB_PUSH_ORIGIN") || "https://asdmontanino.github.io";
-const vapidSubject = Deno.env.get("CLUB_PUSH_VAPID_SUBJECT") || allowedOrigin + "/montanino/";
+const appScope = new URL("/montanino/", allowedOrigin);
+const vapidSubject = Deno.env.get("CLUB_PUSH_VAPID_SUBJECT") || appScope.href;
+const appRoute = /^(?:index\.html#partita-[AR]\d{2}|galleria\.html\?partita=[AR]\d{2}|notifiche\.html\?prova=1)$/;
 const categories = new Set(["calendar", "result", "photos"]);
 
 type VapidKeys = { publicKey: string; privateKey: string };
@@ -60,13 +62,25 @@ async function send(db: ReturnType<typeof database>, job: Job, keys: VapidKeys) 
   let status = 400;
   if (validEndpoint(job.endpoint)) {
     try {
-      const tag = job.message.tag;
+      const { title, body, tag, url } = job.message;
+      // Keep the legacy fields for browsers that hand this JSON to the service worker.
+      const payload = {
+        ...job.message,
+        web_push: 8030,
+        mutable: false,
+        notification: {
+          title,
+          body,
+          tag,
+          navigate: new URL(appRoute.test(url) ? url : "index.html", appScope).href,
+        },
+      };
       // Eighteen bytes produce a valid, unpadded 24-character Web Push Topic.
       const topic = createHash("sha256").update(tag).digest().subarray(0, 18).toString("base64url");
       const request = webPush.generateRequestDetails({
         endpoint: job.endpoint,
         keys: { p256dh: job.p256dh, auth: job.auth_secret },
-      }, JSON.stringify(job.message), {
+      }, JSON.stringify(payload), {
         vapidDetails: { subject: vapidSubject, ...keys },
         TTL: job.ttl,
         urgency: tag.startsWith("calendar-") || tag === "pilot-welcome" ? "high" : "normal",
