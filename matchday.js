@@ -8,7 +8,7 @@ const copy=x=>JSON.parse(JSON.stringify(x));
 const list=x=>Array.isArray(x)?x:[];
 const norm=x=>String(x||'').trim().toLocaleLowerCase('it');
 const types={gol:'⚽ GOL',gol_rigore:'⚽ GOL SU RIGORE',giallo:'🟨 AMMONIZIONE',rosso:'🟥 ESPULSIONE',sostituzione:'⇄ SOSTITUZIONE',rigore_parato:'🧤 RIGORE PARATO',rigore_sbagliato:'✕ RIGORE SBAGLIATO',autogol:'⚽ AUTOGOL'};
-const goalTypes=['gol','gol_rigore','autogol'];
+const goalTypes=['gol','gol_rigore','gol(rigore)','autogol'];
 let sb=null,user=null,remote=null,gameId='',working=null,sourceSignature='',dirty=false,editing=-1,type='gol',history=[],busy=false,conflict=false;
 function notice(message,error=false){const el=$('md-notice');el.hidden=false;el.textContent=message;el.classList.toggle('error',error);}
 function gameFrom(data,id){return list(data?.calendario).find(x=>x.id===id);}
@@ -19,6 +19,7 @@ function saveDraft(){if(!working||!user)return;try{localStorage.setItem(storageK
 function removeDraft(){try{localStorage.removeItem(storageKey(gameId));}catch(e){}}
 function setDirty(){dirty=true;saveDraft();$('md-draft').textContent='BOZZA DA PUBBLICARE';$('md-draft').classList.add('dirty');$('md-save-label').textContent='Modifiche salvate sul dispositivo';}
 function remember(){history.push(copy(working));if(history.length>25)history.shift();$('md-undo').disabled=false;}
+function changedMatchData(){working.eventsComplete=false;setDirty();}
 function roster(){const saved=list(remote?.giocatori);const seen=new Set();return [...saved,...list(detailFrom(remote,gameId).titolari),...list(detailFrom(remote,gameId).panchina)].filter(p=>{const key=norm(p.nome);if(!key||seen.has(key))return false;seen.add(key);return true;}).sort((a,b)=>(Number(a.numero)||999)-(Number(b.numero)||999)||String(a.nome).localeCompare(String(b.nome),'it'));}
 function resultDefined(){return Number.isInteger(working?.scoreHome)&&Number.isInteger(working?.scoreAway);}
 function scoreSide(own){const m=gameFrom(remote,gameId);const montHome=norm(m?.casa)==='montanino';return own?(montHome?'home':'away'):(montHome?'away':'home');}
@@ -127,7 +128,7 @@ function addEvent(){
     if(old){const oldSide=contribution(old);if(oldSide)changeScore(oldSide,-1);working.events[editing]=event;}
     else working.events.push(event);
     const addedSide=contribution(event);if(addedSide)changeScore(addedSide,1);
-    setDirty();showAll();resetForm();notice(old?'Episodio aggiornato nella bozza.':'Episodio registrato nella bozza locale.');
+    changedMatchData();showAll();resetForm();notice(old?'Episodio aggiornato nella bozza. Ricontrolla la cronologia.':'Episodio registrato. Ricontrolla la cronologia prima della pubblicazione.');
   }catch(e){notice(e.message,true);}
 }
 function editEvent(i){
@@ -138,7 +139,7 @@ function editEvent(i){
   $('md-record').textContent='SALVA MODIFICA';$('md-cancel').hidden=false;
   $('md-record').scrollIntoView({behavior:'smooth',block:'center'});
 }
-function deleteEvent(i){if(!confirm('Eliminare questo episodio dalla bozza?'))return;remember();const [old]=working.events.splice(i,1);const oldSide=contribution(old);if(oldSide)changeScore(oldSide,-1);setDirty();showAll();resetForm();notice('Episodio rimosso. Puoi annullare l’ultima azione.');}
+function deleteEvent(i){if(!confirm('Eliminare questo episodio dalla bozza?'))return;remember();const [old]=working.events.splice(i,1);const oldSide=contribution(old);if(oldSide)changeScore(oldSide,-1);changedMatchData();showAll();resetForm();notice('Episodio rimosso. Puoi annullare l’ultima azione.');}
 function makeWorking(m,d){return {scoreHome:Number.isInteger(m.golCasa)?m.golCasa:null,scoreAway:Number.isInteger(m.golOspite)?m.golOspite:null,events:copy(list(d.eventi)),mvp:d.mvp||'',eventsComplete:!!d.eventiCompleti};}
 function loadMatch(id,ignoreDraft=false){
   if(!gameFrom(remote,id))return;
@@ -181,6 +182,22 @@ function validate(){
     const ownGoals=working.events.filter(e=>sideOfEvent(e)==='own'&&(e.tipo==='gol'||e.tipo==='gol_rigore'||e.tipo==='gol(rigore)')).length;
     const ownScore=scoreSide(true)==='home'?working.scoreHome:working.scoreAway;
     if(ownGoals>ownScore)throw Error('I gol registrati del Montanino superano il punteggio. Verifica gli episodi.');
+    // Stessa convalida dei cambi già prevista nel pannello amministratore.
+    const detail=detailFrom(remote,gameId);
+    const field=new Set(list(detail.titolari).map(p=>norm(p.nome)));
+    const bench=new Set(list(detail.panchina).map(p=>norm(p.nome)));
+    const entered=new Set();
+    const minute=e=>{const x=/^(\d+)(?:\+(\d+))?$/.exec(String(e.minuto||''));return x?Number(x[1])*100+Number(x[2]||0):Number.POSITIVE_INFINITY;};
+    const substitutions=working.events.map((e,i)=>({e,i}))
+      .filter(x=>x.e.tipo==='sostituzione'&&sideOfEvent(x.e)==='own')
+      .sort((a,b)=>minute(a.e)-minute(b.e)||a.i-b.i);
+    for(const {e} of substitutions){
+      const out=norm(e.esce),incoming=norm(e.entra);
+      if(!field.has(out))throw Error('Cambio da verificare: '+(e.esce||'giocatore')+' non risulta in campo.');
+      if(!bench.has(incoming)||entered.has(incoming)||field.has(incoming))
+        throw Error('Cambio da verificare: '+(e.entra||'giocatore')+' non risulta una riserva disponibile.');
+      field.delete(out);field.add(incoming);entered.add(incoming);
+    }
   }
 }
 async function publish(){
@@ -215,7 +232,7 @@ async function publish(){
 function bind(){
   $('md-game').addEventListener('change',e=>loadMatch(e.target.value));
   document.querySelectorAll('[data-side-score]').forEach(btn=>btn.addEventListener('click',()=>{
-    if(conflict)return;remember();changeScore(btn.dataset.sideScore,Number(btn.dataset.step));setDirty();showScore();
+    if(conflict)return;remember();changeScore(btn.dataset.sideScore,Number(btn.dataset.step));changedMatchData();showAll();
   }));
   document.querySelectorAll('[data-type]').forEach(btn=>btn.addEventListener('click',()=>selectType(btn.dataset.type)));
   $('md-team').addEventListener('change',()=>{ $('md-person').value='';$('md-second').value='';$('md-person-text').value='';$('md-second-text').value='';updateForm({primary:'',second:''}); });
