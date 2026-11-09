@@ -1,5 +1,5 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
-const CACHE_NAME = 'montanino-shell-20261109-v4.1';
+const CACHE_NAME = 'montanino-shell-20261109-v4.2';
 const SHELL = [
   './index.html',
   './galleria.html',

@@ -161,9 +161,8 @@
     }
   }
 
-  /* Navigazione ancorata alla posizione effettiva delle sezioni.
-     CSS scroll-padding + scroll-margin sommavano due offset e producevano
-     uno scarto importante sotto la barra superiore. */
+  /* Navigazione PWA: ancoraggio all'intestazione per evitare l'ampio padding
+     tra il bordo della sezione e il titolo. */
   const navigableSections = new Set(['home', 'partite', 'foto', 'calendario', 'identita',
     'classifica', 'rosa', 'statistiche', 'staff', 'sponsor']);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -172,8 +171,11 @@
     const target = document.getElementById(id);
     if (!target || target.hidden || window.getComputedStyle(target).display === 'none') return false;
     const headerHeight = Math.ceil(top.getBoundingClientRect().height);
+    // Allinea l'intestazione visibile, non il bordo esterno della sezione:
+    // il padding superiore della sezione lasciava i titoli troppo in basso.
+    const heading = target.querySelector(':scope > .section-heading') || target;
     const y = Math.max(0, Math.round(
-      window.scrollY + target.getBoundingClientRect().top - headerHeight - 10
+      window.scrollY + heading.getBoundingClientRect().top - headerHeight - 12
     ));
     window.scrollTo({ top: y, behavior: animated && !reducedMotion ? 'smooth' : 'instant' });
     return true;
