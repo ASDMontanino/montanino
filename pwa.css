@@ -1,0 +1,42 @@
+/* Invito discreto all'installazione mobile dell'app Montanino */
+.montanino-pwa-banner {
+  position: fixed; z-index: 800; left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  width: min(385px, calc(100vw - 32px)); padding: 13px 34px 13px 13px;
+  color: #f7fbf8; background: #102a1a;
+  border: 1px solid rgba(114, 242, 162, .36); border-radius: 12px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, .44);
+  font-family: 'DM Sans', Arial, sans-serif;
+}
+.montanino-pwa-banner > img {
+  flex: 0 0 48px; width: 48px; height: 48px; object-fit: contain; border-radius: 10px;
+}
+.montanino-pwa-text { flex: 1 1 125px; min-width: 100px; display: flex; flex-direction: column; gap: 3px; }
+.montanino-pwa-text strong {
+  font-family: 'Barlow Condensed', Impact, sans-serif;
+  font-size: 16px; line-height: 1; letter-spacing: .025em;
+}
+.montanino-pwa-text span { color: #bed1c2; font-size: 11px; line-height: 1.4; }
+.montanino-pwa-button {
+  flex: 0 0 auto; padding: 10px 11px; border: 0; border-radius: 5px;
+  background: #72f2a2; color: #06110a; font-size: 10px; font-weight: 800;
+  letter-spacing: .05em; cursor: pointer;
+}
+.montanino-pwa-close {
+  position: absolute; right: 4px; top: 3px; width: 29px; height: 29px;
+  background: transparent; border: 0; color: #e1efe5; font-size: 23px; line-height: 1;
+}
+.montanino-pwa-help {
+  flex: 1 0 100%; margin: 2px 0 0; padding: 9px 10px;
+  background: rgba(255, 255, 255, .07); border-radius: 6px;
+  color: #ecf7ef; font-size: 12px; line-height: 1.5;
+}
+.montanino-pwa-banner [hidden] { display: none !important; }
+.montanino-pwa-banner button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+@media (max-width: 380px) {
+  .montanino-pwa-banner { gap: 7px; padding: 11px 32px 11px 10px; }
+  .montanino-pwa-text strong { font-size: 14px; }
+  .montanino-pwa-text span { font-size: 10px; }
+  .montanino-pwa-button { font-size: 9px; padding: 9px; }
+}

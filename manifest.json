@@ -1,0 +1,43 @@
+{
+  "name": "A.S.D. Montanino — App ufficiale",
+  "short_name": "Montanino",
+  "description": "Risultati, calendario, classifica, rosa, statistiche e galleria fotografica dell'A.S.D. Montanino.",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#060b08",
+  "theme_color": "#08100c",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "assets/icons/montanino-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/montanino-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Partite",
+      "short_name": "Partite",
+      "url": "./index.html#partite"
+    },
+    {
+      "name": "Classifica",
+      "short_name": "Classifica",
+      "url": "./index.html#classifica"
+    },
+    {
+      "name": "Galleria",
+      "short_name": "Galleria",
+      "url": "./galleria.html"
+    }
+  ]
+}
