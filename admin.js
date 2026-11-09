@@ -52,9 +52,8 @@
       const position=pick(p.posizione||'',choices,'posizione');position.setAttribute('aria-label','Posizione in campo');
       row.append(position);
     }
-    const vote=inp(p.voto??'','number','voto','Voto');vote.min=0;vote.max=10;vote.step='.5';vote.setAttribute('aria-label','Voto in pagella');row.append(vote);
     if(bench){const entrance=inp(p.entrato??'','text','entrato','Min. ingresso');entrance.setAttribute('aria-label','Minuto ingresso');row.append(entrance);}
-    const note=inp(p.nota||'','text','nota','Nota facoltativa');note.setAttribute('aria-label','Nota pagella');row.append(note,del());
+    const note=inp(p.nota||'','text','nota','Nota facoltativa');note.setAttribute('aria-label','Nota del giocatore');row.append(note,del());
     updateCounts();return row;
   }
   // I cambi del Montanino accettano soltanto titolari in campo e riserve non ancora entrate.
@@ -179,10 +178,15 @@
   }
   function rowDataLineup(row,bench){
     const name=read(row,'nome');if(!name)return null;
-    const rawNumber=read(row,'numero'),rawVote=read(row,'voto');
+    const rawNumber=read(row,'numero');
     const pos=read(row,'posizione');
     const role=bench?read(row,'reparto'):pos.startsWith('P')?'P':pos.startsWith('D')?'D':pos.startsWith('A')?'A':'C';
-    const p={nome:name,numero:rawNumber===''?null:Number(rawNumber),reparto:role,voto:rawVote===''?null:Number(rawVote),nota:read(row,'nota')};
+    const p={nome:name,numero:rawNumber===''?null:Number(rawNumber),reparto:role,nota:read(row,'nota')};
+    // Eventuali voti storici restano conservati per un possibile ripristino.
+    const historicMatch=(draft.dettagliPartite||{})[activeMatchId]||{};
+    const previous=[...C.list(historicMatch.titolari),...C.list(historicMatch.panchina)]
+      .find(player=>C.normalize(player.nome)===C.normalize(name));
+    if(previous && Object.prototype.hasOwnProperty.call(previous,'voto'))p.voto=previous.voto;
     if(!bench&&pos)p.posizione=pos;
     if(bench){const entrato=read(row,'entrato');if(entrato)p.entrato=entrato;}
     return p;
@@ -192,7 +196,7 @@
     $('starter-count').textContent=filled+'/11';
   }
 
-  // MVP indipendente da pagelle ed episodi. Le foto sono facoltative.
+  // MVP indipendente da formazione ed episodi. Le foto sono facoltative.
   function refreshMvpChoices(selected){
     const menu=$('match-mvp');if(!menu)return;
     const current=selected===undefined?menu.value:selected;
@@ -269,7 +273,6 @@
     if(mvpFoto&&!isSafePhotoFile(mvpFoto))throw Error('Nome file foto MVP non valido: usa per esempio mvp-01.webp.');
     for(const p of [...titolari,...panchina]){
       if(!available.has(C.normalize(p.nome)))throw Error('Il giocatore '+p.nome+' non è presente nella rosa. Selezionalo dal menu.');
-      if(p.voto!==null&&(!Number.isFinite(p.voto)||p.voto<0||p.voto>10||p.voto*2%1!==0))throw Error('I voti devono essere da 0 a 10, con incrementi di 0,5.');
       if(p.numero!==null&&(!Number.isInteger(p.numero)||p.numero<0||p.numero>99))throw Error('Numero maglia non valido.');
     }
     const complete=$('match-complete').checked,eventsComplete=$('events-complete').checked;
@@ -277,7 +280,6 @@
     if((complete||eventsComplete)&&!hasResult)throw Error('Per confermare una sezione serve un risultato finale.');
     if(complete){
       if(titolari.length!==11)throw Error('Per confermare la formazione servono 11 titolari.');
-      if(titolari.some(p=>p.voto===null))throw Error('Per completare le pagelle assegna un voto a tutti gli 11 titolari.');
       const keeper=titolari.find(p=>p.posizione==='P1');
       if(!keeper||C.roleCode(findPlayer(keeper.nome)?.ruolo)!=='P')throw Error('Nella posizione P1 devi selezionare un portiere presente nella rosa.');
     }
@@ -316,7 +318,7 @@
     const temp=C.copy(draft);
     try{
       const prepared=C.prepare(temp),c=prepared._statsCoverage;
-      const parts=[`${c.formations}/${c.played} formazioni e pagelle verificate`,`${c.events}/${c.played} cronologie episodi verificate`];
+      const parts=[`${c.formations}/${c.played} formazioni verificate`,`${c.events}/${c.played} cronologie episodi verificate`];
       box.textContent=parts.join(' · ');
     }catch(e){box.textContent='Statistiche in attesa di dati validi.';}
   }
