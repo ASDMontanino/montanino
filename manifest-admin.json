@@ -11,6 +11,12 @@
   "lang": "it",
   "icons": [
     {
+      "src": "assets/icons/montanino-admin.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
       "src": "assets/icons/montanino-192.png",
       "sizes": "192x192",
       "type": "image/png",
