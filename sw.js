@@ -1,5 +1,5 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
-const CACHE_NAME = 'montanino-shell-20261109';
+const CACHE_NAME = 'montanino-shell-20261109b';
 const SHELL = [
   './index.html',
   './galleria.html',
@@ -7,6 +7,14 @@ const SHELL = [
   './galleria.css',
   './pwa.css',
   './pwa.js',
+  './data.js',
+  './tabellini.js',
+  './config.js',
+  './site-common.js',
+  './site-loader.js',
+  './main.js',
+  './fx.js',
+  './galleria.js',
   './assets/icons/montanino-192.png',
   './assets/icons/montanino-512.webp',
   './assets/img/stemma.webp'
@@ -44,7 +52,12 @@ self.addEventListener('fetch', event => {
     try {
       const response = await fetch(request);
       if (response.ok && response.type === 'basic') {
-        event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone())).catch(() => {}));
+        // Clona prima che il browser inizi a consumare la risposta.
+        try {
+          const copy = response.clone();
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(request, copy);
+        } catch (_) { /* cache opzionale: non blocca la rete */ }
       }
       return response;
     } catch (error) {
