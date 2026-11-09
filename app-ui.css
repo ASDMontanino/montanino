@@ -1,0 +1,250 @@
+/* A.S.D. Montanino — Interfaccia PWA mobile V4.0
+   Attiva SOLO nella app installata, senza alterare il sito nel browser. */
+@media (max-width: 850px) {
+  html.club-app-mode {
+    scroll-padding-top: calc(81px + env(safe-area-inset-top, 0px));
+    background: #060b08;
+  }
+  html.club-app-mode body {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    overscroll-behavior-y: contain;
+  }
+  html.club-app-mode .header,
+  html.club-app-mode .intro { display: none !important; }
+  html.club-app-mode .marquee { display: none !important; }
+  html.club-app-mode .scroll-progress { z-index: 155; }
+  html.club-app-mode .to-top {
+    bottom: calc(94px + env(safe-area-inset-bottom, 0px));
+    right: 15px;
+    width: 40px; height: 40px; border-radius: 50%;
+  }
+  html.club-app-mode .section[id],
+  html.club-app-mode .hero[id],
+  html.club-app-mode .story-banner[id] {
+    scroll-margin-top: calc(81px + env(safe-area-inset-top, 0px));
+  }
+  /* Testata dell'app: marchio originale, stagione e accesso al menu. */
+  .club-app-bar {
+    position: sticky; top: 0; z-index: 160;
+    min-height: calc(65px + env(safe-area-inset-top, 0px));
+    padding: calc(9px + env(safe-area-inset-top, 0px)) 19px 9px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid rgba(113, 229, 159, .19);
+    background: rgba(5, 15, 9, .97);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    color: #f6fff8;
+  }
+  .club-app-brand {
+    display: flex; align-items: center; gap: 10px;
+    min-width: 0; flex: 1; text-decoration: none; color: inherit;
+  }
+  .club-app-brand img { width: 41px; height: 45px; object-fit: contain; flex: none; }
+  .club-app-brand-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .club-app-brand-text strong {
+    font: 900 23px/.88 'Barlow Condensed', Impact, sans-serif; letter-spacing: .045em;
+  }
+  .club-app-brand-text small {
+    font: 800 8px/1.2 'DM Sans', Arial, sans-serif;
+    letter-spacing: .155em; color: #87e9a6;
+  }
+  .club-app-season {
+    font: 800 9px 'DM Sans', Arial, sans-serif;
+    white-space: nowrap; color: #93b49d; letter-spacing: .09em;
+  }
+  .club-app-menu-button {
+    width: 43px; height: 43px; flex: none; border-radius: 12px;
+    display: grid; place-items: center;
+    border: 1px solid rgba(129, 229, 162, .29);
+    color: #f8fffa; background: #12321e;
+  }
+  .club-app-menu-button svg { width: 21px; height: 21px; }
+  /* Tab bar fissa, con icone sufficientemente grandi per il tocco. */
+  .club-app-tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 350;
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    height: calc(68px + env(safe-area-inset-bottom, 0px));
+    padding: 5px 8px calc(5px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(128, 238, 164, .21);
+    background: rgba(5, 17, 10, .98);
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+    box-shadow: 0 -8px 34px rgba(0, 0, 0, .34);
+  }
+  .club-app-tab {
+    position: relative; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    min-width: 0; border-radius: 12px; color: #93ab9c;
+    font: 700 9px/1.15 'DM Sans', Arial, sans-serif;
+    letter-spacing: .02em; text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .club-app-tab svg {
+    width: 23px; height: 23px; stroke-width: 1.85;
+    fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .club-app-tab[aria-current] { background: rgba(43, 188, 101, .13); color: #8cf3ae; }
+  .club-app-tab[aria-current]::before {
+    content: ''; position: absolute; top: 0; left: 32%; right: 32%;
+    height: 2px; border-radius: 0 0 4px 4px; background: #52e58f;
+  }
+  .club-app-tab:focus-visible, .club-app-menu-button:focus-visible,
+  .club-app-sheet button:focus-visible, .club-app-sheet a:focus-visible {
+    outline: 2px solid #91ffc0; outline-offset: 2px;
+  }
+  /* Dashboard sopra alle sezioni web, senza duplicare la logica dei risultati. */
+  html.club-app-mode #home.hero {
+    display: block; min-height: 0; overflow: hidden;
+    background: #08170e; border-bottom: 1px solid rgba(109, 220, 152, .19);
+  }
+  html.club-app-mode #home.hero > :not(.club-app-home) { display: none !important; }
+  .club-app-home {
+    position: relative; isolation: isolate; overflow: hidden;
+    padding: 25px 19px 25px;
+    background: radial-gradient(ellipse at 82% 11%, rgba(23, 98, 57, .66), transparent 63%),
+                linear-gradient(145deg, #0b2918 0%, #07170d 60%, #08100b 100%);
+  }
+  .club-app-home-photo {
+    position: absolute; top: 0; right: -7%; z-index: -1;
+    width: 75%; height: 220px; opacity: .30; pointer-events: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 45%);
+    mask-image: linear-gradient(90deg, transparent, #000 45%);
+  }
+  .club-app-home-photo::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(0deg, #08170e, transparent 78%);
+  }
+  .club-app-home-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 24%; }
+  .club-app-eyebrow {
+    margin: 0 0 13px; font: 800 9px/1.35 'DM Sans', Arial, sans-serif;
+    color: #98efb2; letter-spacing: .18em;
+  }
+  .club-app-eyebrow::before {
+    content: ''; display: inline-block; vertical-align: middle;
+    margin-right: 8px; width: 6px; height: 6px;
+    border-radius: 50%; background: #58e891; box-shadow: 0 0 12px #58e89188;
+  }
+  .club-app-home h1 {
+    margin: 0; font: 900 clamp(51px, 13.4vw, 72px)/.85 'Barlow Condensed', Impact, sans-serif;
+    color: #fcfffd; letter-spacing: -.018em;
+    text-transform: uppercase;
+  }
+  .club-app-home h1 span { color: #6cf09c; }
+  .club-app-home-intro {
+    margin: 14px 0 23px; max-width: 310px;
+    font: 500 12px/1.55 'DM Sans', Arial, sans-serif; color: #afcbb7;
+  }
+  .club-app-match-grid {
+    position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .club-app-match-card {
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-width: 0; min-height: 130px; padding: 14px 12px 12px;
+    border: 1px solid rgba(132, 223, 165, .22); border-radius: 14px;
+    background: rgba(4, 17, 10, .81);
+    color: #fff; text-decoration: none;
+  }
+  .club-app-match-card--next { border-color: rgba(117, 232, 159, .49); background: rgba(18, 63, 34, .73); }
+  .club-app-match-card small {
+    font: 800 9px/1.4 'DM Sans', Arial, sans-serif;
+    color: #91eeb1; letter-spacing: .105em;
+  }
+  .club-app-match-card strong {
+    margin: 8px 0; font: 900 clamp(19px, 5.7vw, 29px)/1.05 'Barlow Condensed', Impact, sans-serif;
+    color: #f6fff9; overflow-wrap: anywhere; text-transform: uppercase;
+  }
+  .club-app-match-card span {
+    font: 600 10px/1.4 'DM Sans', Arial, sans-serif; color: #c6ddcd;
+    overflow-wrap: anywhere;
+  }
+  .club-app-links {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px;
+    margin-top: 11px;
+  }
+  .club-app-links a {
+    min-height: 49px; border-radius: 11px; border: 1px solid rgba(128, 228, 162, .17);
+    background: rgba(255, 255, 255, .045); color: #def4e6;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 4px; padding: 8px 10px;
+    font: 800 9px/1.3 'DM Sans', Arial, sans-serif;
+    text-decoration: none;
+  }
+  .club-app-links span { color: #72f2a2; font-size: 16px; }
+  /* Sezioni e archivio leggermente più compatti nella versione app. */
+  html.club-app-mode .section { padding-top: 48px; padding-bottom: 52px; }
+  html.club-app-mode .section-matches .match-card { min-height: 255px; border-radius: 14px; }
+  html.club-app-mode .match-card h3 { margin-top: 24px; }
+  html.club-app-mode .section-heading { margin-bottom: 22px; }
+  html.club-app-mode .match-gallery-hero { min-height: 290px; }
+  html.club-app-mode .match-gallery-hero-inner { padding: 42px 20px 32px; }
+  html.club-app-mode .match-gallery-hero h1 { font-size: clamp(64px, 16vw, 94px); }
+  html.club-app-mode .gallery-intro { margin-top: 21px; }
+  html.club-app-mode .gallery-hero-bottom { margin-top: 23px; }
+  html.club-app-mode .match-gallery-content { padding-top: 35px; padding-bottom: 50px; }
+  /* Menu "Altro", con contenuti raggiungibili anche da tastiera. */
+  .club-app-backdrop {
+    position: fixed; inset: 0; z-index: 355;
+    background: rgba(0, 5, 2, .70);
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  }
+  .club-app-sheet {
+    position: fixed; left: 10px; right: 10px;
+    bottom: calc(79px + env(safe-area-inset-bottom, 0px));
+    z-index: 360; max-height: min(76vh, 640px); overflow-y: auto;
+    padding: 19px 16px 19px;
+    background: linear-gradient(165deg, #163824, #0a1b11 62%);
+    border: 1px solid rgba(147, 244, 177, .29);
+    border-radius: 22px; color: #f5fff7;
+    box-shadow: 0 24px 74px #000b;
+    overscroll-behavior: contain;
+  }
+  .club-app-sheet-top {
+    display: flex; justify-content: space-between; align-items: start;
+    gap: 15px; margin-bottom: 16px;
+  }
+  .club-app-sheet-kicker {
+    margin: 0 0 5px; color: #8deca9; letter-spacing: .16em;
+    font: 800 9px 'DM Sans', Arial, sans-serif;
+  }
+  .club-app-sheet h2 {
+    margin: 0; font: 900 41px/.95 'Barlow Condensed', Impact, sans-serif;
+  }
+  .club-app-sheet-close {
+    flex: none; width: 40px; height: 40px;
+    display: grid; place-items: center; border-radius: 12px;
+    color: #fff; background: #1b492d; border: 1px solid #386c49; font-size: 25px;
+  }
+  .club-app-sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .club-app-sheet-link {
+    display: flex; align-items: center; gap: 10px;
+    min-height: 62px; padding: 11px 10px;
+    border: 1px solid rgba(133, 227, 166, .19);
+    border-radius: 12px; background: rgba(0, 0, 0, .19);
+    text-decoration: none; color: #f1fff4;
+  }
+  .club-app-sheet-link svg {
+    flex: none; width: 22px; height: 22px;
+    color: #7cef9f; fill: none; stroke: currentColor; stroke-width: 1.9;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .club-app-sheet-link span { font: 800 12px 'DM Sans', Arial, sans-serif; }
+  .club-app-sheet-foot {
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    margin-top: 15px; padding-top: 14px;
+    border-top: 1px solid rgba(145, 230, 161, .20);
+  }
+  .club-app-sheet-foot a {
+    color: #b4d4be; font: 700 11px 'DM Sans', Arial, sans-serif;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  body.club-app-sheet-open { overflow: hidden; }
+}
+@media (max-width: 360px) {
+  .club-app-season { display: none; }
+  .club-app-match-grid { gap: 8px; }
+  .club-app-match-card { min-height: 132px; padding: 12px 9px; }
+  .club-app-links a { font-size: 8px; padding: 8px 7px; }
+  .club-app-tab { font-size: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .club-app-bar, .club-app-tabs, .club-app-sheet { scroll-behavior: auto; }
+}
