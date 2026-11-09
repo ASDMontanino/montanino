@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.110.0";
 import webPush from "npm:web-push@3.6.7";
 import { Buffer } from "node:buffer";
-import { createECDH } from "node:crypto";
+import { createECDH, createHash } from "node:crypto";
 
 const allowedOrigin = Deno.env.get("CLUB_PUSH_ORIGIN") || "https://asdmontanino.github.io";
 const vapidSubject = Deno.env.get("CLUB_PUSH_VAPID_SUBJECT") || allowedOrigin + "/montanino/";
@@ -60,14 +60,17 @@ async function send(db: ReturnType<typeof database>, job: Job, keys: VapidKeys) 
   let status = 400;
   if (validEndpoint(job.endpoint)) {
     try {
+      const tag = job.message.tag;
+      // Eighteen bytes produce a valid, unpadded 24-character Web Push Topic.
+      const topic = createHash("sha256").update(tag).digest().subarray(0, 18).toString("base64url");
       const request = webPush.generateRequestDetails({
         endpoint: job.endpoint,
         keys: { p256dh: job.p256dh, auth: job.auth_secret },
       }, JSON.stringify(job.message), {
         vapidDetails: { subject: vapidSubject, ...keys },
         TTL: job.ttl,
-        urgency: job.message.tag.startsWith("calendar-") ? "high" : "normal",
-        topic: job.message.tag,
+        urgency: tag.startsWith("calendar-") || tag === "pilot-welcome" ? "high" : "normal",
+        topic,
       });
       const headers = new Headers(request.headers);
       headers.delete("Content-Length");
@@ -79,8 +82,16 @@ async function send(db: ReturnType<typeof database>, job: Job, keys: VapidKeys) 
         redirect: "error",
       });
       status = response.status;
-      await response.body?.cancel();
+      if (response.ok) {
+        await response.body?.cancel().catch(() => {});
+      } else {
+        const details = await response.json().catch(() => null);
+        const reason = typeof details?.reason === "string" && /^[A-Za-z]{1,48}$/.test(details.reason)
+          ? details.reason : undefined;
+        console.warn("Club push provider rejected request", { status, reason });
+      }
     } catch {
+      console.warn("Club push request could not be sent");
       status = 503;
     }
   }
