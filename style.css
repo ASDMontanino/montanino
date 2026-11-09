@@ -361,7 +361,7 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   V2.2 — MATCH REPORT: formazione, timeline, voti e statistiche singola gara
+   V2.2 — MATCH REPORT: formazione, cronologia e statistiche singola gara
    ═════════════════════════════════════════════════════════════════════ */
 .fixture-card.md-open{border-color:rgba(64,218,116,.64);background:linear-gradient(125deg,#113420,#091a10)}
 .fixture-card[id^="partita-"]{scroll-margin-top:96px}
@@ -398,7 +398,6 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 .md-pitch-player{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;max-width:100px;min-width:0;flex:0 1 95px}
 .md-shirt{display:grid;place-items:center;background:#fff;color:#0a3320;border:2px solid #08652e;clip-path:polygon(0 17%,19% 0,35% 7%,65% 7%,81% 0,100% 17%,89% 45%,82% 38%,82% 100%,18% 100%,18% 38%,11% 45%);width:43px;height:46px;padding-top:6px;font:900 21px var(--title);text-shadow:none}
 .md-player-name{color:#f0fff3;font-size:10px;font-weight:900;line-height:1.2;text-shadow:0 2px 5px #002709;overflow-wrap:anywhere}
-.md-pitch-vote{font-size:10px;font-weight:900;padding:2px 7px;border:1px solid #c9ffe0;color:#fff;background:#15552f}
 .md-bench{margin-top:25px;border-top:1px solid #315740;padding-top:22px}
 .md-bench h5{font-size:19px;margin-bottom:12px}
 .md-bench-grid{display:grid;gap:8px}
@@ -426,7 +425,6 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 .md-grade-name{font-weight:800;min-width:120px}
 .md-grade-note{display:block;font-size:10px;font-weight:400;color:#b1ceba;line-height:1.4;margin-top:6px}
 .md-grade-status{display:inline-block;font-size:9px;color:#a0e5b6;margin:5px 0 0;font-weight:900}
-.md-grade-score{font-size:15px;font-weight:900;color:#fff!important}
 .md-match-note{margin-top:23px;background:#123420;border-left:3px solid #54cb7c;padding:18px 21px}
 .md-match-note strong{display:block;color:#91ebac;font-size:10px;letter-spacing:.13em;margin-bottom:7px}
 .md-match-note p{margin:0;color:#c0d8c5;font-size:12px;line-height:1.6}

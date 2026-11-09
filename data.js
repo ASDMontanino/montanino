@@ -418,16 +418,16 @@ let SITE_DATA = {
     "golOspite": null
   }
 ],
-  /* TABELLINI PARTITA — aggiungi qui formazione, eventi e voti.
+  /* TABELLINI PARTITA — aggiungi qui formazione, episodi e MVP.
      Le prime tre partite hanno risultati confermati, ma NON i dati individuali.
      Per compilare usa l'esempio dettagliato in COME_COMPILARE_TABELLINI.txt.
-     Giocatori: {numero:1, nome:"Nome Cognome", reparto:"P", voto:6.5, nota:"..."}
+     Giocatori: {numero:1, nome:"Nome Cognome", reparto:"P", nota:"..."}
        reparto = P (portiere), D (difesa), C (centrocampo), A (attacco).
      Eventi: {minuto:"23", tipo:"gol", giocatore:"Nome Cognome", assist:"Nome Assist"}
              {minuto:"51", tipo:"giallo", giocatore:"Nome Cognome"}
              {minuto:"73", tipo:"rosso", giocatore:"Nome Cognome"}
              {minuto:"70", tipo:"sostituzione", esce:"Nome A", entra:"Nome B"}
-     dataCompleti = true SOLTANTO se formazione, eventi e voti sono verificati.
+     datiCompleti = true se la formazione e i partecipanti sono verificati.
      Se manca qualcosa lascia false: il sito lo segnalerà come dato parziale.
   */
   dettagliPartite: {

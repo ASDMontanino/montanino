@@ -27,5 +27,11 @@
     }
   }
   SITE_DATA=window.MontaninoCommon.prepare(SITE_DATA);
-  try{await addScript('main.js?v=20261108-random');}catch(e){console.error('Impossibile caricare main.js',e);}
+  // Mantiene i dati storici in Supabase ma li esclude dal renderer pubblico.
+  for(const match of Object.values(SITE_DATA.dettagliPartite||{})){
+    for(const player of [...(Array.isArray(match.titolari)?match.titolari:[]),...(Array.isArray(match.panchina)?match.panchina:[])]){
+      if(player && typeof player==='object')delete player.voto;
+    }
+  }
+  try{await addScript('main.js?v=20261109-no-voti');}catch(e){console.error('Impossibile caricare main.js',e);}
 })();

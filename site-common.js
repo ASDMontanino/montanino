@@ -48,14 +48,14 @@
     });
   }
   function recalc(d){
-    // Presenze e voti: formazioni verificate. Gol, assist e cartellini: eventi verificati.
+    // Presenze: formazioni verificate. Gol, assist e cartellini: eventi verificati.
     // Le due verifiche sono indipendenti; le gare parziali non alterano gli altri conteggi.
     const calendar=list(d.calendario),records=d.dettagliPartite||{},playedGames=calendar.filter(played);
     const players=new Map();
-    list(d.giocatori).forEach(p=>{const key=normalize(p.nome);if(key&&!players.has(key))players.set(key,{...p,presenze:0,gol:0,assist:0,gialli:0,rossi:0,mvp:0,mediaVoto:null,_votes:[]});});
+    list(d.giocatori).forEach(p=>{const key=normalize(p.nome);if(key&&!players.has(key))players.set(key,{...p,presenze:0,gol:0,assist:0,gialli:0,rossi:0,mvp:0});});
     const ensure=(name,extra={})=>{
       const key=normalize(name);if(!key)return null;
-      if(!players.has(key))players.set(key,{nome:String(name).trim(),numero:extra.numero??null,ruolo:extra.ruolo||extra.reparto||'',presenze:0,gol:0,assist:0,gialli:0,rossi:0,mvp:0,mediaVoto:null,_votes:[]});
+      if(!players.has(key))players.set(key,{nome:String(name).trim(),numero:extra.numero??null,ruolo:extra.ruolo||extra.reparto||'',presenze:0,gol:0,assist:0,gialli:0,rossi:0,mvp:0});
       return players.get(key);
     };
     let formations=0,eventsComplete=0,both=0;
@@ -73,7 +73,6 @@
         for(const p of [...starters,...bench]){
           const s=ensure(p.nome,p);if(!s||!participating.has(normalize(p.nome)))continue;
           s.presenze++;
-          if(p.voto!==''&&p.voto!==null&&p.voto!==undefined&&Number.isFinite(Number(p.voto))&&Number(p.voto)>=0&&Number(p.voto)<=10)s._votes.push(Number(p.voto));
         }
       }
       if(hasEvents){
@@ -91,7 +90,7 @@
       if(detail.mvp){const awarded=ensure(detail.mvp);if(awarded)awarded.mvp++;}
       if(hasLineup&&hasEvents)both++;
     }
-    d.giocatori=[...players.values()].map(({_votes,...p})=>({...p,mediaVoto:_votes.length?Math.round(_votes.reduce((a,b)=>a+b,0)/_votes.length*100)/100:null}));
+    d.giocatori=[...players.values()].map(({mediaVoto,_votes,...p})=>p);
     d._statsCoverage={complete:both,formations,events:eventsComplete,played:playedGames.length};
     return d;
   }

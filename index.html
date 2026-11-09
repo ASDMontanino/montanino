@@ -14,12 +14,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261108-random">
+  <link rel="stylesheet" href="style.css?v=20261109-no-voti">
   <script src="data.js" defer></script>
-  <script src="tabellini.js?v=20261106b" defer></script>
+  <script src="tabellini.js?v=20261109-no-voti" defer></script>
   <script src="config.js" defer></script>
-  <script src="site-common.js?v=20261106" defer></script>
-  <script src="site-loader.js?v=20261108-random" defer></script>
+  <script src="site-common.js?v=20261109-no-voti" defer></script>
+  <script src="site-loader.js?v=20261109-no-voti" defer></script>
   <script src="fx.js" defer></script>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icons/montanino-192.png">
@@ -104,8 +104,8 @@
   </section>
 
   <section class="section section-calendar" id="calendario" aria-labelledby="calendar-title">
-    <div class="section-heading reveal"><div><p class="eyebrow"><span class="eyebrow-dot"></span> IL CAMPIONATO / 2026—27</p><h2 id="calendar-title">26 GIORNATE.<br><span>UNA SOLA MAGLIA.</span></h2></div><p class="heading-aside">ANDATA E RITORNO, CON TABELLINI,<br>FORMAZIONI, VOTI E CARTELLINI.</p></div>
-    <div class="section-toolbar"><div class="filter-pills" role="group" aria-label="Filtra calendario"><button type="button" class="pill is-active" data-calendar-filter="tutte" aria-pressed="true">TUTTE <span>26</span></button><button type="button" class="pill" data-calendar-filter="Andata" aria-pressed="false">ANDATA</button><button type="button" class="pill" data-calendar-filter="Ritorno" aria-pressed="false">RITORNO</button><button type="button" class="pill" data-calendar-filter="giocate" aria-pressed="false">GIÀ GIOCATE</button></div><div class="toolbar-help">APRI “TABELLINO E VOTI” SULLE PARTITE GIOCATE <span aria-hidden="true">↗</span></div></div>
+    <div class="section-heading reveal"><div><p class="eyebrow"><span class="eyebrow-dot"></span> IL CAMPIONATO / 2026—27</p><h2 id="calendar-title">26 GIORNATE.<br><span>UNA SOLA MAGLIA.</span></h2></div><p class="heading-aside">ANDATA E RITORNO, CON TABELLINI,<br>FORMAZIONI, MVP E CARTELLINI.</p></div>
+    <div class="section-toolbar"><div class="filter-pills" role="group" aria-label="Filtra calendario"><button type="button" class="pill is-active" data-calendar-filter="tutte" aria-pressed="true">TUTTE <span>26</span></button><button type="button" class="pill" data-calendar-filter="Andata" aria-pressed="false">ANDATA</button><button type="button" class="pill" data-calendar-filter="Ritorno" aria-pressed="false">RITORNO</button><button type="button" class="pill" data-calendar-filter="giocate" aria-pressed="false">GIÀ GIOCATE</button></div><div class="toolbar-help">APRI “TABELLINO” SULLE PARTITE GIOCATE <span aria-hidden="true">↗</span></div></div>
     <div id="calendar-list" class="calendar-list" aria-live="polite"></div>
     <div class="calendar-source"><span>ⓘ</span> Gli abbinamenti sono riportati dal calendario UISP Arezzo, Categoria 2, Girone C. Le date ancora mancanti non sono state inventate. <a href="https://gestionalecalcionuovo.uisp.it/AREZZO/25/57" target="_blank" rel="noopener noreferrer">VERIFICA LE DATE UFFICIALI ↗</a></div>
   </section>
@@ -117,8 +117,8 @@
     <div class="section-heading reveal"><div><p class="eyebrow"><span class="eyebrow-dot"></span> THE NUMBERS / PLAYER STATS</p><h2 id="stats-title">I NUMERI<br><span>DEI NOSTRI RAGAZZI.</span></h2></div><p class="heading-aside">PRESENZE, RETI, ASSIST E DISCIPLINA.<br>PRESENZE DA FORMAZIONI VERIFICATE; GOL E ASSIST DA EVENTI VERIFICATI.</p></div>
     <p id="stats-coverage" class="stats-coverage" hidden></p>
     <div class="stat-highlights reveal"><div class="stat-highlight"><small>GIOCATORI INSERITI</small><strong id="stat-players-total">0</strong><span>ROSA STATISTICHE</span></div><div class="stat-highlight"><small>GOL REGISTRATI</small><strong id="stat-goals-total">0</strong><span>CAMPIONATO</span></div><div class="stat-highlight"><small>ASSIST REGISTRATI</small><strong id="stat-assists-total">0</strong><span>CAMPIONATO</span></div><div class="stat-highlight"><small>PRESENZE REGISTRATE</small><strong id="stat-apps-total">0</strong><span>CAMPIONATO</span></div><div class="stat-highlight"><small>PREMI MVP</small><strong id="stat-mvp-total">0</strong><span>PLAYER OF THE MATCH</span></div></div>
-    <div class="section-toolbar"><div class="filter-pills" role="group" aria-label="Ordina statistiche giocatori"><button type="button" class="pill is-active" data-stats-sort="gol" aria-pressed="true">MARCATORI</button><button type="button" class="pill" data-stats-sort="presenze" aria-pressed="false">PRESENZE</button><button type="button" class="pill" data-stats-sort="assist" aria-pressed="false">ASSIST</button><button type="button" class="pill" data-stats-sort="mediaVoto" aria-pressed="false">MEDIA VOTO</button><button type="button" class="pill" data-stats-sort="mvp" aria-pressed="false">MVP</button></div></div>
-    <div class="stats-table-shell reveal"><div class="table-caption"><span>STATISTICHE INDIVIDUALI</span><span>STAGIONE 2026/27</span></div><div class="table-scroll"><table class="player-stat-table"><thead><tr><th>#</th><th>GIOCATORE</th><th>RUOLO</th><th>PG</th><th>GOL</th><th>ASSIST</th><th>GIAL.</th><th>ROSSI</th><th>MVP</th><th>MV</th></tr></thead><tbody id="player-stats"></tbody></table></div><div id="stats-empty" class="editorial-empty" hidden><strong>I NOSTRI NUMERI,<br>PRESTO ONLINE.</strong><p>La sezione è pronta. Aggiungi la rosa nell’area admin e completa i tabellini per aggiornare le statistiche.</p></div></div>
+    <div class="section-toolbar"><div class="filter-pills" role="group" aria-label="Ordina statistiche giocatori"><button type="button" class="pill is-active" data-stats-sort="gol" aria-pressed="true">MARCATORI</button><button type="button" class="pill" data-stats-sort="presenze" aria-pressed="false">PRESENZE</button><button type="button" class="pill" data-stats-sort="assist" aria-pressed="false">ASSIST</button><button type="button" class="pill" data-stats-sort="mvp" aria-pressed="false">MVP</button></div></div>
+    <div class="stats-table-shell reveal"><div class="table-caption"><span>STATISTICHE INDIVIDUALI</span><span>STAGIONE 2026/27</span></div><div class="table-scroll"><table class="player-stat-table"><thead><tr><th>#</th><th>GIOCATORE</th><th>RUOLO</th><th>PG</th><th>GOL</th><th>ASSIST</th><th>GIAL.</th><th>ROSSI</th><th>MVP</th></tr></thead><tbody id="player-stats"></tbody></table></div><div id="stats-empty" class="editorial-empty" hidden><strong>I NOSTRI NUMERI,<br>PRESTO ONLINE.</strong><p>La sezione è pronta. Aggiungi la rosa nell’area admin e completa i tabellini per aggiornare le statistiche.</p></div></div>
   </section>
   <section class="section section-staff" id="staff" aria-labelledby="staff-title">
     <div class="section-heading reveal"><div><p class="eyebrow"><span class="eyebrow-dot"></span> DIETRO OGNI PARTITA</p><h2 id="staff-title">LE PERSONE<br><span>DIETRO LO STEMMA.</span></h2></div><p class="heading-aside">DIRIGENZA, STAFF TECNICO, PERSONE.<br>LA FORZA DEL MONTANINO.</p></div>

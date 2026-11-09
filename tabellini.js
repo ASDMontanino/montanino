@@ -16,7 +16,6 @@
   const safeArray = (v) => Array.isArray(v)?v:[];
   const hasData = (v) => !!v && (safeArray(v.titolari).length>0 || safeArray(v.panchina).length>0 || safeArray(v.eventi).length>0 || !!v.modulo || !!v.note || !!v.mvp);
   const isPlayed = (m) => Number.isInteger(m.golCasa) && Number.isInteger(m.golOspite);
-  const rate = v => v===null || v===undefined || v==='' ? '—' : (typeof v==='number' ? String(v).replace('.',',') : String(v));
   const normal = name => String(name||'').trim().toLocaleLowerCase('it');
   const minuteLabel = val => (val===undefined || val===null || val==='') ? '—' : (String(val).replace(/[′']/g,'') + '′');
   const repOf = player => {
@@ -36,8 +35,8 @@
     const schema=['P','D','D','D','D','C','C','C','A','A','A'];
     return {
       modulo:'4-3-3', datiCompleti:false, eventiCompleti:false,
-      titolari:schema.map((reparto,i)=>({numero:i+1,nome:'Giocatore '+String(i+1).padStart(2,'0'),reparto,voto:i%4===0?7:i%3===0?5.5:6.5,nota:i===0?'Esempio di commento alla prestazione.':''})),
-      panchina:[{numero:12,nome:'Giocatore 12',reparto:'P'},{numero:13,nome:'Giocatore 13',reparto:'C',entrato:'67',voto:6}],
+      titolari:schema.map((reparto,i)=>({numero:i+1,nome:'Giocatore '+String(i+1).padStart(2,'0'),reparto,nota:i===0?'Esempio di commento alla prestazione.':''})),
+      panchina:[{numero:12,nome:'Giocatore 12',reparto:'P'},{numero:13,nome:'Giocatore 13',reparto:'C',entrato:'67'}],
       eventi:[
         {minuto:'23',tipo:'gol',giocatore:'Giocatore 09',assist:'Giocatore 07',squadra:'Montanino'},
         {minuto:'51',tipo:'giallo',giocatore:'Giocatore 04',squadra:'Montanino'},
@@ -70,7 +69,6 @@
           if(!p)return;
           const badge=make('div','md-pitch-player');
           badge.append(make('span','md-shirt',p.numero??'•'),make('span','md-player-name',p.nome||'Da inserire'));
-          if(p.voto!==undefined&&p.voto!==null&&p.voto!=='')badge.append(make('span','md-pitch-vote',rate(p.voto)));
           row.append(badge);
         });
         pitch.append(row);
@@ -127,15 +125,15 @@
     const n=own.filter(e=>{const eventType=String(e.tipo||'').toLowerCase();return type==='assist' ? eventType==='gol'&&normal(e.assist)===key : (type==='gol'?['gol','gol_rigore','gol(rigore)'].includes(eventType):eventType===type)&&normal(e.giocatore)===key;}).length;
     return n;
   }
-  function drawGrades(holder, v){
+  function drawPlayerStats(holder, v){
     const section=make('section','md-block md-grades');
     const starters=safeArray(v.titolari), subs=safeArray(v.panchina), people=[...starters,...subs];
-    section.append(make('h5','', 'VOTI E STATISTICHE INDIVIDUALI'));
-    if(!people.length){section.append(make('p','md-empty-small','In attesa di formazione e voti ufficiali.'));holder.append(section);return;}
+    section.append(make('h5','', 'STATISTICHE INDIVIDUALI'));
+    if(!people.length){section.append(make('p','md-empty-small','In attesa della formazione ufficiale.'));holder.append(section);return;}
     const tbl=make('div','md-table-scroller');
     const table=make('table','md-table');
     const thead=make('thead');const h=make('tr');
-    ['#','GIOCATORE','GOL','ASSIST','GIAL.','ROSSI','VOTO'].forEach(k=>h.append(make('th','',k)));
+    ['#','GIOCATORE','GOL','ASSIST','GIAL.','ROSSI'].forEach(k=>h.append(make('th','',k)));
     thead.append(h);table.append(thead);
     const body=make('tbody');const events=safeArray(v.eventi);
     people.forEach((p,i)=>{
@@ -143,9 +141,9 @@
       const values=[p.numero??'—',p.nome||'—', ...['gol','assist','giallo','rosso'].map(type=>{
         const n=count(events,p.nome,type);
         return n>0?String(n):(v.eventiCompleti===true?'0':'—');
-      }),rate(p.voto)];
+      })];
       values.forEach((val,idx)=>{
-        const td=make('td',idx===1?'md-grade-name':idx===6?'md-grade-score':'',val);
+        const td=make('td',idx===1?'md-grade-name':'',val);
         if(idx===1){
           if(i>=starters.length)td.append(make('small','md-grade-status','PANCHINA'));
           if(p.nota)td.append(make('small','md-grade-note',p.nota));
@@ -185,22 +183,22 @@
     }
     if(!hasData(v) && !isDemo){
       const empty=make('div','md-report-empty');
-      empty.append(make('strong','','FORMAZIONE E VOTI IN ARRIVO.'),make('p','','Il risultato è disponibile, ma i dati individuali non sono ancora stati forniti. Nessun nome, voto o cartellino è stato inventato.'));
+      empty.append(make('strong','','FORMAZIONE E DATI IN ARRIVO.'),make('p','','Il risultato è disponibile, ma i dati individuali non sono ancora stati forniti. Nessun nome o cartellino è stato inventato.'));
       const show=make('button','md-demo-button','GUARDA UN ESEMPIO DI TABELLINO ↗');show.type='button';
       show.addEventListener('click',()=>renderContent(panel,m,demoMatch(),true));
       empty.append(show);panel.append(empty);return;
     }
     if(isDemo){
-      const alert=make('div','md-demo-banner','ANTEPRIMA DIMOSTRATIVA: formazione, nomi, voti ed episodi qui sotto sono inventati e servono soltanto a mostrare la grafica.');
+      const alert=make('div','md-demo-banner','ANTEPRIMA DIMOSTRATIVA: formazione, nomi ed episodi qui sotto sono inventati e servono soltanto a mostrare la grafica.');
       const back=make('button','md-demo-back','← TORNA AI DATI DELLA PARTITA');back.type='button';
       back.addEventListener('click',()=>renderContent(panel,m,(SITE_DATA.dettagliPartite||{})[m.id]||{},false));
       panel.append(alert,back);
     } else if(v.datiCompleti!==true){
-      panel.append(make('p','md-partial-disclaimer','Dati tecnici parziali: l’assenza di un episodio o di un voto non significa che non sia avvenuto.'));
+      panel.append(make('p','md-partial-disclaimer','Dati tecnici parziali: l’assenza di un episodio non significa che non sia avvenuto.'));
     }
     const layout=make('div','md-report-grid');
     const colLeft=make('div','md-report-column');const colRight=make('div','md-report-column');
-    drawPitch(colLeft,v);drawEvents(colRight,v);drawGrades(colRight,v);
+    drawPitch(colLeft,v);drawEvents(colRight,v);drawPlayerStats(colRight,v);
     layout.append(colLeft,colRight);panel.append(layout);
     if(v.note){const foot=make('div','md-match-note');foot.append(make('strong','','NOTE DEL MATCH'),make('p','',v.note));panel.append(foot);}
   }
@@ -212,11 +210,11 @@
     const panel=make('div','md-report'); panel.id='tabellino-'+m.id;
     panel.setAttribute('role','region');panel.setAttribute('aria-label','Tabellino '+m.casa+' contro '+m.ospite);
     panel.hidden=true;
-    const toggle=make('button','md-toggle',isPlayed(m)?'TABELLINO E VOTI +':'FORMAZIONE +');
+    const toggle=make('button','md-toggle',isPlayed(m)?'TABELLINO +':'FORMAZIONE +');
     toggle.type='button';toggle.setAttribute('aria-controls',panel.id);toggle.setAttribute('aria-expanded','false');
     toggle.addEventListener('click',()=>{
       const open=panel.hidden;panel.hidden=!open;card.classList.toggle('md-open',open);
-      toggle.setAttribute('aria-expanded',String(open));toggle.textContent=(isPlayed(m)?'TABELLINO E VOTI ':'FORMAZIONE ')+(open?'−':'+');
+      toggle.setAttribute('aria-expanded',String(open));toggle.textContent=(isPlayed(m)?'TABELLINO ':'FORMAZIONE ')+(open?'−':'+');
       if(open)renderContent(panel,m,details,false);
     });
     side.append(toggle);card.append(panel);

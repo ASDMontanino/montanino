@@ -329,7 +329,7 @@
   const events=coverage.events??coverage.complete??0;
   if(coverageEl&&coverage.played>0){
     coverageEl.hidden=false;
-    coverageEl.textContent=`STATISTICHE SU ${coverage.played} GARE GIOCATE · PRESENZE E VOTI: ${formations} FORMAZIONI VERIFICATE · GOL, ASSIST E CARTELLINI: ${events} CRONOLOGIE VERIFICATE. I DATI ASSENTI NON SONO CONTEGGIATI.`;
+    coverageEl.textContent=`STATISTICHE SU ${coverage.played} GARE GIOCATE · PRESENZE: ${formations} FORMAZIONI VERIFICATE · GOL, ASSIST E CARTELLINI: ${events} CRONOLOGIE VERIFICATE. I DATI ASSENTI NON SONO CONTEGGIATI.`;
   }
   const players=Array.isArray(SITE_DATA.giocatori)?SITE_DATA.giocatori:[];
   const intVal=x=>Math.max(0,Number(x)||0);
@@ -348,7 +348,7 @@
     [...players].sort((a,b)=>intVal(b[order])-intVal(a[order])||String(a.nome).localeCompare(String(b.nome),'it'))
       .forEach(p=>{
         const tr=create('tr');const showLineups=formations||!coverage.played,showEvents=events||!coverage.played;
-        const values=[p.numero??'—',p.nome||'—',p.ruolo||'—',showLineups?(p.presenze??0):'—',showEvents?(p.gol??0):'—',showEvents?(p.assist??0):'—',showEvents?(p.gialli??0):'—',showEvents?(p.rossi??0):'—',p.mvp??0,showLineups?(p.mediaVoto??'—'):'—'];
+        const values=[p.numero??'—',p.nome||'—',p.ruolo||'—',showLineups?(p.presenze??0):'—',showEvents?(p.gol??0):'—',showEvents?(p.assist??0):'—',showEvents?(p.gialli??0):'—',showEvents?(p.rossi??0):'—',p.mvp??0];
         values.forEach((v,i)=>{const td=create('td',i===1?'player-name-cell':'',String(v));tr.appendChild(td)});statsBody.appendChild(tr);
       });
   }
