@@ -12,7 +12,7 @@
   <script src="data.js" defer></script><script src="config.js" defer></script>
   <script src="site-common.js?v=20261106" defer></script><script src="admin.js?v=20261109-upload2" defer></script>
   <link rel="stylesheet" href="photo-upload.css?v=20261109">
-  <script src="photo-upload.js?v=20261109" defer></script>
+  <script src="photo-upload.js?v=20261109b" defer></script>
 </head>
 <body>
 <header class="admin-header"><a href="index.html" class="admin-brand"><img src="assets/img/stemma.webp" alt="Stemma Montanino"><span><strong>MONTANINO</strong><small>CONTROL ROOM · V3.3</small></span></a><div class="header-actions"><span id="mode-label" class="mode-label">CARICAMENTO…</span><a class="link-back" href="index.html">← VEDI IL SITO</a><button type="button" id="logout" class="btn-quiet" hidden>ESCI</button></div></header>
@@ -76,7 +76,7 @@
   <progress id="gallery-upload-progress" max="100" value="0" hidden></progress>
   <p id="gallery-upload-status" role="status" aria-live="polite">Pronto per il caricamento.</p>
   <div id="gallery-upload-preview" class="gallery-upload-preview" aria-label="Anteprima delle fotografie caricate"></div>
-  <p class="hint">Prima del primo utilizzo esegui <code>FOTO_STORAGE_SETUP.sql</code> nel SQL Editor del tuo progetto Supabase. Le foto verranno mostrate in galleria e nel carosello Home.</p>
+  <p class="hint">Prima del primo utilizzo esegui <a href="https://github.com/ASDMontanino/montanino/blob/main/FOTO_STORAGE_SETUP.sql" target="_blank" rel="noopener noreferrer"><strong>FOTO_STORAGE_SETUP.sql ↗</strong></a> nel SQL Editor del tuo progetto Supabase. Le foto verranno mostrate in galleria e nel carosello Home.</p>
 </div>
 <div class="surface pad"><div class="block-head"><div><h3>FOTO DELLE GARE</h3><p>Le foto pubblicate tramite caricamento automatico sono su Supabase; quelle vecchie rimangono su GitHub.</p></div><button id="add-match-photo" type="button" class="btn-add">+ FOTO</button></div><div id="match-gallery-list" class="entity-list match-gallery-list"></div></div><div class="surface pad"><h3 class="social-heading">AGGIUNTA MANUALE DI FILE GIÀ SU GITHUB</h3><div class="form-grid two"><label>Partita<select id="gallery-bulk-match"></select></label><label>File (uno per riga)<textarea id="gallery-bulk-files" rows="5" placeholder="montanino-partita-01.webp&#10;montanino-partita-02.webp"></textarea></label></div><button id="add-match-photos-bulk" type="button" class="btn-add">+ AGGIUNGI I FILE ALL’ELENCO</button><p class="hint">Poi premi Salva modifiche per pubblicarli. Le immagini devono prima essere caricate su GitHub.</p><p><a class="link-back" href="galleria.html" target="_blank" rel="noopener noreferrer">VEDI LA GALLERIA ↗</a></p></div></section>
     <div class="editor-bottom"><button id="save-bottom" class="btn-primary" type="button">SALVA TUTTO →</button><span>Le modifiche non sono pubblicate finché non premi Salva.</span></div>

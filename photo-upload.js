@@ -23,7 +23,10 @@
   async function webp(file){
     let source,objectURL;
     try{
-      if(window.createImageBitmap)source=await createImageBitmap(file,{imageOrientation:'from-image'});
+      if(window.createImageBitmap){
+        try{source=await createImageBitmap(file,{imageOrientation:'from-image'});}
+        catch(_){source=await createImageBitmap(file);}
+      }
       else {
         objectURL=URL.createObjectURL(file);
         source=await new Promise((resolve,reject)=>{
