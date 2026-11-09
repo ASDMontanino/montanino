@@ -20,6 +20,7 @@
     calendar: svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>'),
     person: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
     heart: svg('<path d="M20.5 5.8a5.5 5.5 0 0 0-7.8 0L12 6.5l-.7-.7a5.5 5.5 0 0 0-7.8 7.8l8.5 8 8.5-8a5.5 5.5 0 0 0 0-7.8z"/>'),
+    bell: svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>'),
     star: svg('<path d="m12 2 3 7 7 .6-5.4 4.6 1.7 7-6.3-3.8L5.7 21l1.7-7L2 9.6 9 9z"/>')
   };
   const tabs = [
@@ -35,7 +36,8 @@
     ['STAFF', sectionLink('staff'), icons.person],
     ['SPONSOR', sectionLink('sponsor'), icons.heart],
     ['GALLERIA', 'galleria.html', icons.photos],
-    ['MATCH CENTER', sectionLink('partite'), icons.match]
+    ['MATCH CENTER', sectionLink('partite'), icons.match],
+    ['NOTIFICHE', 'notifiche.html', icons.bell]
   ];
 
   document.documentElement.classList.add('club-app-mode');

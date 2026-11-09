@@ -114,5 +114,7 @@
   groupIds.forEach(id=>{const opt=el('option','',matchTitle(id));opt.value=id;select.append(opt);});
   select.addEventListener('change',()=>{closeLightbox();render(select.value);});
   $('gallery-loading').hidden=true;
-  render();
+  const requestedMatch = new URLSearchParams(location.search).get('partita');
+  if (groupIds.includes(requestedMatch)) select.value = requestedMatch;
+  render(select.value);
 })();
