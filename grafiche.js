@@ -10,7 +10,6 @@
   const download = get('download');
   const share = get('share');
   const demo = window.MONTANINO_GRAPHICS_DEMO;
-  const types = { pre: 'PREPARTITA', final: 'RISULTATO FINALE', scorers: 'MARCATORI', mvp: 'MVP' };
   const display = '"Barlow Condensed", "Arial Narrow", Arial, sans-serif';
   const body = '"DM Sans", Arial, sans-serif';
   const white = '#f4fbf5';
@@ -19,6 +18,7 @@
   const ink = '#08170f';
   const seasonDate = new Intl.DateTimeFormat('it-IT', { dateStyle: 'full', timeZone: 'Europe/Rome' });
   let season;
+  let teamPhoto;
   let revision = 0;
   let imageUrl;
   let file;
@@ -66,110 +66,231 @@
     context.fillText(value, x, y, max);
   }
 
-  function line(x1, y1, x2, y2, color) {
+  function line(x1, y1, x2, y2, color, width = 2) {
     context.strokeStyle = color;
-    context.lineWidth = 2;
+    context.lineWidth = width;
     context.beginPath();
     context.moveTo(x1, y1);
     context.lineTo(x2, y2);
     context.stroke();
   }
 
-  function background(height) {
-    const gradient = context.createRadialGradient(870, height * .35, 30, 600, height * .48, height * .76);
-    gradient.addColorStop(0, '#285a3b');
-    gradient.addColorStop(.63, '#10271a');
-    gradient.addColorStop(1, '#06110b');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 1080, height);
+  function rect(x, y, width, height, color) {
+    context.fillStyle = color;
+    context.fillRect(x, y, width, height);
+  }
 
-    context.fillStyle = '#86e3a80e';
-    for (let i = 0; i < 5; i++) {
-      const x = 710 + i * 128;
-      context.beginPath();
-      context.moveTo(x, 0);
-      context.lineTo(x + 55, 0);
-      context.lineTo(x - 375, height);
-      context.lineTo(x - 430, height);
-      context.fill();
-    }
-
-    context.strokeStyle = '#87d6a02c';
-    context.lineWidth = 3;
-    context.strokeRect(114, height * .24, 852, height * .49);
-    context.strokeRect(339, height * .24, 402, height * .095);
-    context.strokeRect(339, height * .635, 402, height * .095);
-    line(114, height * .485, 966, height * .485, '#87d6a02c');
+  function polygon(points, color) {
+    context.fillStyle = color;
     context.beginPath();
-    context.arc(540, height * .485, 103, 0, Math.PI * 2);
-    context.stroke();
-
-    context.fillStyle = lime;
-    context.fillRect(64, 64, 5, height - 128);
-    line(96, 250, 984, 250, '#83c99d66');
-    line(96, height - 141, 984, height - 141, '#83c99d66');
-  }
-
-  function teamName(name, x, y, max = 430) {
-    text(String(name).toLocaleUpperCase('it'), x, y, 63, { color: ownTeam(name) ? lime : white, max });
-  }
-
-  function draw(match, type, details, goals, height) {
-    canvas.height = height;
-    background(height);
-    context.fillStyle = '#e4f5e7';
-    context.fillRect(96, 95, 114, 114);
-    if (crest.naturalWidth) {
-      const width = 90 * crest.naturalWidth / crest.naturalHeight;
-      context.drawImage(crest, 153 - width / 2, 107, width, 90);
+    for (const [index, [x, y]] of points.entries()) {
+      if (index) context.lineTo(x, y);
+      else context.moveTo(x, y);
     }
-    text('A.S.D. MONTANINO', 235, 139, 48, { align: 'left', max: 725 });
-    const round = match.giornata ? ' · ' + match.giornata + 'ª GIORNATA' : '';
-    text('CAMPIONATO UISP' + round, 238, 184, 26, { align: 'left', max: 715, color: subdued, family: body, weight: 700 });
-    text(types[type], 540, height * .287, type === 'mvp' ? 150 : 112, { color: lime, max: 890 });
+    context.closePath();
+    context.fill();
+  }
 
-    if (type === 'pre') {
-      teamName(match.casa, 540, height * .435, 870);
-      text('VS', 540, height * .505, 52, { color: subdued });
-      teamName(match.ospite, 540, height * .575, 870);
-      text(readableDate(match).toLocaleUpperCase('it') + (match.ora ? ' · ' + match.ora : ''), 540,
-        height * .72, 37, { color: white, max: 870, family: body, weight: 700 });
-      text(match.campo || 'Campo da definire', 540, height * .765, 28, { color: subdued, max: 850, family: body, weight: 600 });
-    } else if (type === 'final') {
-      teamName(match.casa, 305, height * .405);
-      teamName(match.ospite, 775, height * .405);
-      text(match.golCasa + ' – ' + match.golOspite, 540, height * .563, 268, { color: white, max: 870 });
-      text(readableDate(match), 540, height * .738, 32, { color: subdued, family: body, weight: 600 });
-    } else if (type === 'mvp') {
-      const name = String(details.mvp).toLocaleUpperCase('it');
-      const words = name.split(/\s+/);
-      const split = Math.ceil(words.length / 2);
-      if (words.length > 1) {
-        text(words.slice(0, split).join(' '), 540, height * .468, 120, { max: 880 });
-        text(words.slice(split).join(' '), 540, height * .555, 120, { color: lime, max: 880 });
-      } else text(name, 540, height * .51, 145, { max: 880 });
-      text(match.casa + ' ' + match.golCasa + ' – ' + match.golOspite + ' ' + match.ospite,
-        540, height * .73, 43, { max: 870 });
-    } else {
-      teamName(match.casa, 306, height * .389);
-      teamName(match.ospite, 774, height * .389);
-      text(match.golCasa + ' – ' + match.golOspite, 540, height * .465, 86);
-      line(540, height * .51, 540, height * .79, '#83c99d66');
-      const step = Math.min(67, height * .25 / Math.max(1, ...goals.map(group => group.length)));
-      goals.forEach((group, column) => {
-        const rows = group.length ? group : ['Nessun marcatore registrato'];
-        rows.forEach((name, index) => text(name, column ? 774 : 306, height * .548 + index * step,
-          Math.min(28, step * .72), { max: 414, family: body, weight: 600, color: group.length ? white : subdued }));
+  function shade(x, y, width, height, stops) {
+    const gradient = context.createLinearGradient(x, y, x, y + height);
+    for (const [point, color] of stops) gradient.addColorStop(point, color);
+    rect(x, y, width, height, gradient);
+  }
+
+  function cover(image, x, y, width, height, focusY = .5) {
+    if (!image) return;
+    const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+    const sourceWidth = width / scale;
+    const sourceHeight = height / scale;
+    context.drawImage(image, (image.naturalWidth - sourceWidth) / 2,
+      (image.naturalHeight - sourceHeight) * focusY, sourceWidth, sourceHeight, x, y, width, height);
+  }
+
+  function logo(x, y, size) {
+    if (!crest.naturalWidth) return;
+    const width = size * crest.naturalWidth / crest.naturalHeight;
+    context.drawImage(crest, x + (size - width) / 2, y, width, size);
+  }
+
+  function topAndBottom(match, top, bottom, light = false) {
+    const color = light ? '#153725' : white;
+    const muted = light ? '#3a634a' : subdued;
+    rect(68, top, 76, 80, light ? '#dbeae0' : '#e5f4e8');
+    logo(73, top + 6, 67);
+    text('A.S.D. MONTANINO', 164, top + 24, 38, { align: 'left', color });
+    text('CAMPIONATO UISP', 166, top + 58, 20, { align: 'left', color: muted, family: body, weight: 700 });
+    if (match.giornata) text(match.giornata + 'ª GIORNATA', 1010, top + 40, 27,
+      { align: 'right', color: muted, family: body, weight: 700 });
+    line(69, bottom - 29, 1011, bottom - 29, light ? '#91ac9a' : '#63947a');
+    text('@ASD_MONTANINO', 69, bottom, 22, { align: 'left', family: body, weight: 700, color: muted });
+    if (demo) text('ESEMPIO DIMOSTRATIVO', 1010, bottom, 22,
+      { align: 'right', family: body, weight: 700, color: muted });
+  }
+
+  function strokes(height, color) {
+    for (let i = 0; i < 5; i++) {
+      const x = 709 + i * 83;
+      line(x, 0, x - 485, height, color, i === 0 ? 3 : 1);
+    }
+  }
+
+  function team(name, x, y, size, max, color, align = 'center') {
+    text(String(name).toLocaleUpperCase('it'), x, y, size,
+      { color: color || (ownTeam(name) ? lime : white), max, align });
+  }
+
+  function fixtureLine(match) {
+    return match.casa + '  ' + match.golCasa + ' – ' + match.golOspite + '  ' + match.ospite;
+  }
+
+  function prepartita(match, height, top, bottom, at) {
+    rect(0, 0, 1080, height, '#0a1b11');
+    cover(teamPhoto, 0, at(-.14), 1080, at(.73) - at(-.14), .74);
+    shade(0, 0, 1080, height, [[0, '#050f0bea'], [.32, '#10291a00'], [.49, '#07150d08'], [.67, '#07150df7'], [1, '#07150d']]);
+    strokes(height, '#a5e6b734');
+    polygon([[0, at(.555)], [1080, at(.495)], [1080, at(.92)], [0, at(.92)]], '#07170ef0');
+    line(68, at(.575), 1012, at(.53), '#83e6a36c', 2);
+    text('MATCH DAY', 66, at(.075), 137, { align: 'left', max: 940 });
+    rect(69, at(.147), 186, 8, lime);
+    team(match.casa, 70, at(.65), 109, 942, null, 'left');
+    text('VS', 72, at(.725), 30, { align: 'left', color: subdued, family: body, weight: 700 });
+    team(match.ospite, 70, at(.797), 109, 942, null, 'left');
+    rect(68, at(.877), 944, 114, '#a4f8b8');
+    text(readableDate(match).toLocaleUpperCase('it') + (match.ora ? ' · ORE ' + match.ora : ''),
+      94, at(.877) + 32, 29, { align: 'left', max: 882, color: ink, family: body, weight: 700 });
+    text(match.campo || 'Campo da definire', 94, at(.877) + 77, 26,
+      { align: 'left', max: 882, color: '#234431', family: body, weight: 700 });
+    topAndBottom(match, top, bottom);
+  }
+
+  function risultato(match, photo, height, top, bottom, at) {
+    rect(0, 0, 1080, height, '#08170e');
+    cover(photo || teamPhoto, 0, 0, 1080, height, .62);
+    shade(0, 0, 1080, height, [[0, '#040e08f5'], [.23, '#08180d46'], [.4, '#091a0f08'], [.63, '#07150dcf'], [1, '#07150d']]);
+    strokes(height, '#9af1ad38');
+    text('FULL TIME', 540, at(.12), 145, { max: 920 });
+    rect(450, at(.21), 180, 7, lime);
+    line(68, at(.565), 1012, at(.508), '#b4f7c66c', 2);
+    polygon([[0, at(.615)], [1080, at(.552)], [1080, at(.815)], [0, at(.878)]], '#07170ee3');
+    text(match.golCasa + ' – ' + match.golOspite, 540, at(.655), 270, { max: 850 });
+    line(540, at(.773), 540, at(.842), '#63947a');
+    team(match.casa, 299, at(.805), 65, 420);
+    team(match.ospite, 781, at(.805), 65, 420);
+    text(readableDate(match).toLocaleUpperCase('it'), 540, at(.945), 29,
+      { max: 900, color: subdued, family: body, weight: 700 });
+    topAndBottom(match, top, bottom);
+  }
+
+  function marcatori(match, details, goals, height, top, bottom, at) {
+    rect(0, 0, 1080, height, '#eaf1e8');
+    strokes(height, '#427b5350');
+    rect(0, at(.026), 1080, at(.255) - at(.026), '#123c27');
+    polygon([[750, at(.026)], [1080, at(.026)], [1080, at(.255)], [632, at(.255)]], '#205837');
+    text('MARCATORI', 68, at(.134), 125, { align: 'left', max: 690 });
+    text(match.golCasa + ' – ' + match.golOspite, 1009, at(.134), 94,
+      { align: 'right', max: 229, color: lime });
+    const maxRows = Math.max(1, ...goals.map(group => group.length));
+    const spacing = Math.min(76, (at(.84) - at(.45)) / maxRows);
+    goals.forEach((group, column) => {
+      const x = column ? 552 : 68;
+      const name = column ? match.ospite : match.casa;
+      rect(x, at(.31), 460, at(.867) - at(.31), '#f9fcf7');
+      rect(x, at(.31), 460, 75, ownTeam(name) ? '#a4f8b8' : '#d5e5d8');
+      team(name, x + 22, at(.31) + 37, 58, 418, '#153725', 'left');
+      const rows = group.length ? group : ['Nessun marcatore registrato'];
+      rows.forEach((scorer, index) => {
+        const y = at(.31) + 104 + spacing * index;
+        rect(x + 20, y - 4, 8, 8, '#4d865e');
+        text(scorer, x + 40, y, Math.min(29, spacing * .64),
+          { align: 'left', max: 398, family: body, weight: 700, color: '#143522' });
+        line(x + 20, y + spacing * .45, x + 438, y + spacing * .45, '#cddbcf', 1);
       });
-      if (!details.eventiCompleti) text('MARCATORI REGISTRATI NEL TABELLINO', 540, height * .82, 22,
-        { color: subdued, family: body, weight: 700 });
-    }
-    text('@ASD_MONTANINO', 97, height - 95, 26, { align: 'left', family: body, weight: 700, color: lime });
-    if (demo) text('ESEMPIO DIMOSTRATIVO', 982, height - 95, 24,
-      { align: 'right', family: body, weight: 700, color: subdued });
+    });
+    if (!details.eventiCompleti) text('MARCATORI REGISTRATI NEL TABELLINO', 68, at(.944), 25,
+      { align: 'left', color: '#39634a', family: body, weight: 700 });
+    topAndBottom(match, top, bottom, true);
   }
 
-  function refresh() {
+  function mvp(match, details, portrait, height, top, bottom, at) {
+    rect(0, 0, 1080, height, '#0b1d13');
+    polygon([[545, 0], [1080, 0], [1080, height], [334, height]], '#1b4029');
+    strokes(height, '#83d69c5c');
+    if (portrait) {
+      cover(portrait, 363, at(.075), 717, at(.69) - at(.075), .34);
+      shade(363, at(.075), 717, at(.69) - at(.075), [[0, '#0c281818'], [.63, '#10291a08'], [1, '#10291af7']]);
+    } else {
+      context.save();
+      context.globalAlpha = .17;
+      logo(549, at(.12), 425);
+      context.restore();
+    }
+    text('MVP', 64, at(.25), 258, { align: 'left', color: lime, max: 585 });
+    rect(69, at(.405), 100, 7, lime);
+    text('GIOCATORE DELLA PARTITA', 70, at(.452), 27, { align: 'left', color: white, family: body, weight: 700 });
+    polygon([[0, at(.625)], [1080, at(.572)], [1080, at(.842)], [0, at(.895)]], '#a4f8b8');
+    const words = String(details.mvp).trim().toLocaleUpperCase('it').split(/\s+/);
+    const split = Math.ceil(words.length / 2);
+    if (words.length > 1) {
+      text(words.slice(0, split).join(' '), 67, at(.681), 123, { align: 'left', color: ink, max: 942 });
+      text(words.slice(split).join(' '), 67, at(.797), 123, { align: 'left', color: ink, max: 942 });
+    } else text(words[0], 67, at(.744), 146, { align: 'left', color: ink, max: 942 });
+    text(fixtureLine(match).toLocaleUpperCase('it'), 69, at(.95), 42, { align: 'left', max: 940 });
+    topAndBottom(match, top, bottom);
+  }
+
+  function draw(match, type, details, goals, height, photo) {
+    canvas.height = height;
+    const story = height === 1920;
+    const top = story ? 176 : 69;
+    const bottom = story ? 1672 : 1274;
+    const at = fraction => (story ? 340 : 183) + fraction * (story ? 1220 : 984);
+    if (type === 'pre') prepartita(match, height, top, bottom, at);
+    else if (type === 'final') risultato(match, photo, height, top, bottom, at);
+    else if (type === 'scorers') marcatori(match, details, goals, height, top, bottom, at);
+    else mvp(match, details, photo, height, top, bottom, at);
+  }
+
+  async function imageFrom(source, crossOrigin = false) {
+    if (!source) return null;
+    const image = new Image();
+    if (crossOrigin) image.crossOrigin = 'anonymous';
+    image.src = source;
+    let timeout;
+    try {
+      await Promise.race([image.decode(), new Promise((_, reject) => { timeout = setTimeout(reject, 4500); })]);
+      return image;
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function imageFileName(value) {
+    const name = String(value ?? '');
+    return /^[\p{L}\p{N}][\p{L}\p{N} _().-]*\.(?:jpe?g|png|webp|avif)$/iu.test(name) && !name.includes('..') ? name : '';
+  }
+
+  function mvpImage(fileName) {
+    const name = imageFileName(fileName);
+    return name ? imageFrom('assets/img/' + encodeURIComponent(name)) : null;
+  }
+
+  function resultPhoto(match) {
+    if (demo) return imageFrom(window.MONTANINO_GRAPHICS_MATCH_PHOTO);
+    const photos = Array.isArray(season.fotoPartite) ? season.fotoPartite : [];
+    const photo = photos.find(item => item && String(item.partita) === String(match.id));
+    const file = String(photo?.file ?? '');
+    if (/^sb:montanino-[0-9a-f]{32}\.webp$/.test(file)) {
+      const url = new URL('/storage/v1/object/public/montanino-partite/' + encodeURIComponent(file.slice(3)),
+        window.MONTANINO_SUPABASE.url);
+      return imageFrom(url.href, true);
+    }
+    const name = imageFileName(file);
+    return name ? imageFrom('assets/img/partite/' + encodeURIComponent(name)) : null;
+  }
+
+  async function refresh() {
     const current = ++revision;
     const match = season.calendario.find(game => String(game.id) === fixture.value);
     if (!match) return;
@@ -192,7 +313,11 @@
     file = undefined;
     if (imageUrl) URL.revokeObjectURL(imageUrl);
 
-    draw(match, type, details, goals, height);
+    let photo;
+    if (type === 'mvp') photo = await mvpImage(details.mvpFoto);
+    if (type === 'final') photo = await resultPhoto(match);
+    if (current !== revision) return;
+    draw(match, type, details, goals, height, photo);
     canvas.toBlob(blob => {
       if (current !== revision) return;
       if (!blob) {
@@ -237,7 +362,8 @@
       const selected = (demo && last) || upcoming || last || season.calendario[0];
       fixture.value = String(selected.id);
       artwork.value = hasScore(selected) ? 'final' : 'pre';
-      await Promise.allSettled([crest.decode(), document.fonts.load('900 100px ' + display), document.fonts.load('700 35px ' + body)]);
+      await Promise.allSettled([imageFrom(demo ? window.MONTANINO_GRAPHICS_PHOTO : 'assets/img/identita-hero.webp').then(image => { teamPhoto = image; }),
+        crest.decode(), document.fonts.load('900 100px ' + display), document.fonts.load('700 35px ' + body)]);
       fixture.disabled = artwork.disabled = false;
       refresh();
     } catch {
