@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#07140e">
+  <title>Grafiche partita · A.S.D. Montanino</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@800;900&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="grafiche.css">
+  <script src="config.js" defer></script>
+  <script src="grafiche.js" defer></script>
+</head>
+<body>
+  <main class="studio">
+    <header class="masthead">
+      <img id="club-crest" src="assets/img/stemma.webp" width="52" height="56" alt="">
+      <div><strong>A.S.D. MONTANINO</strong><p>Grafica partita</p></div>
+      <a class="back" href="admin-app.html">← Pannello</a>
+    </header>
+    <div class="workspace">
+      <section class="controls" aria-labelledby="studio-title">
+        <h1 id="studio-title">Grafiche partita</h1>
+        <p id="data-status" class="data-status" role="status">Caricamento partite…</p>
+        <label for="fixture">Partita</label>
+        <select id="fixture" disabled></select>
+        <label for="artwork">Grafica</label>
+        <select id="artwork" disabled>
+          <option value="pre">Prepartita</option>
+          <option value="final">Risultato finale</option>
+          <option value="scorers">Marcatori</option>
+          <option value="mvp">MVP</option>
+        </select>
+        <fieldset>
+          <legend>Formato</legend>
+          <div class="formats">
+            <label><input type="radio" name="format" value="1350" checked><span><strong>Post</strong><small>1080 × 1350</small></span></label>
+            <label><input type="radio" name="format" value="1920"><span><strong>Story</strong><small>1080 × 1920</small></span></label>
+          </div>
+        </fieldset>
+        <p id="artwork-status" class="note" role="status"></p>
+        <div class="actions">
+          <a id="download" class="primary disabled" download aria-disabled="true">Scarica PNG</a>
+          <button id="share" type="button" hidden>Condividi</button>
+        </div>
+        <p id="share-status" class="note" role="status"></p>
+      </section>
+      <section class="preview" aria-label="Anteprima grafica">
+        <canvas id="poster" width="1080" height="1350" aria-label="Anteprima della grafica selezionata"></canvas>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
