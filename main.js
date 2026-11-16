@@ -33,10 +33,10 @@
 
   const standings = $('standings');
   const list = Array.isArray(SITE_DATA.classifica) ? SITE_DATA.classifica : [];
-  // La posizione è gestita manualmente dal pannello admin, anche in caso di pari punti.
+  // Si conserva l’ordine ufficiale UISP, anche in caso di pari punti.
   list.forEach((team, i) => {
     const tr = document.createElement('tr');
-    if ((team.squadra || '').toLocaleLowerCase('it') === 'montanino') tr.classList.add('highlight');
+    if ((team.squadra || '').toLocaleLowerCase('it').includes('montanino')) tr.classList.add('highlight');
     const columns = [String(i+1).padStart(2,'0'), team.squadra, team.giocate, team.punti];
     columns.forEach((value,j) => {
       const td = document.createElement('td'); td.textContent = value ?? '—';
