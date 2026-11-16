@@ -36,7 +36,7 @@
   // La posizione è gestita manualmente dal pannello admin, anche in caso di pari punti.
   list.forEach((team, i) => {
     const tr = document.createElement('tr');
-    if (/\\bmontanino\\b/i.test(team.squadra || '')) tr.classList.add('highlight');
+    if ((team.squadra || '').toLocaleLowerCase('it').includes('montanino')) tr.classList.add('highlight');
     const columns = [String(i+1).padStart(2,'0'), team.squadra, team.giocate, team.punti];
     columns.forEach((value,j) => {
       const td = document.createElement('td'); td.textContent = value ?? '—';
