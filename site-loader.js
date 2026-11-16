@@ -29,12 +29,12 @@
 
   // Legge la classifica pubblica ufficiale UISP; in caso di errore conserva l'ultima copia del sito.
   if(ready){
-    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),15000);
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),7000);
     try{
       const res=await fetch(conf.url.replace(/\/$/,'')+'/functions/v1/uisp-classifica',{
         headers:{apikey:conf.anonKey},
         signal:controller.signal,
-        cache:'no-store'
+        cache:'default'
       });
       if(!res.ok)throw new Error('HTTP '+res.status);
       const result=await res.json();
