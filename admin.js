@@ -335,18 +335,17 @@
     const number=inp(p.numero??'','number','numero','Numero');number.min=0;number.max=99;number.setAttribute('aria-label','Numero maglia');r.append(number);
     r.append(pick(p.ruolo||'Centrocampista',[['Portiere','Portiere'],['Difensore','Difensore'],['Centrocampista','Centrocampista'],['Attaccante','Attaccante']],'ruolo'));
     const photo=el('div','player-photo-control');
-    const preview=el('span','player-photo-preview',playerInitials(p.nome));
+    const preview=el('span','player-photo-preview');
     const photoUrl=playerPhotoUrl(p.foto);
-    if(photoUrl){const image=el('img');image.src=photoUrl;image.alt='';image.loading='lazy';image.onerror=()=>{image.remove();preview.textContent=playerInitials(read(r,'nome'));};preview.replaceChildren(image);}
+    if(photoUrl){const image=el('img');image.src=photoUrl;image.alt='';image.loading='lazy';image.onerror=()=>image.remove();preview.replaceChildren(image);}
     const hidden=inp(p.foto||'','hidden','foto');
     const picker=el('label','player-photo-picker','Scegli foto');
     const file=el('input');file.type='file';file.accept='.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';file.dataset.playerPhotoFile='true';file.setAttribute('aria-label','Carica foto profilo');picker.append(file);
     const status=el('small','player-photo-status',photoUrl?'Foto assegnata':'Nessuna foto');
     const remove=el('button','player-photo-remove','Rimuovi');remove.type='button';remove.hidden=!photoUrl;remove.setAttribute('aria-label','Rimuovi foto profilo');
-    remove.addEventListener('click',()=>{hidden.value='';preview.textContent=playerInitials(read(r,'nome'));status.textContent='Nessuna foto';remove.hidden=true;hidden.dispatchEvent(new Event('input',{bubbles:true}));});
+    remove.addEventListener('click',()=>{hidden.value='';preview.replaceChildren();status.textContent='Nessuna foto';remove.hidden=true;hidden.dispatchEvent(new Event('input',{bubbles:true}));});
     photo.append(preview,picker,status,remove,hidden);r.append(photo,del());
   }
-  function playerInitials(name){return String(name||'').trim().split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toLocaleUpperCase('it')||'•';}
   function playerPhotoUrl(value){
     const file=String(value||'').trim();
     if(/^sb:montanino-[0-9a-f]{32}\.webp$/i.test(file)&&conf.url)return conf.url.replace(/\/$/,'')+'/storage/v1/object/public/montanino-partite/'+encodeURIComponent(file.slice(3));
