@@ -48,7 +48,7 @@ BEGIN
      AND (last_attempt_at IS NULL OR last_attempt_at < pg_catalog.now() - interval '10 minutes')
   RETURNING true INTO claimed;
 
-  RETURN pg_catalog.coalesce(claimed, false);
+  RETURN COALESCE(claimed, false);
 END;
 $$;
 
@@ -66,10 +66,14 @@ SECURITY INVOKER
 SET search_path = ''
 AS $$
 BEGIN
-  IF p_classifica IS NULL OR p_calendario IS NULL
-     OR pg_catalog.jsonb_typeof(p_classifica) <> 'array'
-     OR pg_catalog.jsonb_array_length(p_classifica) < 2
-     OR pg_catalog.jsonb_typeof(p_calendario) <> 'array'
+  IF p_classifica IS NULL OR p_calendario IS NULL THEN
+    RETURN false;
+  END IF;
+  IF pg_catalog.jsonb_typeof(p_classifica) <> 'array'
+     OR pg_catalog.jsonb_typeof(p_calendario) <> 'array' THEN
+    RETURN false;
+  END IF;
+  IF pg_catalog.jsonb_array_length(p_classifica) < 2
      OR pg_catalog.jsonb_array_length(p_calendario) < 26 THEN
     RETURN false;
   END IF;
