@@ -403,6 +403,8 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 .md-pitch-lines:before{content:"";position:absolute;left:50%;top:50%;width:85px;height:85px;transform:translate(-50%,-50%);border:1px solid rgba(239,255,238,.3);border-radius:50%}
 .md-pitch-row{display:flex;align-items:flex-start;justify-content:space-around;gap:5px;min-height:76px}
 .md-pitch-player{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;max-width:100px;min-width:0;flex:0 1 95px}
+.md-pitch-player-card{max-width:90px;flex-basis:84px;gap:5px}
+.md-player-card{display:block;width:min(100%,78px);aspect-ratio:1199/1312;object-fit:contain;border:1px solid #80d99a;border-radius:6px;background:#0b2415;box-shadow:0 4px 12px #001a0b99}
 .md-shirt{display:grid;place-items:center;background:#fff;color:#0a3320;border:2px solid #08652e;clip-path:polygon(0 17%,19% 0,35% 7%,65% 7%,81% 0,100% 17%,89% 45%,82% 38%,82% 100%,18% 100%,18% 38%,11% 45%);width:43px;height:46px;padding-top:6px;font:900 21px var(--title);text-shadow:none}
 .md-player-name{color:#f0fff3;font-size:10px;font-weight:900;line-height:1.2;text-shadow:0 2px 5px #002709;overflow-wrap:anywhere}
 .md-bench{margin-top:25px;border-top:1px solid #315740;padding-top:22px}
@@ -411,6 +413,7 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 .md-bench-player{display:flex;align-items:center;gap:9px;padding:10px;background:#10291a;font-size:12px;font-weight:700;flex-wrap:wrap}
 .md-bench-number{display:grid;place-items:center;width:29px;height:29px;flex-shrink:0;background:#d6ffe5;color:#0a3319;font:900 18px var(--title)}
 .md-bench-player small{margin-left:auto;color:#80c695;font-size:10px}
+.md-bench-card{width:38px;height:43px;flex:0 0 38px;object-fit:contain;border:1px solid #62a778;border-radius:4px;background:#0b2415}
 .md-event-list{list-style:none;padding:0;margin:0;display:grid;gap:3px}
 .md-event{display:flex;align-items:center;gap:15px;border-bottom:1px solid #214b30;padding:13px 0}
 .md-event:last-child{border-bottom:0}
@@ -441,7 +444,7 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 @media(max-width:1040px){.md-report-grid{grid-template-columns:1fr}.md-pitch{min-height:440px}.md-report-column{min-width:0}}
 @media(max-width:560px){
  .md-report{padding:21px 0 0}.md-header{gap:13px}.md-header .md-status{white-space:normal}
- .md-title{font-size:27px}.md-block{padding:16px}.md-report-grid{gap:15px}.md-pitch{min-height:380px;gap:17px;padding:17px 5px}.md-shirt{width:35px;height:39px;font-size:18px}.md-player-name{font-size:9px}.md-pitch-player{flex:0 1 70px}
+ .md-title{font-size:27px}.md-block{padding:16px}.md-report-grid{gap:15px}.md-pitch{min-height:380px;gap:17px;padding:17px 5px}.md-shirt{width:35px;height:39px;font-size:18px}.md-player-name{font-size:9px}.md-pitch-player{flex:0 1 70px}.md-pitch-player-card{flex-basis:clamp(46px,13vw,65px)}.md-player-card{width:min(100%,60px)}.md-bench-card{width:32px;height:36px;flex-basis:32px}
  .md-mini-label{font-size:8px}.md-block h5{font-size:19px}.md-event-minute{font-size:22px}.md-event{gap:8px}
  .md-toggle{width:100%;text-align:center;min-height:44px}.md-report-empty{padding:22px 16px}
 }

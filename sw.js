@@ -1,7 +1,7 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
 importScripts('./push-route.js?v=20261109-tap');
 
-const CACHE_NAME = 'montanino-shell-20261117-game-cards';
+const CACHE_NAME = 'montanino-shell-20261117-public-cards';
 const SHELL = [
   './index.html',
   './galleria.html',
@@ -27,7 +27,7 @@ const SHELL = [
   './config.js',
   './site-common.js',
   './site-loader.js',
-  './player-cards.js',
+  './player-cards.js?v=20261117-public-cards',
   './main.js',
   './assets/img/cards/banchetti.webp',
   './assets/img/cards/benedetti.webp',
