@@ -1,7 +1,7 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
 importScripts('./push-route.js?v=20261109-tap');
 
-const CACHE_NAME = 'montanino-shell-20261117-no-initials';
+const CACHE_NAME = 'montanino-shell-20261117-game-cards';
 const SHELL = [
   './index.html',
   './galleria.html',
@@ -27,7 +27,27 @@ const SHELL = [
   './config.js',
   './site-common.js',
   './site-loader.js',
+  './player-cards.js',
   './main.js',
+  './assets/img/cards/banchetti.webp',
+  './assets/img/cards/benedetti.webp',
+  './assets/img/cards/brandini.webp',
+  './assets/img/cards/casini.webp',
+  './assets/img/cards/deiana.webp',
+  './assets/img/cards/del-mira.webp',
+  './assets/img/cards/drappello.webp',
+  './assets/img/cards/ermini.webp',
+  './assets/img/cards/filippone.webp',
+  './assets/img/cards/guhacaj.webp',
+  './assets/img/cards/iavarazzo.webp',
+  './assets/img/cards/madrucci.webp',
+  './assets/img/cards/novedrati.webp',
+  './assets/img/cards/palma.webp',
+  './assets/img/cards/pancrazzi.webp',
+  './assets/img/cards/ragona.webp',
+  './assets/img/cards/russolillo.webp',
+  './assets/img/cards/tacconi.webp',
+  './assets/img/cards/tozzi.webp',
   './fx.js',
   './galleria.js',
   './assets/icons/montanino-192.png',
