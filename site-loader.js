@@ -27,26 +27,6 @@
     }
   }
 
-  // Legge la classifica pubblica ufficiale UISP; in caso di errore conserva l'ultima copia del sito.
-  if(ready){
-    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),7000);
-    try{
-      const res=await fetch(conf.url.replace(/\/$/,'')+'/functions/v1/uisp-classifica',{
-        headers:{apikey:conf.anonKey},
-        signal:controller.signal,
-        cache:'default'
-      });
-      if(!res.ok)throw new Error('HTTP '+res.status);
-      const result=await res.json();
-      if(!Array.isArray(result.classifica)||result.classifica.length<2)throw new Error('Dati classifica non validi');
-      SITE_DATA.classifica=result.classifica;
-      window.MONTANINO_STANDINGS_LIVE=true;
-    }catch(error){
-      console.warn('Classifica UISP non disponibile; uso l’ultima copia salvata.',error);
-      window.MONTANINO_STANDINGS_LIVE=false;
-    }finally{clearTimeout(timer);}
-  }
-
   SITE_DATA=window.MontaninoCommon.prepare(SITE_DATA);
   // Mantiene i dati storici in Supabase ma li esclude dal renderer pubblico.
   for(const match of Object.values(SITE_DATA.dettagliPartite||{})){
@@ -54,5 +34,5 @@
       if(player && typeof player==='object')delete player.voto;
     }
   }
-  try{await addScript('main.js?v=20261116-uisp-classifica');}catch(e){console.error('Impossibile caricare main.js',e);}
+  try{await addScript('main.js?v=20261117-uisp-calendar');}catch(e){console.error('Impossibile caricare main.js',e);}
 })();
