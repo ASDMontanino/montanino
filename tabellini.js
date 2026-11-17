@@ -18,6 +18,17 @@
   const isPlayed = (m) => Number.isInteger(m.golCasa) && Number.isInteger(m.golOspite);
   const normal = name => String(name||'').trim().toLocaleLowerCase('it');
   const minuteLabel = val => (val===undefined || val===null || val==='') ? '—' : (String(val).replace(/[′']/g,'') + '′');
+  function cardImage(player,className){
+    const common=window.MontaninoPlayerCards;
+    if(!common||!player)return null;
+    const roster=(SITE_DATA.giocatori||[]).find(item=>normal(item.nome)===normal(player.nome));
+    const path=player.carta||roster?.carta||common.assetFor(player.nome);
+    const src=common.urlFor(path,window.MONTANINO_SUPABASE?.url);
+    if(!src)return null;
+    const img=make('img',className);img.src=src;img.alt=`Carta da gioco di ${player.nome||'giocatore'}`;img.loading='lazy';
+    img.onerror=()=>img.remove();
+    return img;
+  }
   const repOf = player => {
     const explicit=String(player.reparto||'').trim().toUpperCase();
     if (['P','D','C','A'].includes(explicit)) return explicit;
@@ -68,7 +79,10 @@
           // Non inventare i nomi: mostrare soltanto le posizioni effettivamente compilate.
           if(!p)return;
           const badge=make('div','md-pitch-player');
-          badge.append(make('span','md-shirt',p.numero??'•'),make('span','md-player-name',p.nome||'Da inserire'));
+          const card=cardImage(p,'md-player-card');
+          if(card){badge.classList.add('md-pitch-player-card');badge.append(card);}
+          else badge.append(make('span','md-shirt',p.numero??'•'));
+          badge.append(make('span','md-player-name',p.nome||'Da inserire'));
           row.append(badge);
         });
         pitch.append(row);
@@ -83,6 +97,7 @@
       const chips=make('div','md-bench-grid');
       substitutes.forEach(p=>{
         const chip=make('div','md-bench-player');
+        const card=cardImage(p,'md-bench-card');if(card)chip.append(card);
         chip.append(make('span','md-bench-number',p.numero??'—'),make('span','',p.nome||'Da inserire'));
         if(p.entrato!==undefined&&p.entrato!==null&&p.entrato!=='')chip.append(make('small','',`IN CAMPO AL ${minuteLabel(p.entrato)}`));
         chips.append(chip);
