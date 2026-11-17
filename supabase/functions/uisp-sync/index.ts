@@ -232,11 +232,18 @@ async function fetchAllOfficialData(teamNames: Map<string, string>) {
   for (let index = 0; index < pages.length; index++) {
     const phase = index < ROUND_COUNT ? 1 : 2;
     const round = index < ROUND_COUNT ? index + 1 : index - ROUND_COUNT + 1;
-    calendario.push(...parseFixtures(pages[index], phase, round, teamNames));
+    const fixtures = parseFixtures(pages[index], phase, round, teamNames);
+    const montaninoFixtures = fixtures.filter((match) =>
+      normalizeTeam(String(match.casa)) === "montanino" || normalizeTeam(String(match.ospite)) === "montanino"
+    );
+    if (montaninoFixtures.length !== 1) {
+      throw new Error("Giornata " + phase + "/" + round + ": trovate " + montaninoFixtures.length + " partite del Montanino");
+    }
+    calendario.push(...montaninoFixtures);
   }
   const ids = new Set(calendario.map((match) => match.id));
-  if (calendario.length !== 182 || ids.size !== 182 || classifica.length < 2) {
-    throw new Error("La risposta UISP è incompleta: " + calendario.length + " partite, " + classifica.length + " squadre");
+  if (calendario.length !== 26 || ids.size !== 26 || classifica.length < 2) {
+    throw new Error("La risposta UISP è incompleta: " + calendario.length + " partite Montanino, " + classifica.length + " squadre");
   }
   return { classifica, calendario };
 }
