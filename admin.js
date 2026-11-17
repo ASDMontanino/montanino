@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 12452)
-Total output lines: 682
-
 /* A.S.D. MONTANINO — amministrazione V3.6
    Modalità prova: localStorage, NON pubblica. Modalità online: Supabase Auth + RLS. */
 (async function(){
@@ -287,7 +284,121 @@ Total output lines: 682
       const ev={minuto:read(r,'minuto'),tipo,squadra:read(r,'squadra')};
       if(tipo==='sostituzione'){ev.esce=p;ev.entra=secondo;}else{ev.giocatore=p;if(tipo==='gol'&&secondo)ev.assist=secondo;}
       return ev;
-    }).filter(e=>e.tipo)…2452 tokens truncated…"]');
+    }).filter(e=>e.tipo);
+    const names=[...titolari,...panchina].map(p=>C.normalize(p.nome));
+    if(new Set(names).size!==names.length)throw Error('Un giocatore compare due volte tra titolari e panchina.');
+    if(titolari.length>11)throw Error('Non puoi inserire più di 11 titolari.');
+    const slots=C.formationSlots($('match-module').value).slots;
+    const slotIds=slots.map(s=>s.id),chosen=titolari.map(p=>p.posizione);
+    if(chosen.some(id=>!slotIds.includes(id))||new Set(chosen).size!==chosen.length)throw Error('Ogni titolare deve avere una posizione diversa del modulo. Premi “Prepara / riordina 11 posizioni”.');
+    const available=new Set(rosterNow().map(p=>C.normalize(p.nome)));
+    const mvp=$('match-mvp').value.trim(),mvpFoto=$('match-mvp-photo').value.trim();
+    if(mvp&&!available.has(C.normalize(mvp)))throw Error('Scegli l’MVP dall’elenco della rosa.');
+    if(mvp&&(home===''||away===''))throw Error('Puoi assegnare l’MVP soltanto a una partita conclusa.');
+    if(mvpFoto&&!mvp)throw Error('Seleziona prima il giocatore MVP.');
+    if(mvpFoto&&!isSafePhotoFile(mvpFoto))throw Error('Nome file foto MVP non valido: usa per esempio mvp-01.webp.');
+    for(const p of [...titolari,...panchina]){
+      if(!available.has(C.normalize(p.nome)))throw Error('Il giocatore '+p.nome+' non è presente nella rosa. Selezionalo dal menu.');
+      if(p.numero!==null&&(!Number.isInteger(p.numero)||p.numero<0||p.numero>99))throw Error('Numero maglia non valido.');
+    }
+    const complete=$('match-complete').checked,eventsComplete=$('events-complete').checked;
+    const hasResult=home!==''&&away!=='';
+    if((complete||eventsComplete)&&!hasResult)throw Error('Per confermare una sezione serve un risultato finale.');
+    if(complete){
+      if(titolari.length!==11)throw Error('Per confermare la formazione servono 11 titolari.');
+      const keeper=titolari.find(p=>p.posizione==='P1');
+      if(!keeper||C.roleCode(findPlayer(keeper.nome)?.ruolo)!=='P')throw Error('Nella posizione P1 devi selezionare un portiere presente nella rosa.');
+    }
+    if(eventsComplete){
+      // Controlla che ogni cambio sia possibile al momento dell'episodio.
+      const playing=new Set(titolari.map(p=>C.normalize(p.nome)));
+      const reserves=new Set(panchina.map(p=>C.normalize(p.nome)));
+      const entered=new Set();
+      const orderedChanges=events.map((event,index)=>({event,index})).filter(x=>x.event.tipo==='sostituzione'&&x.event.squadra==='Montanino')
+        .sort((a,b)=>eventMinuteValue(a.event.minuto)-eventMinuteValue(b.event.minuto)||a.index-b.index);
+      for(const {event:e} of orderedChanges){
+        const out=C.normalize(e.esce),incoming=C.normalize(e.entra);
+        if(!playing.has(out))throw Error('Cambio non valido: '+(e.esce||'giocatore in uscita')+' non risulta in campo. Controlla i titolari e i cambi precedenti.');
+        if(!reserves.has(incoming)||entered.has(incoming)||playing.has(incoming))throw Error('Cambio non valido: '+(e.entra||'giocatore in entrata')+' deve essere una riserva non ancora entrata.');
+        playing.delete(out);playing.add(incoming);entered.add(incoming);
+      }
+      for(const e of events){
+        const first=e.tipo==='sostituzione'?e.esce:e.giocatore;
+        if(!first||(e.tipo==='sostituzione'&&!e.entra))throw Error('Completa i giocatori di ogni episodio prima di confermare gli eventi.');
+        if(e.squadra==='Montanino'){
+          if(!available.has(C.normalize(first))||(e.tipo==='sostituzione'&&!available.has(C.normalize(e.entra)))||(e.assist&&!available.has(C.normalize(e.assist))))throw Error('Un episodio del Montanino contiene un nome non presente in rosa.');
+        }
+      }
+      const goals=events.filter(e=>['gol','gol_rigore','gol(rigore)'].includes(e.tipo)&&e.squadra==='Montanino').length;
+      const ownScore=m.casa==='Montanino'?Number(home):Number(away);
+      if(goals>ownScore)throw Error('I gol registrati per il Montanino superano quelli del risultato finale.');
+    }
+    m.data=$('match-date').value||null;m.ora=$('match-time').value||null;m.campo=$('match-field').value.trim()||null;
+    m.casa=$('match-home').value.trim();m.ospite=$('match-away').value.trim();
+    if(!m.casa||!m.ospite)throw Error('Inserisci entrambe le squadre.');
+    m.golCasa=hasResult?Number(home):null;m.golOspite=hasResult?Number(away):null;
+    (draft.dettagliPartite ||= {})[activeMatchId]={...((draft.dettagliPartite||{})[activeMatchId]||{}),modulo:$('match-module').value,titolari,panchina,eventi:events,note:$('match-notes').value.trim(),datiCompleti:complete,eventiCompleti:eventsComplete,mvp,mvpFoto};
+  }
+  function updateStatsPreview(){
+    const box=$('admin-stats-preview');if(!box)return;
+    const temp=C.copy(draft);
+    try{
+      const prepared=C.prepare(temp),c=prepared._statsCoverage;
+      const parts=[`${c.formations}/${c.played} formazioni verificate`,`${c.events}/${c.played} cronologie episodi verificate`];
+      box.textContent=parts.join(' · ');
+    }catch(e){box.textContent='Statistiche in attesa di dati validi.';}
+  }
+  function fillPlayers(){
+    const node=$('players-list');node.replaceChildren();
+    C.list(draft.giocatori).forEach(p=>playerRow(p));
+    const dl=$('player-names');dl.replaceChildren();
+    C.list(draft.giocatori).forEach(p=>{const op=el('option');op.value=p.nome;dl.append(op);});
+    if(!node.childElementCount)node.append(el('p','hint','Nessun giocatore ancora inserito: clicca + GIOCATORE.'));
+  }
+  function playerRow(p={}){
+    const node=$('players-list');node.querySelector('p.hint')?.remove();const r=makeRow(node,'player-entity');
+    const name=inp(p.nome||'','text','nome','Nome e cognome');name.setAttribute('aria-label','Nome giocatore');r.append(name);
+    const number=inp(p.numero??'','number','numero','Numero');number.min=0;number.max=99;number.setAttribute('aria-label','Numero maglia');r.append(number);
+    r.append(pick(p.ruolo||'Centrocampista',[['Portiere','Portiere'],['Difensore','Difensore'],['Centrocampista','Centrocampista'],['Attaccante','Attaccante']],'ruolo'));
+    const photo=el('div','player-photo-control');
+    const preview=el('span','player-photo-preview');
+    const photoUrl=playerPhotoUrl(p.foto);
+    if(photoUrl){const image=el('img');image.src=photoUrl;image.alt='';image.loading='lazy';image.onerror=()=>image.remove();preview.replaceChildren(image);}
+    const hidden=inp(p.foto||'','hidden','foto');
+    const picker=el('label','player-photo-picker','Scegli foto');
+    const file=el('input');file.type='file';file.accept='.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';file.dataset.playerPhotoFile='true';file.setAttribute('aria-label','Carica foto profilo');picker.append(file);
+    const status=el('small','player-photo-status',photoUrl?'Foto assegnata':'Nessuna foto');
+    const remove=el('button','player-photo-remove','Rimuovi');remove.type='button';remove.hidden=!photoUrl;remove.setAttribute('aria-label','Rimuovi foto profilo');
+    remove.addEventListener('click',()=>{hidden.value='';preview.replaceChildren();status.textContent='Nessuna foto';remove.hidden=true;hidden.dispatchEvent(new Event('input',{bubbles:true}));});
+    photo.append(preview,picker,status,remove,hidden);
+    const cardPath=inp(p.carta||PLAYER_CARDS.assetFor(p.nome),'hidden','carta');
+    const cardControl=el('div','player-card-control');
+    const cardPreview=el('span','player-card-preview');
+    const storedCard=p.carta||PLAYER_CARDS.assetFor(p.nome),cardUrl=PLAYER_CARDS.urlFor(storedCard,conf.url);
+    if(cardUrl){const image=el('img');image.src=cardUrl;image.alt='';image.loading='lazy';image.onerror=()=>image.remove();cardPreview.replaceChildren(image);}
+    const cardPicker=el('label','player-card-picker',cardUrl?'Cambia carta':'Assegna carta');
+    const cardFile=el('input');cardFile.type='file';cardFile.accept='.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';cardFile.dataset.playerCardFile='true';cardFile.setAttribute('aria-label','Carica carta da gioco');cardPicker.append(cardFile);
+    const cardStatus=el('small','player-card-status',cardUrl?'Carta assegnata':'Nessuna carta');
+    const cardRemove=el('button','player-card-remove','Ripristina');cardRemove.type='button';cardRemove.hidden=!p.carta;cardRemove.setAttribute('aria-label','Ripristina carta predefinita');
+    cardRemove.addEventListener('click',()=>{const fallback=PLAYER_CARDS.assetFor(read(r,'nome'));cardPath.value=fallback;const src=PLAYER_CARDS.urlFor(fallback,conf.url);cardPreview.replaceChildren();if(src){const image=el('img');image.src=src;image.alt='';cardPreview.append(image);}cardStatus.textContent=src?'Carta predefinita':'Nessuna carta';cardRemove.hidden=true;cardPath.dispatchEvent(new Event('input',{bubbles:true}));});
+    cardControl.append(cardPreview,cardPicker,cardStatus,cardRemove,cardPath);r.append(photo,cardControl,del());
+  }
+  function playerPhotoUrl(value){
+    const file=String(value||'').trim();
+    if(/^sb:montanino-[0-9a-f]{32}\.webp$/i.test(file)&&conf.url)return conf.url.replace(/\/$/,'')+'/storage/v1/object/public/montanino-partite/'+encodeURIComponent(file.slice(3));
+    if(/^assets\/img\/[\p{L}\p{N} _().-]+\.(?:jpe?g|png|webp|avif)$/iu.test(file)&&!file.includes('..'))return file;
+    return '';
+  }
+  function playerCardUrl(value){return PLAYER_CARDS.urlFor(value,conf.url);}
+  // L'ordine delle righe è l'ordine ufficiale mostrato nel sito pubblico.
+  // Le frecce non alterano punti o partite: modificano soltanto la posizione.
+  function refreshStandingPositions(){
+    const rows=arr('standings-list');
+    rows.forEach((row,index)=>{
+      const number=row.querySelector('.standing-rank');
+      if(number)number.textContent=String(index+1).padStart(2,'0');
+      const up=row.querySelector('[data-standings-move="-1"]');
+      const down=row.querySelector('[data-standings-move="1"]');
       if(up)up.disabled=index===0;
       if(down)down.disabled=index===rows.length-1;
     });
