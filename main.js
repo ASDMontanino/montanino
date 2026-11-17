@@ -340,6 +340,14 @@
   set('stat-apps-total',formations||!coverage.played?sum('presenze'):'—');
   set('stat-mvp-total',sum('mvp'));
   const statsBody=$('player-stats');
+  const playerPhotoUrl=value=>{
+    const file=String(value||'').trim();
+    if(/^sb:montanino-[0-9a-f]{32}\.webp$/i.test(file)&&window.MONTANINO_SUPABASE?.url)
+      return window.MONTANINO_SUPABASE.url.replace(/\/$/,'')+'/storage/v1/object/public/montanino-partite/'+encodeURIComponent(file.slice(3));
+    if(/^assets\/img\/[\p{L}\p{N} _().-]+\.(?:jpe?g|png|webp|avif)$/iu.test(file)&&!file.includes('..'))return file;
+    return '';
+  };
+  const playerInitials=name=>String(name||'').trim().split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toLocaleUpperCase('it')||'•';
   function renderStats(order='gol'){
     if(!statsBody)return;
     statsBody.replaceChildren();
@@ -348,8 +356,19 @@
     [...players].sort((a,b)=>intVal(b[order])-intVal(a[order])||String(a.nome).localeCompare(String(b.nome),'it'))
       .forEach(p=>{
         const tr=create('tr');const showLineups=formations||!coverage.played,showEvents=events||!coverage.played;
-        const values=[p.numero??'—',p.nome||'—',p.ruolo||'—',showLineups?(p.presenze??0):'—',showEvents?(p.gol??0):'—',showEvents?(p.assist??0):'—',showEvents?(p.gialli??0):'—',showEvents?(p.rossi??0):'—',p.mvp??0];
-        values.forEach((v,i)=>{const td=create('td',i===1?'player-name-cell':'',String(v));tr.appendChild(td)});statsBody.appendChild(tr);
+        const values=[p.numero??'—',null,p.ruolo||'—',showLineups?(p.presenze??0):'—',showEvents?(p.gol??0):'—',showEvents?(p.assist??0):'—',showEvents?(p.gialli??0):'—',showEvents?(p.rossi??0):'—',p.mvp??0];
+        values.forEach((v,i)=>{
+          const td=create('td',i===1?'player-name-cell':'',i===1?'':String(v));
+          if(i===1){
+            const identity=create('span','stats-player');
+            const avatar=create('span','stats-player-avatar',playerInitials(p.nome));
+            const src=playerPhotoUrl(p.foto);
+            if(src){const image=create('img');image.alt='';image.loading='lazy';image.decoding='async';image.onerror=()=>{image.remove();avatar.classList.remove('has-photo');};image.onload=()=>avatar.classList.add('has-photo');image.src=src;avatar.append(image);}
+            identity.append(avatar,create('span','stats-player-name',p.nome||'—'));
+            td.append(identity);
+          }
+          tr.appendChild(td);
+        });statsBody.appendChild(tr);
       });
   }
   document.querySelectorAll('[data-stats-sort]').forEach(btn=>btn.addEventListener('click',()=>{

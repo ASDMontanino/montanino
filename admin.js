@@ -6,7 +6,7 @@
   const C=window.MontaninoCommon;
   const conf=window.MONTANINO_SUPABASE||{};
   const configured=!!(conf.url && conf.anonKey && /^https:\/\/[^/]+\.supabase\.co\/?$/.test(conf.url));
-  let sb=null,online=false,rev=0,hasRow=false,draft=C.copy(SITE_DATA),activeMatchId='',dirty=false,busy=false;
+  let sb=null,online=false,rev=0,hasRow=false,draft=C.copy(SITE_DATA),activeMatchId='',dirty=false,busy=false,photoUploads=0;
   const msg=(s,error=false)=>{const el=$('alert');el.hidden=false;el.textContent=s;el.classList.toggle('error',error);};
   const el=(tag,cls='',text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
   const inp=(value='',kind='text',field='',placeholder='')=>{const n=el('input');n.type=kind;n.value=value??'';n.placeholder=placeholder;n.dataset.field=field;return n;};
@@ -330,10 +330,28 @@
     if(!node.childElementCount)node.append(el('p','hint','Nessun giocatore ancora inserito: clicca + GIOCATORE.'));
   }
   function playerRow(p={}){
-    const node=$('players-list');node.querySelector('p.hint')?.remove();const r=makeRow(node);
+    const node=$('players-list');node.querySelector('p.hint')?.remove();const r=makeRow(node,'player-entity');
     const name=inp(p.nome||'','text','nome','Nome e cognome');name.setAttribute('aria-label','Nome giocatore');r.append(name);
     const number=inp(p.numero??'','number','numero','Numero');number.min=0;number.max=99;number.setAttribute('aria-label','Numero maglia');r.append(number);
-    r.append(pick(p.ruolo||'Centrocampista',[['Portiere','Portiere'],['Difensore','Difensore'],['Centrocampista','Centrocampista'],['Attaccante','Attaccante']],'ruolo'),del());
+    r.append(pick(p.ruolo||'Centrocampista',[['Portiere','Portiere'],['Difensore','Difensore'],['Centrocampista','Centrocampista'],['Attaccante','Attaccante']],'ruolo'));
+    const photo=el('div','player-photo-control');
+    const preview=el('span','player-photo-preview',playerInitials(p.nome));
+    const photoUrl=playerPhotoUrl(p.foto);
+    if(photoUrl){const image=el('img');image.src=photoUrl;image.alt='';image.loading='lazy';image.onerror=()=>{image.remove();preview.textContent=playerInitials(read(r,'nome'));};preview.replaceChildren(image);}
+    const hidden=inp(p.foto||'','hidden','foto');
+    const picker=el('label','player-photo-picker','Scegli foto');
+    const file=el('input');file.type='file';file.accept='.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';file.dataset.playerPhotoFile='true';file.setAttribute('aria-label','Carica foto profilo');picker.append(file);
+    const status=el('small','player-photo-status',photoUrl?'Foto assegnata':'Nessuna foto');
+    const remove=el('button','player-photo-remove','Rimuovi');remove.type='button';remove.hidden=!photoUrl;remove.setAttribute('aria-label','Rimuovi foto profilo');
+    remove.addEventListener('click',()=>{hidden.value='';preview.textContent=playerInitials(read(r,'nome'));status.textContent='Nessuna foto';remove.hidden=true;hidden.dispatchEvent(new Event('input',{bubbles:true}));});
+    photo.append(preview,picker,status,remove,hidden);r.append(photo,del());
+  }
+  function playerInitials(name){return String(name||'').trim().split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toLocaleUpperCase('it')||'•';}
+  function playerPhotoUrl(value){
+    const file=String(value||'').trim();
+    if(/^sb:montanino-[0-9a-f]{32}\.webp$/i.test(file)&&conf.url)return conf.url.replace(/\/$/,'')+'/storage/v1/object/public/montanino-partite/'+encodeURIComponent(file.slice(3));
+    if(/^assets\/img\/[\p{L}\p{N} _().-]+\.(?:jpe?g|png|webp|avif)$/iu.test(file)&&!file.includes('..'))return file;
+    return '';
   }
   // L'ordine delle righe è l'ordine ufficiale mostrato nel sito pubblico.
   // Le frecce non alterano punti o partite: modificano soltanto la posizione.
@@ -453,8 +471,9 @@
   function sponsorRow(s={}){const r=makeRow($('sponsors-editor-list'),'sponsor-entity');
     r.append(inp(s.nome||'','text','nome','Nome sponsor'),inp(s.categoria||'Partner ufficiale','text','categoria','Categoria'),inp(s.logo||'','text','logo','logo.png (assets/img)'),inp(s.sito||'','url','sito','https://...'),del());}
   function captureOther(){
-    draft.giocatori=arr('players-list').map(r=>({nome:read(r,'nome'),numero:read(r,'numero')===''?null:Number(read(r,'numero')),ruolo:read(r,'ruolo')})).filter(p=>p.nome);
+    draft.giocatori=arr('players-list').map(r=>({nome:read(r,'nome'),numero:read(r,'numero')===''?null:Number(read(r,'numero')),ruolo:read(r,'ruolo'),...(read(r,'foto')?{foto:read(r,'foto')}:{})})).filter(p=>p.nome);
     if(new Set(draft.giocatori.map(p=>C.normalize(p.nome))).size!==draft.giocatori.length)throw Error('La rosa contiene due giocatori con lo stesso nome.');
+    for(const p of draft.giocatori)if(p.foto&&!playerPhotoUrl(p.foto))throw Error('Foto profilo non valida per '+p.nome+'. Carica una foto dal pannello oppure usa un file valido in assets/img.');
     draft.classifica=arr('standings-list').map(r=>({squadra:read(r,'squadra'),giocate:Number(read(r,'giocate')||0),punti:Number(read(r,'punti')||0)})).filter(t=>t.squadra);
     draft.staff=arr('staff-editor-list').map(r=>({gruppo:read(r,'gruppo')||'Staff tecnico',nome:read(r,'nome'),ruolo:read(r,'ruolo'),...(read(r,'foto')?{foto:read(r,'foto')}:{})})).filter(s=>s.nome);
     // L'elenco dedicato mantiene anche i gruppi creati che non hanno ancora membri.
@@ -500,7 +519,7 @@
     $('save-note').textContent='Utente autenticato e autorizzato.';
   }
   async function save(){
-    if(busy)return false;
+    if(busy||photoUploads)return false;
     let value;try{value=captureAll();}catch(e){msg(e.message,true);return false;}
     busy=true;$('save-all').disabled=$('save-bottom').disabled=true;
     try{
@@ -518,7 +537,7 @@
       }
       synced();updateStatsPreview();msg(online?'Modifiche salvate su Supabase. Apri il sito pubblico e ricaricalo.':'Modifiche salvate soltanto in questo browser. Per pubblicarle online configura Supabase.');
       return true;
-    }catch(err){msg('Salvataggio non riuscito: '+err.message,true);return false;}finally{busy=false;$('save-all').disabled=$('save-bottom').disabled=false;}
+    }catch(err){msg('Salvataggio non riuscito: '+err.message,true);return false;}finally{busy=false;$('save-all').disabled=$('save-bottom').disabled=photoUploads>0;}
   }
   function exportJSON(){let data;try{data=captureAll();}catch(e){msg(e.message,true);return;}
     const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(b),a=el('a');a.href=url;a.download='montanino-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -577,9 +596,11 @@
   });
   $('add-sponsor').addEventListener('click',()=>{sponsorRow();markDirty();});
   window.MontaninoPhotoAdmin={
-    available:()=>online && !!sb && !$('editor').hidden && !busy,
+    available:()=>online && !!sb && !$('editor').hidden && !busy && !photoUploads,
     client:()=>sb,
     dirty:()=>dirty,
+    beginUpload:()=>{photoUploads++;$('save-all').disabled=$('save-bottom').disabled=true;},
+    endUpload:()=>{photoUploads=Math.max(0,photoUploads-1);$('save-all').disabled=$('save-bottom').disabled=busy||photoUploads>0;},
     validate:()=>captureAll(),
     current:()=>arr('match-gallery-list').map(r=>({partita:read(r,'partita'),file:read(r,'file')})),
     add:photo=>{matchPhotoRow(photo);markDirty();},
