@@ -83,31 +83,40 @@
     if(src){const image=new Image();image.alt='';image.onload=()=>preview.replaceChildren(image);image.onerror=()=>preview.replaceChildren();image.src=src;}
     if(statusText)statusText.textContent=src?'Foto assegnata':'Nessuna foto';
   }
+  function showPlayerCard(row,path){
+    const preview=row.querySelector('.player-card-preview'),statusText=row.querySelector('.player-card-status');
+    if(!preview)return;
+    preview.replaceChildren();
+    const src=window.MontaninoPlayerCards?.urlFor(path,window.MONTANINO_SUPABASE?.url)||'';
+    if(src){const image=new Image();image.alt='';image.onload=()=>preview.replaceChildren(image);image.onerror=()=>preview.replaceChildren();image.src=src;}
+    if(statusText)statusText.textContent=src?'Carta assegnata':'Nessuna carta';
+  }
   playerList?.addEventListener('change',async event=>{
     const fileInput=event.target;
-    if(!fileInput.matches('[data-player-photo-file]'))return;
-    const file=fileInput.files?.[0],row=fileInput.closest('.player-entity'),path=row?.querySelector('[data-field="foto"]');
+    const isCard=fileInput.matches('[data-player-card-file]');
+    if(!isCard&&!fileInput.matches('[data-player-photo-file]'))return;
+    const file=fileInput.files?.[0],row=fileInput.closest('.player-entity'),path=row?.querySelector(`[data-field="${isCard?'carta':'foto'}"]`);
     if(!file||!row||!path)return;
-    const statusText=row.querySelector('.player-photo-status'),admin=window.MontaninoPhotoAdmin;
+    const statusText=row.querySelector(isCard?'.player-card-status':'.player-photo-status'),admin=window.MontaninoPhotoAdmin;
     if(!admin?.available()){if(statusText)statusText.textContent='Accedi al pannello online per caricare';fileInput.value='';return;}
     if((!['image/jpeg','image/png','image/webp'].includes(file.type)&&!/\.(jpe?g|png|webp)$/i.test(file.name))||file.size>25*1024*1024||!file.size){
       if(statusText)statusText.textContent='Usa JPG, PNG o WebP (max 25 MB)';fileInput.value='';return;
     }
-    const inputs=[...playerList.querySelectorAll('[data-player-photo-file]')];
+    const inputs=[...playerList.querySelectorAll('[data-player-photo-file],[data-player-card-file]')];
     inputs.forEach(input=>input.disabled=true);admin.beginUpload();
     if(statusText)statusText.textContent='Caricamento foto…';
     try{
-      const blob=await webp(file),name='montanino-'+await fileHash(file)+'.webp';
+      const blob=await webp(file),name=(isCard?'montanino-card-':'montanino-')+await fileHash(file)+'.webp';
       const {error}=await admin.client().storage.from('montanino-partite').upload(name,blob,{contentType:'image/webp',cacheControl:'31536000',upsert:false});
       if(error&&!duplicate(error)){
         if(/bucket.not.found|does not exist|not found|row.level.security|permission.denied|unauthoriz/i.test(error.message||''))throw Error('Configurazione caricamento foto non disponibile.');
         throw Error(error.message||'Errore caricamento');
       }
       path.value='sb:'+name;path.dispatchEvent(new Event('input',{bubbles:true}));
-      showPlayerPhoto(row,path.value);
-      const remove=row.querySelector('.player-photo-remove');if(remove)remove.hidden=false;
-      if(statusText)statusText.textContent='Foto pronta · salva le modifiche';
-    }catch(error){if(statusText)statusText.textContent=error.message||'Caricamento non riuscito';notice('Foto profilo non caricata: '+(error.message||'errore'),true);}
+      if(isCard)showPlayerCard(row,path.value);else showPlayerPhoto(row,path.value);
+      const remove=row.querySelector(isCard?'.player-card-remove':'.player-photo-remove');if(remove)remove.hidden=false;
+      if(statusText)statusText.textContent=(isCard?'Carta pronta':'Foto pronta')+' · salva le modifiche';
+    }catch(error){if(statusText)statusText.textContent=error.message||'Caricamento non riuscito';notice((isCard?'Carta da gioco':'Foto profilo')+' non caricata: '+(error.message||'errore'),true);}
     finally{fileInput.value='';inputs.forEach(input=>input.disabled=false);admin.endUpload();}
   });
   button.addEventListener('click',async()=>{
