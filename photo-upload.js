@@ -75,14 +75,12 @@
   const playerPhotoUrl=file=>String(file||'').startsWith('sb:')&&window.MONTANINO_SUPABASE?.url
     ? window.MONTANINO_SUPABASE.url.replace(/\/$/,'')+'/storage/v1/object/public/montanino-partite/'+encodeURIComponent(String(file).slice(3))
     : /^assets\/img\/[\p{L}\p{N} _().-]+\.(?:jpe?g|png|webp|avif)$/iu.test(String(file||''))&&!String(file).includes('..')?String(file):'';
-  const playerInitials=name=>String(name||'').trim().split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toLocaleUpperCase('it')||'•';
   function showPlayerPhoto(row,path){
     const preview=row.querySelector('.player-photo-preview'),statusText=row.querySelector('.player-photo-status');
     if(!preview)return;
     preview.replaceChildren();
     const src=playerPhotoUrl(path);
-    if(src){const image=new Image();image.alt='';image.onload=()=>preview.replaceChildren(image);image.onerror=()=>{preview.textContent=playerInitials(row.querySelector('[data-field="nome"]')?.value);};image.src=src;}
-    else preview.textContent=playerInitials(row.querySelector('[data-field="nome"]')?.value);
+    if(src){const image=new Image();image.alt='';image.onload=()=>preview.replaceChildren(image);image.onerror=()=>preview.replaceChildren();image.src=src;}
     if(statusText)statusText.textContent=src?'Foto assegnata':'Nessuna foto';
   }
   playerList?.addEventListener('change',async event=>{
