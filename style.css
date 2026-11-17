@@ -305,6 +305,11 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 .player-stat-table tbody tr:hover{background:#143b24}
 .player-stat-table th{white-space:nowrap}
 .player-stat-table .player-name-cell{color:#ecfff0;font-weight:800;white-space:nowrap}
+.stats-player{display:flex;align-items:center;gap:10px;min-height:42px}
+.stats-player-avatar{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border:1px solid #5aa979;border-radius:50%;overflow:hidden;background:linear-gradient(145deg,#1c5a34,#0b2415);color:#d9ffe4;font:900 12px 'DM Sans',sans-serif;letter-spacing:.04em}
+.stats-player-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.stats-player-avatar.has-photo{border-color:#78d99b;box-shadow:0 0 0 2px #397b4f55}
+.stats-player-name{display:block}
 .editorial-empty{position:relative;overflow:hidden;padding:clamp(35px,5vw,64px);border:1px solid #2f6742;background:radial-gradient(ellipse at 80% 50%,#1d5834,#10271a 60%);min-height:220px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
 .editorial-empty strong{font:900 clamp(42px,5vw,72px)/.9 var(--title);color:#d7ffe3;letter-spacing:.02em;position:relative;z-index:1}
 .editorial-empty p{max-width:510px;font-size:13px;line-height:1.8;color:#b3d3ba;margin:21px 0 0;position:relative;z-index:1}
