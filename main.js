@@ -347,7 +347,6 @@
     if(/^assets\/img\/[\p{L}\p{N} _().-]+\.(?:jpe?g|png|webp|avif)$/iu.test(file)&&!file.includes('..'))return file;
     return '';
   };
-  const playerInitials=name=>String(name||'').trim().split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toLocaleUpperCase('it')||'•';
   function renderStats(order='gol'){
     if(!statsBody)return;
     statsBody.replaceChildren();
@@ -361,7 +360,7 @@
           const td=create('td',i===1?'player-name-cell':'',i===1?'':String(v));
           if(i===1){
             const identity=create('span','stats-player');
-            const avatar=create('span','stats-player-avatar',playerInitials(p.nome));
+            const avatar=create('span','stats-player-avatar');
             const src=playerPhotoUrl(p.foto);
             if(src){const image=create('img');image.alt='';image.loading='lazy';image.decoding='async';image.onerror=()=>{image.remove();avatar.classList.remove('has-photo');};image.onload=()=>avatar.classList.add('has-photo');image.src=src;avatar.append(image);}
             identity.append(avatar,create('span','stats-player-name',p.nome||'—'));
