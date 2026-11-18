@@ -118,8 +118,7 @@
     const list = roleFilter === 'Tutti' ? players : players.filter(player => String(player.ruolo || '').toLocaleLowerCase('it').includes(roleFilter.toLocaleLowerCase('it')));
     $('#player-grid').innerHTML = list.length ? list.map(player => {
       const photo = publicPhoto(player.foto) || publicPhoto(player.carta);
-      const initials = String(player.nome || 'M').split(/\s+/).slice(0,2).map(part=>part[0]).join('').toUpperCase();
-      return `<article class="player-card">${photo ? `<img src="${esc(photo)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<span class="player-number">${esc(player.numero ?? '—')}</span><span class="player-fallback" aria-hidden="true">${esc(initials)}</span><div class="player-copy"><strong>${esc(player.nome || 'Giocatore')}</strong><span>${esc(player.ruolo || 'ROSA')}</span></div></article>`;
+      return `<article class="player-card"><span class="player-number">${esc(player.numero ?? '—')}</span><span class="player-avatar" aria-hidden="true">${photo ? `<img src="${esc(photo)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span><div class="player-copy"><strong>${esc(player.nome || 'Giocatore')}</strong><span>${esc(player.ruolo || 'ROSA')}</span></div></article>`;
     }).join('') : '<div class="empty-state">La rosa sarà visibile qui appena i dati saranno caricati.</div>';
   }
 
