@@ -8,12 +8,13 @@ on conflict (id) do update set
   allowed_mime_types=excluded.allowed_mime_types;
 
 -- Solo gli utenti esplicitamente autorizzati in club_admins possono caricare.
+-- Accetta sia le foto profilo sia le carte da gioco WebP generate dal pannello admin.
 drop policy if exists "montanino admin upload fotografie" on storage.objects;
 create policy "montanino admin upload fotografie"
 on storage.objects for insert to authenticated
 with check (
   bucket_id='montanino-partite'
-  and name ~ '^montanino-[0-9a-f]{32}[.]webp$'
+  and name ~ '^montanino-(card-)?[0-9a-f]{32}[.]webp$'
   and exists(
     select 1 from public.club_admins a where a.user_id=(select auth.uid())
   )
