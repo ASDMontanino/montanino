@@ -340,6 +340,7 @@
   set('stat-apps-total',formations||!coverage.played?sum('presenze'):'—');
   set('stat-mvp-total',sum('mvp'));
   const statsBody=$('player-stats');
+  const showLineups=formations||!coverage.played,showEvents=events||!coverage.played;
   const playerPhotoUrl=value=>{
     const file=String(value||'').trim();
     if(/^sb:montanino-[0-9a-f]{32}\.webp$/i.test(file)&&window.MONTANINO_SUPABASE?.url)
@@ -347,6 +348,156 @@
     if(/^assets\/img\/[\p{L}\p{N} _().-]+\.(?:jpe?g|png|webp|avif)$/iu.test(file)&&!file.includes('..'))return file;
     return '';
   };
+  const playerNameKey=value=>String(value||'').trim().replace(/\s+/g,' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('it');
+  const profileCalendar=Array.isArray(SITE_DATA.calendario)?SITE_DATA.calendario:[];
+  const profileDetails=SITE_DATA.dettagliPartite&&typeof SITE_DATA.dettagliPartite==='object'?SITE_DATA.dettagliPartite:{};
+  const profileDialog=create('div','player-profile-overlay');
+  profileDialog.id='player-profile-dialog';
+  profileDialog.hidden=true;
+  profileDialog.setAttribute('role','dialog');
+  profileDialog.setAttribute('aria-modal','true');
+  profileDialog.setAttribute('aria-labelledby','player-profile-title');
+  const profilePanel=create('section','player-profile-panel');
+  const profileClose=create('button','player-profile-close','×');
+  profileClose.type='button';
+  profileClose.setAttribute('aria-label','Chiudi scheda giocatore');
+  const profileKicker=create('p','player-profile-kicker','A.S.D. MONTANINO · SCHEDA GIOCATORE');
+  const profileTitle=create('h2','player-profile-title');
+  profileTitle.id='player-profile-title';
+  const profileSubtitle=create('p','player-profile-subtitle');
+  const profileMain=create('div','player-profile-main');
+  const profilePortrait=create('div','player-profile-photo');
+  profilePortrait.setAttribute('aria-hidden','true');
+  const profileIdentity=create('div','player-profile-identity');
+  profileIdentity.append(profileKicker,profileTitle,profileSubtitle);
+  profileMain.append(profilePortrait,profileIdentity);
+  const profileNote=create('p','player-profile-note');
+  profileNote.hidden=true;
+  const profileMetrics=create('div','player-profile-metrics');
+  const profileHistoryTitle=create('h3','player-profile-history-title','PARTITE GIOCATE');
+  const profileHistory=create('div','player-profile-history');
+  profilePanel.append(profileClose,profileMain,profileNote,profileMetrics,profileHistoryTitle,profileHistory);
+  profileDialog.appendChild(profilePanel);
+  document.body.appendChild(profileDialog);
+  let profileTrigger=null;
+  const playerIsClub=value=>playerNameKey(value).includes('montanino');
+  function profileEvents(detail,nameKey){
+    const counts={gol:0,assist:0,gialli:0,rossi:0};
+    const ownEvents=Array.isArray(detail.eventi)?detail.eventi:[];
+    ownEvents.forEach(ev=>{
+      if(ev.squadra&&!playerIsClub(ev.squadra))return;
+      const type=String(ev.tipo||'').toLowerCase();
+      const scorer=playerNameKey(ev.giocatore)===nameKey;
+      if(scorer&&['gol','gol_rigore','gol(rigore)'].includes(type))counts.gol++;
+      if(type==='gol'&&playerNameKey(ev.assist)===nameKey)counts.assist++;
+      if(scorer&&type==='giallo')counts.gialli++;
+      if(scorer&&type==='rosso')counts.rossi++;
+    });
+    return counts;
+  }
+  function renderPlayerProfile(player,trigger){
+    profileTrigger=trigger||document.activeElement;
+    const name=player.nome||'Giocatore';
+    const nameKey=playerNameKey(name);
+    profileTitle.textContent=name;
+    profileSubtitle.textContent=(player.ruolo||'Ruolo non indicato')+(player.numero!==undefined&&player.numero!==null?' · N° '+player.numero:'');
+    profilePortrait.replaceChildren();
+    profilePortrait.classList.remove('is-empty','has-photo');
+    const photo=playerPhotoUrl(player.foto);
+    if(photo){
+      const image=create('img');
+      image.alt='Ritratto di '+name;
+      image.loading='eager';
+      image.decoding='async';
+      image.onload=()=>profilePortrait.classList.add('has-photo');
+      image.onerror=()=>{image.remove();profilePortrait.classList.add('is-empty');};
+      image.src=photo;
+      profilePortrait.appendChild(image);
+    } else {
+      profilePortrait.classList.add('is-empty');
+    }
+    profileNote.hidden=showLineups&&showEvents;
+    profileNote.textContent='Alcuni dati della stagione sono in aggiornamento: i trattini indicano statistiche non ancora verificate.';
+    profileMetrics.replaceChildren();
+    [
+      ['PRESENZE',showLineups?(player.presenze??0):'—'],
+      ['GOL',showEvents?(player.gol??0):'—'],
+      ['ASSIST',showEvents?(player.assist??0):'—'],
+      ['MVP',player.mvp??0],
+      ['GIALLO',showEvents?(player.gialli??0):'—'],
+      ['ROSSI',showEvents?(player.rossi??0):'—']
+    ].forEach(([label,value])=>{
+      const item=create('div','player-profile-stat');
+      item.append(create('small','',label),create('strong','',String(value)));
+      profileMetrics.appendChild(item);
+    });
+    profileHistory.replaceChildren();
+    const appearances=[];
+    profileCalendar.forEach((match,index)=>{
+      if(!isPlayed(match)||!match.id)return;
+      const detail=profileDetails[match.id]||{};
+      const starters=Array.isArray(detail.titolari)?detail.titolari:[];
+      const bench=Array.isArray(detail.panchina)?detail.panchina:[];
+      const starter=starters.find(person=>playerNameKey(person.nome)===nameKey);
+      const substitute=bench.find(person=>playerNameKey(person.nome)===nameKey);
+      const events=Array.isArray(detail.eventi)?detail.eventi:[];
+      const substitutionEvent=events.find(ev=>String(ev.tipo||'').toLowerCase()==='sostituzione'&&playerNameKey(ev.entra)===nameKey);
+      const enteredAt=substitute?.entrato||substitutionEvent?.minuto;
+      if(!starter&&!enteredAt)return;
+      appearances.push({match,detail,index,starter,enteredAt});
+    });
+    appearances.sort((a,b)=>b.index-a.index).forEach(({match,detail,starter,enteredAt})=>{
+      const nameHome=match.casa||'Montanino';
+      const nameAway=match.ospite||'Avversario';
+      const opponent=playerIsClub(nameHome)?nameAway:(playerIsClub(nameAway)?nameHome:nameHome+' · '+nameAway);
+      const events=profileEvents(detail,nameKey);
+      const counts=[events.gol,events.assist,events.gialli,events.rossi];
+      const hasPlayerEvent=counts.some(value=>value>0);
+      const card=create('article','player-profile-match');
+      const matchTop=create('div','player-profile-match-top');
+      matchTop.append(create('span','player-profile-date',dateLabel(match)));
+      matchTop.append(create('span','player-profile-role',starter?'TITOLARE':'SUBENTRATO'+(enteredAt?' · '+String(enteredAt).replace(/[′']/g,'')+'′':'')));
+      const matchName=create('h4','player-profile-opponent',opponent);
+      const matchScore=create('p','player-profile-score',nameHome+'  '+match.golCasa+' : '+match.golOspite+'  '+nameAway);
+      const eventTags=create('div','player-profile-event-tags');
+      if(showEvents){
+        if(events.gol)eventTags.appendChild(create('span','player-profile-tag','⚽ GOL'+(events.gol>1?' ×'+events.gol:'')));
+        if(events.assist)eventTags.appendChild(create('span','player-profile-tag','ASSIST'+(events.assist>1?' ×'+events.assist:'')));
+        if(events.gialli)eventTags.appendChild(create('span','player-profile-tag','AMMONITO'));
+        if(events.rossi)eventTags.appendChild(create('span','player-profile-tag','ESPULSO'));
+        if(detail.mvp&&playerNameKey(detail.mvp)===nameKey)eventTags.appendChild(create('span','player-profile-tag player-profile-tag--mvp','★ MVP'));
+        if(!hasPlayerEvent&&detail.eventiCompleti===true)eventTags.appendChild(create('span','player-profile-tag player-profile-tag--quiet','PRESENZA'));
+        if(detail.eventiCompleti!==true&&(hasPlayerEvent||!eventTags.childElementCount))eventTags.appendChild(create('span','player-profile-tag player-profile-tag--quiet','EVENTI IN AGGIORNAMENTO'));
+      } else {
+        eventTags.appendChild(create('span','player-profile-tag player-profile-tag--quiet','DATI EVENTI NON VERIFICATI'));
+      }
+      card.append(matchTop,matchName,matchScore,eventTags);
+      profileHistory.appendChild(card);
+    });
+    if(!appearances.length){
+      profileHistory.appendChild(create('p','player-profile-empty','Nessuna presenza individuale risulta ancora collegata ai tabellini delle partite.'));
+    }
+    profileDialog.hidden=false;
+    document.body.classList.add('player-profile-open');
+    profileClose.focus();
+  }
+  function closePlayerProfile(){
+    if(profileDialog.hidden)return;
+    profileDialog.hidden=true;
+    document.body.classList.remove('player-profile-open');
+    if(profileTrigger&&profileTrigger.isConnected)profileTrigger.focus({preventScroll:true});
+  }
+  profileClose.addEventListener('click',closePlayerProfile);
+  profileDialog.addEventListener('click',event=>{if(event.target===profileDialog)closePlayerProfile();});
+  profileDialog.addEventListener('keydown',event=>{
+    if(profileDialog.hidden)return;
+    if(event.key==='Escape'){event.preventDefault();closePlayerProfile();return;}
+    if(event.key!=='Tab')return;
+    const focusable=[...profileDialog.querySelectorAll('button:not([disabled]),a[href]')];
+    if(!focusable.length)return;
+    if(event.shiftKey&&document.activeElement===focusable[0]){event.preventDefault();focusable[focusable.length-1].focus();}
+    else if(!event.shiftKey&&document.activeElement===focusable[focusable.length-1]){event.preventDefault();focusable[0].focus();}
+  });
   function renderStats(order='gol'){
     if(!statsBody)return;
     statsBody.replaceChildren();
@@ -354,7 +505,7 @@
     document.querySelector('.player-stat-table').hidden=players.length===0;
     [...players].sort((a,b)=>intVal(b[order])-intVal(a[order])||String(a.nome).localeCompare(String(b.nome),'it'))
       .forEach(p=>{
-        const tr=create('tr');const showLineups=formations||!coverage.played,showEvents=events||!coverage.played;
+        const tr=create('tr');
         const values=[p.numero??'—',null,p.ruolo||'—',showLineups?(p.presenze??0):'—',showEvents?(p.gol??0):'—',showEvents?(p.assist??0):'—',showEvents?(p.gialli??0):'—',showEvents?(p.rossi??0):'—',p.mvp??0];
         values.forEach((v,i)=>{
           const td=create('td',i===1?'player-name-cell':'',i===1?'':String(v));
@@ -364,7 +515,13 @@
             const src=playerPhotoUrl(p.foto);
             if(src){const image=create('img');image.alt='';image.loading='lazy';image.decoding='async';image.onerror=()=>{image.remove();avatar.classList.remove('has-photo');};image.onload=()=>avatar.classList.add('has-photo');image.src=src;avatar.append(image);}
             identity.append(avatar,create('span','stats-player-name',p.nome||'—'));
-            td.append(identity);
+            const open=create('button','stats-player-open');
+            open.type='button';
+            open.setAttribute('aria-label','Apri la scheda di '+(p.nome||'giocatore'));
+            open.title='Apri la scheda giocatore';
+            open.appendChild(identity);
+            open.addEventListener('click',()=>renderPlayerProfile(p,open));
+            td.append(open);
           }
           tr.appendChild(td);
         });statsBody.appendChild(tr);
