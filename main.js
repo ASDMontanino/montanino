@@ -519,7 +519,7 @@
             open.type='button';
             open.setAttribute('aria-label','Apri la scheda di '+(p.nome||'giocatore'));
             open.title='Apri la scheda giocatore';
-            open.appendChild(identity);
+            open.append(identity,create('span','stats-player-hint','SCHEDA'));
             open.addEventListener('click',()=>renderPlayerProfile(p,open));
             td.append(open);
           }
