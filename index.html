@@ -14,13 +14,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261122-refresh-persistent-2">
+  <link rel="stylesheet" href="style.css?v=20261122-calendar-archive-1">
   <script src="data.js" defer></script>
   <script src="player-cards.js?v=20261117-public-cards" defer></script>
   <script src="tabellini.js?v=20261117-public-cards" defer></script>
   <script src="config.js" defer></script>
   <script src="site-common.js?v=20261109-no-voti" defer></script>
-  <script src="site-loader.js?v=20261122-refresh-persistent-2" defer></script>
+  <script src="site-loader.js?v=20261122-calendar-archive-1" defer></script>
   <script src="fx.js" defer></script>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icons/montanino-192.png">
@@ -29,8 +29,8 @@
   <meta name="apple-mobile-web-app-title" content="Montanino">
   <link rel="stylesheet" href="pwa.css?v=20261109">
   <script src="pwa.js?v=20261109" defer></script>
-  <link rel="stylesheet" href="app-ui.css?v=20261122-refresh-persistent-2">
-  <script src="app-ui.js?v=20261122-refresh-persistent-2" defer></script>
+  <link rel="stylesheet" href="app-ui.css?v=20261122-calendar-archive-1">
+  <script src="app-ui.js?v=20261122-calendar-archive-1" defer></script>
   <script src="push-route.js?v=20261109-tap" defer></script>
   <link rel="stylesheet" href="pull-refresh.css?v=20261109">
   <script src="pull-refresh.js?v=20261109" defer></script>
@@ -110,6 +110,13 @@
   <section class="section section-calendar" id="calendario" aria-labelledby="calendar-title">
     <div class="section-heading reveal"><div><p class="eyebrow"><span class="eyebrow-dot"></span> IL CAMPIONATO / 2026—27</p><h2 id="calendar-title">26 GIORNATE.<br><span>UNA SOLA MAGLIA.</span></h2></div><p class="heading-aside">ANDATA E RITORNO, CON TABELLINI,<br>FORMAZIONI, MVP E CARTELLINI.</p></div>
     <div class="section-toolbar"><div class="filter-pills" role="group" aria-label="Filtra calendario"><button type="button" class="pill is-active" data-calendar-filter="tutte" aria-pressed="true">TUTTE <span>26</span></button><button type="button" class="pill" data-calendar-filter="Andata" aria-pressed="false">ANDATA</button><button type="button" class="pill" data-calendar-filter="Ritorno" aria-pressed="false">RITORNO</button><button type="button" class="pill" data-calendar-filter="giocate" aria-pressed="false">GIÀ GIOCATE</button></div><div class="toolbar-help">APRI “TABELLINO” SULLE PARTITE GIOCATE <span aria-hidden="true">↗</span></div></div>
+    <div class="calendar-archive-filters" aria-label="Cerca e filtra l’archivio partite">
+      <label class="calendar-search-field" for="calendar-search"><span>CERCA AVVERSARIO</span><input id="calendar-search" type="search" placeholder="Es. San Cipriano" autocomplete="off"></label>
+      <label for="calendar-season-filter"><span>STAGIONE</span><select id="calendar-season-filter"><option value="tutte">TUTTE LE STAGIONI</option></select></label>
+      <label for="calendar-result-filter"><span>RISULTATO</span><select id="calendar-result-filter"><option value="tutti">TUTTI I RISULTATI</option><option value="vinte">VITTORIE</option><option value="pareggiate">PAREGGI</option><option value="perse">SCONFITTE</option><option value="programmate">PROGRAMMATE</option></select></label>
+      <button id="calendar-reset-filters" class="calendar-reset-filters" type="button">AZZERA FILTRI</button>
+      <p id="calendar-result-count" class="calendar-result-count" aria-live="polite"></p>
+    </div>
     <div id="calendar-list" class="calendar-list" aria-live="polite"></div>
     <div class="calendar-source"><span>ⓘ</span> Gli abbinamenti sono riportati dal calendario UISP Arezzo, Categoria 2, Girone C. Le date ancora mancanti non sono state inventate. <a href="https://gestionalecalcionuovo.uisp.it/AREZZO/25/57" target="_blank" rel="noopener noreferrer">VERIFICA LE DATE UFFICIALI ↗</a></div>
   </section>
