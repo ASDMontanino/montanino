@@ -4,7 +4,42 @@
   'use strict';
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   const mobile = window.matchMedia('(max-width: 850px)').matches;
-  if (!installed || !mobile) return;
+  if (!installed) return;
+  if (!mobile) {
+    document.documentElement.classList.add('club-app-desktop-mode');
+    const addRefreshButton = () => {
+      if (document.getElementById('club-app-refresh')) return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'club-app-refresh';
+      button.className = 'club-app-refresh';
+      button.setAttribute('aria-label', "Ricarica l'app Montanino");
+      button.title = "Ricarica l'app";
+      button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v4h4M4 13a8 8 0 0 0 14.9 4M20 20v-4h-4"/></svg><span>AGGIORNA</span>';
+      button.addEventListener('click', async () => {
+        if (button.disabled) return;
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        try {
+          const registration = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
+          if (registration) {
+            await Promise.race([
+              registration.update().catch(() => {}),
+              new Promise(resolve => setTimeout(resolve, 1200))
+            ]);
+          }
+        } catch (_) {}
+        window.location.reload();
+      });
+      document.body.appendChild(button);
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', addRefreshButton, { once: true });
+    } else {
+      addRefreshButton();
+    }
+    return;
+  }
 
   const gallery = /(?:^|\/)galleria\.html$/i.test(location.pathname);
   const sectionLink = id => gallery ? 'index.html#' + id : '#' + id;
