@@ -135,3 +135,7 @@
   .pitch-player-picker-actions button{flex:1}
   .match-time-override{align-items:flex-start;line-height:1.4}
 }
+
+
+/* I titolari si assegnano direttamente alle posizioni sul campo. */
+#starters-list[hidden]{display:none!important}
