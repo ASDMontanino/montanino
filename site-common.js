@@ -99,7 +99,10 @@
     const completed=games.filter(m=>played(m)&&m.data).sort((a,b)=>parseDate(b)-parseDate(a));
     const future=games.filter(m=>!played(m));const now=Date.now();
     const scheduled=future.filter(m=>m.data&&parseDate(m)>=now).sort((a,b)=>parseDate(a)-parseDate(b));
-    const upcoming=scheduled[0]||future.find(m=>!m.data)||future.find(m=>m.data);
+    // Una gara con data passata ma senza risultato resta da giocare/registrare:
+    // va mostrata prima delle giornate ancora senza data.
+    const unresolved=future.filter(m=>m.data&&parseDate(m)<now).sort((a,b)=>parseDate(a)-parseDate(b));
+    const upcoming=scheduled[0]||unresolved[0]||future.find(m=>!m.data)||future.find(m=>m.data);
     if(upcoming){
       const date=upcoming.data?new Intl.DateTimeFormat('it-IT',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(upcoming.data+'T12:00:00Z')).toUpperCase():'DA DEFINIRE';
       d.prossimaPartita={casa:upcoming.casa,ospite:upcoming.ospite,data:date+(upcoming.ora?' · '+upcoming.ora:''),dataISO:upcoming.data&&upcoming.ora?upcoming.data+'T'+upcoming.ora+':00':null,competizione:`${upcoming.giornata}ª GIORNATA · CAMPIONATO`,campo:upcoming.campo||'CAMPO DA CONFERMARE',indirizzoMaps:upcoming.campo||''};
