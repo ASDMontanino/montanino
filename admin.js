@@ -55,7 +55,7 @@
       row.append(position);
     }
     if(bench){const entrance=inp(p.entrato??'','text','entrato','Min. ingresso');entrance.setAttribute('aria-label','Minuto ingresso');row.append(entrance);}
-    const note=inp(p.nota||'','text','nota','Nota facoltativa');note.setAttribute('aria-label','Nota del giocatore');row.append(note,del());
+    const note=inp(p.nota||'','text','nota','Nota facoltativa');note.setAttribute('aria-label','Nota del giocatore');if(bench)row.append(note);else row.append(note,del());
     updateLineupCard(row);updateCounts();return row;
   }
   function playerCardPath(player){return player?.carta||PLAYER_CARDS.assetFor(player?.nome);}
