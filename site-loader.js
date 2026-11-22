@@ -34,5 +34,5 @@
       if(player && typeof player==='object')delete player.voto;
     }
   }
-  try{await addScript('main.js?v=20261122-player-profile-sheets-2');}catch(e){console.error('Impossibile caricare main.js',e);}
+  try{await addScript('main.js?v=20261122-calendar-archive-1');}catch(e){console.error('Impossibile caricare main.js',e);}
 })();
