@@ -4,8 +4,17 @@
   'use strict';
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   const mobile = window.matchMedia('(max-width: 850px)').matches;
-  if (!installed) return;
-  if (!mobile) {
+  const mobileDevice = navigator.userAgentData?.mobile === true ||
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let desktopApp = installed && !mobileDevice;
+  if (!mobileDevice) {
+    try {
+      desktopApp = desktopApp || sessionStorage.getItem('montanino-desktop-app-session') === '1';
+      if (installed) sessionStorage.setItem('montanino-desktop-app-session', '1');
+    } catch (_) {}
+  }
+  if (desktopApp) {
     document.documentElement.classList.add('club-app-desktop-mode');
     const addRefreshButton = () => {
       if (document.getElementById('club-app-refresh')) return;
@@ -46,6 +55,7 @@
     }
     return;
   }
+  if (!installed || !mobile) return;
 
   const gallery = /(?:^|\/)galleria\.html$/i.test(location.pathname);
   const sectionLink = id => gallery ? 'index.html#' + id : '#' + id;
