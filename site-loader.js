@@ -34,5 +34,5 @@
       if(player && typeof player==='object')delete player.voto;
     }
   }
-  try{await addScript('main.js?v=20261117-player-profiles');}catch(e){console.error('Impossibile caricare main.js',e);}
+  try{await addScript('main.js?v=20261122-player-profile-sheets');}catch(e){console.error('Impossibile caricare main.js',e);}
 })();
