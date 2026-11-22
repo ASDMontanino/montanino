@@ -175,15 +175,61 @@
     for(const line of layout.rows){
       const group=el('div','preview-line');group.setAttribute('aria-label',line.label);
       for(const slot of line.slots){
-        const person=bySlot.get(slot.id),card=el('div','preview-player'+(!person?' empty':''));
+        const person=bySlot.get(slot.id),card=el('button','preview-player'+(!person?' empty':''));card.type='button';card.setAttribute('aria-label',person?.nome?slot.id+' · '+person.nome:'Assegna un giocatore alla posizione '+slot.id);
         const artwork=el('div','preview-card-art');
         const src=playerCardSource(person);
         if(src){const image=el('img');image.src=src;image.alt='';image.loading='lazy';image.onerror=()=>{artwork.replaceChildren();artwork.classList.add('is-generic');artwork.append(previewCardFallback(person,slot));};artwork.append(image);}
         else{artwork.classList.add('is-generic');artwork.append(previewCardFallback(person,slot));}
-        card.append(artwork,el('span','preview-player-name',person?.nome||slot.id));group.append(card);
+        card.append(artwork,el('span','preview-player-name',person?.nome||slot.id));card.addEventListener('click',()=>openPitchPlayerPicker(slot));group.append(card);
       }
       root.append(group);
     }
+  }
+  function openPitchPlayerPicker(slot){
+    const host=$('pitch-player-picker');if(!host)return;
+    const currentRow=arr('starters-list').find(row=>read(row,'posizione')===slot.id);
+    const currentName=currentRow?read(currentRow,'nome'):'';
+    const occupied=new Set([
+      ...arr('starters-list').filter(row=>row!==currentRow).map(row=>C.normalize(read(row,'nome'))),
+      ...arr('bench-list').map(row=>C.normalize(read(row,'nome')))
+    ].filter(Boolean));
+    host.replaceChildren();
+    const panel=el('div','pitch-player-picker-panel');
+    const label=el('label','pitch-player-picker-label','SCEGLI PER '+slot.id+' · '+slot.label);
+    const select=el('select','roster-choice');
+    select.setAttribute('aria-label','Scegli il giocatore per la posizione '+slot.id);
+    const blank=el('option','','— Seleziona dalla rosa —');blank.value='';select.append(blank);
+    const roster=rosterNow().sort((a,b)=>(a.numero??999)-(b.numero??999)||a.nome.localeCompare(b.nome,'it'));
+    roster.filter(player=>!occupied.has(C.normalize(player.nome))||C.normalize(player.nome)===C.normalize(currentName)).forEach(player=>{
+      const option=el('option','',(player.numero??'–')+' · '+player.nome);option.value=player.nome;select.append(option);
+    });
+    if(currentName&&!roster.some(player=>C.normalize(player.nome)===C.normalize(currentName))){
+      const missing=el('option','','⚠ Fuori rosa: '+currentName);missing.value=currentName;select.append(missing);
+    }
+    if(currentName){const remove=el('option','','Rimuovi dalla posizione');remove.value='__remove__';select.append(remove);}
+    select.value=currentName||'';
+    const actions=el('div','pitch-player-picker-actions');
+    const assign=el('button','btn-add','ASSEGNA');assign.type='button';assign.disabled=!select.value;
+    const cancel=el('button','btn-quiet','ANNULLA');cancel.type='button';
+    select.addEventListener('change',()=>assign.disabled=!select.value);
+    assign.addEventListener('click',()=>{
+      const choice=select.value;
+      if(!choice)return;
+      let row=currentRow||arr('starters-list').find(item=>read(item,'posizione')===slot.id);
+      if(!row)row=lineupRow($('starters-list'),{posizione:slot.id});
+      const playerSelect=row.querySelector('select[data-field="nome"]');
+      if(!playerSelect)return;
+      if(choice==='__remove__'){
+        playerSelect.value='';
+        const number=row.querySelector('[data-field="numero"]');if(number)number.value='';
+      }else playerSelect.value=choice;
+      playerSelect.dispatchEvent(new Event('change',{bubbles:true}));
+      host.hidden=true;host.replaceChildren();markDirty();updateCounts();renderPitchPreview();refreshMatchSubstitutionChoices();
+    });
+    const close=()=>{host.hidden=true;host.replaceChildren();};
+    cancel.addEventListener('click',close);
+    actions.append(assign,cancel);panel.append(label,select,actions);host.append(panel);host.hidden=false;
+    select.focus();host.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
   function previewCardFallback(player,slot){
     const face=el('div','preview-card-fallback');
@@ -220,6 +266,8 @@
   function updateCounts(){
     const filled=arr('starters-list').filter(r=>read(r,'nome')).length;
     $('starter-count').textContent=filled+'/11';
+    const benchFilled=arr('bench-list').filter(r=>read(r,'nome')).length;
+    if($('bench-count'))$('bench-count').textContent=benchFilled+'/9';
   }
 
   // MVP indipendente da formazione ed episodi. Le foto sono facoltative.
@@ -257,7 +305,8 @@
   function showMatch(id){
     activeMatchId=id;const m=draft.calendario.find(x=>x.id===id);if(!m)return;
     $('match-select').value=id;
-    [['match-date',m.data||''],['match-time',m.ora||''],['match-field',m.campo||''],['match-home',m.casa||''],['match-away',m.ospite||''],['match-goals-home',m.golCasa??''],['match-goals-away',m.golOspite??'']].forEach(([k,v])=>$(k).value=v);
+    $('match-time-manual').checked=m.oraManuale===true;
+    [['match-date',m.data||''],['match-time',(m.ora||'').replace(':','')],['match-field',m.campo||''],['match-home',m.casa||''],['match-away',m.ospite||''],['match-goals-home',m.golCasa??''],['match-goals-away',m.golOspite??'']].forEach(([k,v])=>$(k).value=v);
     const d=(draft.dettagliPartite||{})[id]||{};
     $('match-module').value=C.isValidModule(d.modulo||'')?d.modulo:'4-3-3';
     $('match-notes').value=d.note||'';
@@ -267,7 +316,7 @@
     $('starters-list').replaceChildren();
     const assigned=C.assignFormation($('match-module').value,C.list(d.titolari),rosterNow(),true);
     assigned.forEach(p=>lineupRow($('starters-list'),p));
-    $('bench-list').replaceChildren();C.list(d.panchina).forEach(p=>lineupRow($('bench-list'),p,true));
+    $('bench-list').replaceChildren();const reserves=C.list(d.panchina);for(let i=0;i<9;i++)lineupRow($('bench-list'),reserves[i]||{},true);
     $('events-list').replaceChildren();C.list(d.eventi).forEach(e=>eventRow($('events-list'),e));
     updateCounts();renderPitchPreview();refreshMatchSubstitutionChoices();updateStatsPreview();
   }
@@ -288,9 +337,10 @@
     const names=[...titolari,...panchina].map(p=>C.normalize(p.nome));
     if(new Set(names).size!==names.length)throw Error('Un giocatore compare due volte tra titolari e panchina.');
     if(titolari.length>11)throw Error('Non puoi inserire più di 11 titolari.');
+    if(panchina.length>9)throw Error('La panchina può contenere al massimo 9 riserve.');
     const slots=C.formationSlots($('match-module').value).slots;
     const slotIds=slots.map(s=>s.id),chosen=titolari.map(p=>p.posizione);
-    if(chosen.some(id=>!slotIds.includes(id))||new Set(chosen).size!==chosen.length)throw Error('Ogni titolare deve avere una posizione diversa del modulo. Premi “Prepara / riordina 11 posizioni”.');
+    if(chosen.some(id=>!slotIds.includes(id))||new Set(chosen).size!==chosen.length)throw Error('Ogni titolare deve avere una posizione diversa del modulo. Tocca la posizione corretta sul campo.');
     const available=new Set(rosterNow().map(p=>C.normalize(p.nome)));
     const mvp=$('match-mvp').value.trim(),mvpFoto=$('match-mvp-photo').value.trim();
     if(mvp&&!available.has(C.normalize(mvp)))throw Error('Scegli l’MVP dall’elenco della rosa.');
@@ -333,7 +383,10 @@
       const ownScore=m.casa==='Montanino'?Number(home):Number(away);
       if(goals>ownScore)throw Error('I gol registrati per il Montanino superano quelli del risultato finale.');
     }
-    m.data=$('match-date').value||null;m.ora=$('match-time').value||null;m.campo=$('match-field').value.trim()||null;
+    const rawTime=$('match-time').value.trim();
+    const normalizedTime=/^\d{4}$/.test(rawTime)?rawTime.slice(0,2)+':'+rawTime.slice(2):rawTime;
+    if(normalizedTime&&!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(normalizedTime))throw Error('Orario non valido. Inserisci quattro cifre, per esempio 2115.');
+    m.data=$('match-date').value||null;m.ora=normalizedTime||null;m.oraManuale=$('match-time-manual').checked;m.campo=$('match-field').value.trim()||null;
     m.casa=$('match-home').value.trim();m.ospite=$('match-away').value.trim();
     if(!m.casa||!m.ospite)throw Error('Inserisci entrambe le squadre.');
     m.golCasa=hasResult?Number(home):null;m.golOspite=hasResult?Number(away):null;
@@ -588,6 +641,7 @@
   // Selezionare le foto o la partita nell'upload non modifica i dati pubblicati.
   const editorChanged=event=>{if(!event.target.closest('.gallery-uploader'))markDirty();};
   $('editor').addEventListener('input',editorChanged);$('editor').addEventListener('change',editorChanged);
+  $('match-time').addEventListener('input',()=>{$('match-time-manual').checked=true;});
   $('match-select').addEventListener('change',e=>{
     const previous=activeMatchId;
     try{captureMatch();showMatch(e.target.value);}catch(err){msg(err.message,true);$('match-select').value=previous;}
@@ -597,19 +651,11 @@
     document.querySelectorAll('[data-editor-panel]').forEach(n=>n.hidden=n.dataset.editorPanel!==b.dataset.panel);
   }));
   $('match-module').addEventListener('change',organizeFormation);
-  $('prepare-formation').addEventListener('click',organizeFormation);
   $('starters-list').addEventListener('change',()=>{renderPitchPreview();refreshMatchSubstitutionChoices();});
   $('starters-list').addEventListener('input',renderPitchPreview);
   $('bench-list').addEventListener('change',e=>{if(e.target.matches('[data-field="nome"]'))updateLineupCard(e.target.closest('.lineup-row'));refreshMatchSubstitutionChoices();});
   $('events-list').addEventListener('change',refreshMatchSubstitutionChoices);
   $('events-list').addEventListener('input',e=>{if(e.target.matches('[data-field="minuto"]'))refreshMatchSubstitutionChoices();});
-  $('add-starter').addEventListener('click',()=>{
-    if(arr('starters-list').length>=11){msg('Ci sono già 11 posizioni. Per cambiare il modulo usa “Prepara / riordina”.',true);return;}
-    const occupied=new Set(arr('starters-list').map(r=>read(r,'posizione')));
-    const slot=C.formationSlots($('match-module').value).slots.find(t=>!occupied.has(t.id));
-    lineupRow($('starters-list'),{posizione:slot?.id||''});markDirty();renderPitchPreview();refreshMatchSubstitutionChoices();
-  });
-  $('add-bench').addEventListener('click',()=>{lineupRow($('bench-list'),{},true);markDirty();refreshMatchSubstitutionChoices();});
   $('add-event').addEventListener('click',()=>{eventRow($('events-list'));markDirty();});
   $('add-player').addEventListener('click',()=>{playerRow();markDirty();refreshRosterChoices();refreshMvpChoices();});
   $('sort-standings-points').addEventListener('click',sortStandingsByPoints);
