@@ -711,3 +711,18 @@ body.player-profile-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   .stats-player-open,.player-profile-panel{scroll-behavior:auto}
 }
+
+
+/* Archivio partite: ricerca avversario e filtri per stagione/risultato */
+.calendar-archive-filters{display:grid;grid-template-columns:minmax(220px,1.6fr) repeat(2,minmax(175px,1fr)) auto;align-items:end;gap:12px;margin:-5px 0 18px;padding:16px;background:#091b10;border:1px solid rgba(157,234,171,.14)}
+.calendar-archive-filters label{display:grid;gap:7px;min-width:0}
+.calendar-archive-filters label>span{font-size:9px;font-weight:800;letter-spacing:.12em;color:#85b591}
+.calendar-archive-filters input,.calendar-archive-filters select{width:100%;height:43px;padding:0 12px;border:1px solid rgba(164,223,181,.22);border-radius:0;background:#0c2115;color:#eef9f0;font:600 12px var(--body);outline:none}
+.calendar-archive-filters input::placeholder{color:#73927a}
+.calendar-archive-filters input:focus,.calendar-archive-filters select:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(67,224,113,.12)}
+.calendar-archive-filters select{color-scheme:dark}
+.calendar-reset-filters{height:43px;padding:0 13px;border:1px solid rgba(164,223,181,.22);background:transparent;color:#c4ddc9;font:800 9px var(--body);letter-spacing:.08em;cursor:pointer}
+.calendar-reset-filters:hover{border-color:var(--green);color:var(--green-light)}
+.calendar-result-count{grid-column:1/-1;margin:1px 0 0;color:#82a98b;font-size:9px;font-weight:800;letter-spacing:.1em}
+@media(max-width:850px){.calendar-archive-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-search-field{grid-column:1/-1}.calendar-result-count{grid-column:1/-1}}
+@media(max-width:560px){.calendar-archive-filters{grid-template-columns:1fr;gap:11px;padding:13px}.calendar-search-field,.calendar-result-count{grid-column:auto}.calendar-reset-filters{width:100%}}
