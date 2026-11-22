@@ -341,8 +341,8 @@
       `DTEND;TZID=Europe/Rome:${isoLocal.slice(0,9)+String((Number(m.ora.slice(0,2))+2)%24).padStart(2,'0')+isoLocal.slice(11)}`,
       `SUMMARY:${safe(m.casa+' - '+m.ospite)}`,`LOCATION:${safe(m.campo||'Da definire')}`,
       'DESCRIPTION:Orario soggetto a variazioni. Verificare i comunicati ufficiali UISP.',
-      'BEGIN:VALARM','TRIGGER:-PT24H','ACTION:DISPLAY',\`DESCRIPTION:Promemoria: domani \${safe(m.casa+' - '+m.ospite)}\`,'END:VALARM',
-      'BEGIN:VALARM','TRIGGER:-PT2H','ACTION:DISPLAY',\`DESCRIPTION:Promemoria: tra 2 ore \${safe(m.casa+' - '+m.ospite)}\`, 'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+      'BEGIN:VALARM','TRIGGER:-PT24H','ACTION:DISPLAY',`DESCRIPTION:Promemoria: domani ${safe(m.casa+' - '+m.ospite)}`,'END:VALARM',
+      'BEGIN:VALARM','TRIGGER:-PT2H','ACTION:DISPLAY',`DESCRIPTION:Promemoria: tra 2 ore ${safe(m.casa+' - '+m.ospite)}`, 'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
     const url=URL.createObjectURL(new Blob([ics],{type:'text/calendar;charset=utf-8'}));
     const a=document.createElement('a');a.href=url;a.download=`Montanino-${m.id}.ics`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
