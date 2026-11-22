@@ -226,15 +226,19 @@
   const calendarResultNode=$('calendar-result-filter');
   const calendarCountNode=$('calendar-result-count');
   const calendarResetNode=$('calendar-reset-filters');
-  const normalizeCalendarText=value=>String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('it').trim();
-  const seasonForMatch=m=>{
-    const explicit=m.stagione||m.season||m.campionato;
-    if(explicit)return String(explicit).replace(/season|stagione/ig,'').trim();
-    const match=String(m.data||'').match(/^(\\d{4})-(\\d{2})-/);
-    if(!match)return String(SITE_DATA.stagione||SITE_DATA.season||'Stagione non specificata');
+  const normalizeCalendarText=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('it').trim();
+  const seasonFromDate=m=>{
+    const match=String(m.data||'').match(/^(\d{4})-(\d{2})-/);
+    if(!match)return '';
     const year=Number(match[1]),month=Number(match[2]);
     const startYear=month>=7?year:year-1;
     return startYear+'/'+String((startYear+1)%100).padStart(2,'0');
+  };
+  const defaultCalendarSeason=calendar.map(seasonFromDate).find(Boolean)||String(SITE_DATA.stagione||SITE_DATA.season||'Stagione non specificata');
+  const seasonForMatch=m=>{
+    const explicit=m.stagione||m.season||m.campionato;
+    if(explicit)return String(explicit).replace(/season|stagione/ig,'').trim();
+    return seasonFromDate(m)||defaultCalendarSeason;
   };
   const seasonOptions=[...new Set(calendar.map(seasonForMatch))].sort((a,b)=>b.localeCompare(a,'it',{numeric:true}));
   if(calendarSeasonNode)seasonOptions.forEach(season=>{const option=document.createElement('option');option.value=season;option.textContent=season;calendarSeasonNode.appendChild(option);});
