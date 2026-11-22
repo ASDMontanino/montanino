@@ -1,7 +1,7 @@
 /* A.S.D. Montanino — PWA. Dati Supabase e area admin sempre online. */
 importScripts('./push-route.js?v=20261109-tap');
 
-const CACHE_NAME = 'montanino-shell-20261122-calendar-archive-1';
+const CACHE_NAME = 'montanino-shell-20261122-safari-refresh-1';
 const SHELL = [
   './index.html',
   './galleria.html',
@@ -85,7 +85,7 @@ self.addEventListener('fetch', event => {
 
   event.respondWith((async () => {
     try {
-      const response = await fetch(request);
+      const response = await fetch(request, url.searchParams.has('__montanino_refresh') ? { cache: 'reload' } : {});
       if (response.ok && response.type === 'basic') {
         // Clona prima che il browser inizi a consumare la risposta.
         try {
