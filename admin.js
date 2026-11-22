@@ -189,10 +189,7 @@
     const host=$('pitch-player-picker');if(!host)return;
     const currentRow=arr('starters-list').find(row=>read(row,'posizione')===slot.id);
     const currentName=currentRow?read(currentRow,'nome'):'';
-    const occupied=new Set([
-      ...arr('starters-list').filter(row=>row!==currentRow).map(row=>C.normalize(read(row,'nome'))),
-      ...arr('bench-list').map(row=>C.normalize(read(row,'nome')))
-    ].filter(Boolean));
+    const occupied=new Set(arr('starters-list').filter(row=>row!==currentRow).map(row=>C.normalize(read(row,'nome'))).filter(Boolean));
     host.replaceChildren();
     const panel=el('div','pitch-player-picker-panel');
     const label=el('label','pitch-player-picker-label','SCEGLI PER '+slot.id+' · '+slot.label);
@@ -222,7 +219,14 @@
       if(choice==='__remove__'){
         playerSelect.value='';
         const number=row.querySelector('[data-field="numero"]');if(number)number.value='';
-      }else playerSelect.value=choice;
+      }else{
+        const reserve=arr('bench-list').find(item=>C.normalize(read(item,'nome'))===C.normalize(choice));
+        if(reserve){
+          const reserveName=reserve.querySelector('select[data-field="nome"]');if(reserveName){reserveName.value='';reserveName.dispatchEvent(new Event('change',{bubbles:true}));}
+          ['numero','entrato'].forEach(field=>{const input=reserve.querySelector('[data-field="'+field+'"]');if(input)input.value='';});
+        }
+        playerSelect.value=choice;
+      }
       playerSelect.dispatchEvent(new Event('change',{bubbles:true}));
       host.hidden=true;host.replaceChildren();markDirty();updateCounts();renderPitchPreview();refreshMatchSubstitutionChoices();
     });
