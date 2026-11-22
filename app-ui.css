@@ -247,7 +247,7 @@
   .club-app-bar, .club-app-tabs, .club-app-sheet { scroll-behavior: auto; }
 }
 
-@media (min-width: 851px) {
+@media (min-width: 0px) {
   html.club-app-desktop-mode .club-app-refresh {
     position: fixed;
     right: 88px;
