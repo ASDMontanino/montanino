@@ -221,11 +221,53 @@
   };
   let calendarFilter='tutte';
   let futureExpanded=false;
+  const calendarSearchNode=$('calendar-search');
+  const calendarSeasonNode=$('calendar-season-filter');
+  const calendarResultNode=$('calendar-result-filter');
+  const calendarCountNode=$('calendar-result-count');
+  const calendarResetNode=$('calendar-reset-filters');
+  const normalizeCalendarText=value=>String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('it').trim();
+  const seasonForMatch=m=>{
+    const explicit=m.stagione||m.season||m.campionato;
+    if(explicit)return String(explicit).replace(/season|stagione/ig,'').trim();
+    const match=String(m.data||'').match(/^(\\d{4})-(\\d{2})-/);
+    if(!match)return String(SITE_DATA.stagione||SITE_DATA.season||'Stagione non specificata');
+    const year=Number(match[1]),month=Number(match[2]);
+    const startYear=month>=7?year:year-1;
+    return startYear+'/'+String((startYear+1)%100).padStart(2,'0');
+  };
+  const seasonOptions=[...new Set(calendar.map(seasonForMatch))].sort((a,b)=>b.localeCompare(a,'it',{numeric:true}));
+  if(calendarSeasonNode)seasonOptions.forEach(season=>{const option=document.createElement('option');option.value=season;option.textContent=season;calendarSeasonNode.appendChild(option);});
+  const opponentForMatch=m=>{
+    const home=String(m.casa||''),away=String(m.ospite||'');
+    if(normalizeCalendarText(home).includes('montanino'))return away;
+    if(normalizeCalendarText(away).includes('montanino'))return home;
+    return home+' '+away;
+  };
+  const resultForMatch=m=>{
+    if(!isPlayed(m))return 'programmate';
+    const home=Number(m.golCasa),away=Number(m.golOspite);
+    if(normalizeCalendarText(m.casa).includes('montanino'))return home>away?'vinte':home<away?'perse':'pareggiate';
+    if(normalizeCalendarText(m.ospite).includes('montanino'))return away>home?'vinte':away<home?'perse':'pareggiate';
+    return 'altre';
+  };
   function renderCalendar(filter=calendarFilter){
     if(!calendarNode)return;
     calendarFilter=filter;
     calendarNode.replaceChildren();
-    const rows=calendar.filter(m=>filter==='tutte'||(filter==='giocate'&&isPlayed(m))||m.fase===filter);
+    const search=normalizeCalendarText(calendarSearchNode?.value);
+    const season=calendarSeasonNode?.value||'tutte';
+    const result=calendarResultNode?.value||'tutti';
+    const customFilter=Boolean(search)||season!=='tutte'||result!=='tutti';
+    const rows=calendar.filter(m=>{
+      const phaseMatches=filter==='tutte'||(filter==='giocate'&&isPlayed(m))||m.fase===filter;
+      const searchMatches=!search||normalizeCalendarText(opponentForMatch(m)).includes(search);
+      const seasonMatches=season==='tutte'||seasonForMatch(m)===season;
+      const resultMatches=result==='tutti'||resultForMatch(m)===result;
+      return phaseMatches&&searchMatches&&seasonMatches&&resultMatches;
+    });
+    if(customFilter)futureExpanded=true;
+    if(calendarCountNode)calendarCountNode.textContent=rows.length+' '+(rows.length===1?'PARTITA TROVATA':'PARTITE TROVATE');
     const playedRows=rows.filter(isPlayed);
     const futureRows=rows.filter(m=>!isPlayed(m));
     const makeFixtureCard=m=>{
@@ -281,7 +323,7 @@
       calendarNode.append(toggle,upcoming);
       sync();
     }
-    if(!rows.length)calendarNode.appendChild(create('p','editorial-empty','NESSUNA PARTITA IN QUESTA SEZIONE.'));
+    if(!rows.length)calendarNode.appendChild(create('p','editorial-empty',search||season!=='tutte'||result!=='tutti'?'NESSUNA PARTITA TROVATA. MODIFICA I FILTRI.':'NESSUNA PARTITA IN QUESTA SEZIONE.'));
     calendarNode.querySelectorAll('.reveal').forEach(el=>el.classList.add('is-visible'));
   }
   function downloadICS(m){
@@ -300,10 +342,17 @@
   }
   document.querySelectorAll('[data-calendar-filter]').forEach(btn=>btn.addEventListener('click',()=>{
     document.querySelectorAll('[data-calendar-filter]').forEach(b=>{const on=b===btn;b.classList.toggle('is-active',on);b.setAttribute('aria-pressed',String(on));});
-    // Le viste Andata e Ritorno mantengono il comportamento completo del filtro.
     futureExpanded=!['tutte','giocate'].includes(btn.dataset.calendarFilter);
     renderCalendar(btn.dataset.calendarFilter);
   }));
+  [calendarSearchNode,calendarSeasonNode,calendarResultNode].forEach(control=>control?.addEventListener(control===calendarSearchNode?'input':'change',()=>renderCalendar()));
+  calendarResetNode?.addEventListener('click',()=>{
+    if(calendarSearchNode)calendarSearchNode.value='';
+    if(calendarSeasonNode)calendarSeasonNode.value='tutte';
+    if(calendarResultNode)calendarResultNode.value='tutti';
+    futureExpanded=false;
+    document.querySelector('[data-calendar-filter="tutte"]')?.click();
+  });
   renderCalendar();
   // Un link diretto a una partita resta raggiungibile anche dentro il calendario chiuso.
   const openLinkedMatch=()=>{
