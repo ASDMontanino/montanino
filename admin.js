@@ -3,6 +3,11 @@
 (async function(){
   'use strict';
   const $=id=>document.getElementById(id);
+  const hideStarterRows=()=>{
+    const list=$('starters-list');
+    if(list){list.hidden=true;list.setAttribute('aria-hidden','true');list.style.setProperty('display','none','important');}
+  };
+  hideStarterRows();
   const C=window.MontaninoCommon;
   const conf=window.MONTANINO_SUPABASE||{};
   const PLAYER_CARDS=window.MontaninoPlayerCards||{assetFor:()=>'',urlFor:()=>''};
@@ -247,6 +252,7 @@
     const slots=C.formationSlots($('match-module').value).slots;
     const assignments=new Map(organized.map(p=>[p.posizione,p]));
     $('starters-list').replaceChildren();
+    hideStarterRows();
     slots.forEach(slot=>lineupRow($('starters-list'),assignments.get(slot.id)||{posizione:slot.id}));
     updateCounts();renderPitchPreview();refreshMatchSubstitutionChoices();markDirty();
   }
@@ -318,6 +324,7 @@
     $('match-mvp-photo').value=d.mvpFoto||'';
     $('match-complete').checked=!!d.datiCompleti;$('events-complete').checked=!!d.eventiCompleti;
     $('starters-list').replaceChildren();
+    hideStarterRows();
     const assigned=C.assignFormation($('match-module').value,C.list(d.titolari),rosterNow(),true);
     assigned.forEach(p=>lineupRow($('starters-list'),p));
     $('bench-list').replaceChildren();const reserves=C.list(d.panchina);for(let i=0;i<9;i++)lineupRow($('bench-list'),reserves[i]||{},true);
