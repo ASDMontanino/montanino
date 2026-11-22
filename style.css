@@ -666,8 +666,8 @@ tr.highlight td:nth-child(2):before{content:"◆";font-size:10px;color:var(--gre
 .player-profile-close:hover{background:#1d5030}
 .player-profile-close:focus-visible{outline:2px solid #91ffc0;outline-offset:3px}
 .player-profile-main{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr);align-items:center;gap:25px;padding-right:38px}
-.player-profile-photo{position:relative;overflow:hidden;aspect-ratio:4/5;border:1px solid #4e9a66;border-radius:16px;background:linear-gradient(145deg,#1c5a34,#0b2415);box-shadow:0 14px 36px #0006}
-.player-profile-photo img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 24%}
+.player-profile-photo{position:relative;overflow:hidden;aspect-ratio:1/1;border:1px solid #4e9a66;border-radius:50%;background:linear-gradient(145deg,#1c5a34,#0b2415);box-shadow:0 14px 36px #0006}
+.player-profile-photo img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 22%}
 .player-profile-photo.is-empty::before{content:"";position:absolute;top:22%;left:50%;width:28%;aspect-ratio:1;border-radius:50%;background:#8fcda2;transform:translateX(-50%)}
 .player-profile-photo.is-empty::after{content:"";position:absolute;left:50%;bottom:8%;width:57%;height:37%;border-radius:55% 55% 32% 32%;background:#8fcda2;transform:translateX(-50%)}
 .player-profile-kicker{margin:0 0 10px;color:#91e9a9;font-size:11px;font-weight:800;letter-spacing:.16em}
