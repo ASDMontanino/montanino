@@ -246,3 +246,57 @@
 @media (prefers-reduced-motion: reduce) {
   .club-app-bar, .club-app-tabs, .club-app-sheet { scroll-behavior: auto; }
 }
+
+@media (min-width: 851px) {
+  html.club-app-desktop-mode .club-app-refresh {
+    position: fixed;
+    right: 88px;
+    bottom: 24px;
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 46px;
+    padding: 0 17px;
+    border: 1px solid rgba(145, 239, 176, .42);
+    border-radius: 999px;
+    background: rgba(8, 29, 17, .96);
+    color: #f4fff7;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, .35);
+    font: 800 10px/1 'DM Sans', Arial, sans-serif;
+    letter-spacing: .11em;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    transition: transform .18s ease, background .18s ease, border-color .18s ease;
+  }
+  html.club-app-desktop-mode .club-app-refresh:hover {
+    transform: translateY(-2px);
+    background: #174329;
+    border-color: #8be9a5;
+  }
+  html.club-app-desktop-mode .club-app-refresh:focus-visible {
+    outline: 2px solid #91ffc0;
+    outline-offset: 3px;
+  }
+  html.club-app-desktop-mode .club-app-refresh:disabled {
+    cursor: progress;
+    opacity: .8;
+  }
+  html.club-app-desktop-mode .club-app-refresh svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  html.club-app-desktop-mode .club-app-refresh[aria-busy="true"] svg {
+    animation: club-app-refresh-spin .8s linear infinite;
+  }
+}
+@keyframes club-app-refresh-spin {
+  to { transform: rotate(360deg); }
+}
