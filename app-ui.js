@@ -20,6 +20,12 @@
         if (button.disabled) return;
         button.disabled = true;
         button.setAttribute('aria-busy', 'true');
+        window.setTimeout(() => {
+          if (button.isConnected) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+          }
+        }, 4000);
         try {
           const registration = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
           if (registration) {
