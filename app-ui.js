@@ -2,6 +2,12 @@
    Si attiva solo nella PWA mobile installata. Non tocca Supabase o il pannello admin. */
 (() => {
   'use strict';
+  const refreshParam='__montanino_refresh';
+  const initialUrl=new URL(window.location.href);
+  if(initialUrl.searchParams.has(refreshParam)){
+    initialUrl.searchParams.delete(refreshParam);
+    history.replaceState(history.state,'',initialUrl.pathname+initialUrl.search+initialUrl.hash);
+  }
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   const mobile = window.matchMedia('(max-width: 850px)').matches;
   const mobileDevice = navigator.userAgentData?.mobile === true ||
@@ -44,7 +50,9 @@
             ]);
           }
         } catch (_) {}
-        window.location.reload();
+        const refreshUrl = new URL(window.location.href);
+        refreshUrl.searchParams.set('__montanino_refresh', String(Date.now()));
+        window.location.replace(refreshUrl.href);
       });
       document.body.appendChild(button);
     };
