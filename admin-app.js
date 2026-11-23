@@ -19,6 +19,30 @@
     const stamp=new Date(m.data+'T'+(m.ora||'15:00')+':00');
     return Number.isFinite(stamp.valueOf())?stamp.valueOf():Number.MAX_SAFE_INTEGER;
   }
+  function formatDateTime(date){
+    return new Intl.DateTimeFormat('it-IT',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(date);
+  }
+  function updateFixtureTiming(match){
+    const countdown=$('aa-countdown-status'),reminder=$('aa-reminder-status');
+    if(!match){countdown.textContent='Countdown: nessuna partita da programmare.';reminder.textContent='Promemoria: non previsto.';return;}
+    if(!match.data||!match.ora){
+      const missing=[!match.data?'data':'',!match.ora?'orario':''].filter(Boolean).join(' e ');
+      countdown.textContent='Countdown: non attivo, manca '+missing+'.';
+      reminder.textContent='Promemoria: non programmabile finché manca '+missing+'.';
+      return;
+    }
+    const kickoff=new Date(match.data+'T'+match.ora+':00');
+    if(!Number.isFinite(kickoff.valueOf())){
+      countdown.textContent='Countdown: non attivo, data o orario non valido.';
+      reminder.textContent='Promemoria: non programmabile, controlla data e orario.';
+      return;
+    }
+    const now=new Date(),reminderAt=new Date(kickoff.valueOf()-2*60*60*1000);
+    countdown.textContent=kickoff>now?'Countdown: attivo fino a '+formatDateTime(kickoff)+'.':'Countdown: orario della partita già passato.';
+    reminder.textContent=kickoff<=now?'Promemoria: partita già iniziata o conclusa.':
+      reminderAt>now?'Promemoria previsto '+formatDateTime(reminderAt)+' (2 ore prima).':
+      'Promemoria: fascia delle 2 ore già trascorsa; invio non verificato.';
+  }
   function updateDashboard(content){
     const calendar=list(content.calendario);
     const now=Date.now();
@@ -30,6 +54,7 @@
     $('aa-stat-players').textContent=list(content.giocatori).length;
     $('aa-stat-matches').textContent=calendar.filter(played).length;
     $('aa-stat-photos').textContent=list(content.fotoPartite).length;
+    updateFixtureTiming(next);
     if(next){
       $('aa-next-home').textContent=next.casa||'DA DEFINIRE';
       $('aa-next-away').textContent=next.ospite||'DA DEFINIRE';
@@ -38,6 +63,7 @@
       $('aa-next-status').textContent=next.data?'DA GIOCARE':'DA PROGRAMMARE';
       $('aa-next-live').href='matchday.html?app=1&partita='+encodeURIComponent(next.id);
     }else{
+      updateFixtureTiming(null);
       $('aa-next-home').textContent='STAGIONE';
       $('aa-next-away').textContent='IN CORSO';
       $('aa-next-details').textContent=calendar.length?'TUTTE LE PARTITE RISULTANO DISPUTATE.':'INSERISCI IL CALENDARIO DAL PANNELLO.';
