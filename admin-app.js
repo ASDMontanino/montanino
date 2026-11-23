@@ -50,8 +50,8 @@
     section.hidden=false;
     $('aa-schedule-warning-count').textContent=String(incomplete.length);
     $('aa-schedule-warning-copy').textContent=incomplete.length
-      ?'Senza data e orario il countdown non parte e il promemoria non può essere programmato.'
-      :'Tutte le partite ancora da giocare hanno data e orario.';
+      ?'Se manca la data o l’orario, il countdown non parte e il promemoria non può essere programmato.'
+      :(calendar.filter(match=>!played(match)).length ? 'Tutte le partite ancora da giocare hanno data e orario.' : 'Nessuna partita da programmare.');
     section.classList.toggle('is-complete',incomplete.length===0);
     const listEl=$('aa-incomplete-list');
     listEl.replaceChildren();
