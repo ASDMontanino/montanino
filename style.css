@@ -726,3 +726,5 @@ body.player-profile-open{overflow:hidden}
 .calendar-result-count{grid-column:1/-1;margin:1px 0 0;color:#82a98b;font-size:9px;font-weight:800;letter-spacing:.1em}
 @media(max-width:850px){.calendar-archive-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-search-field{grid-column:1/-1}.calendar-result-count{grid-column:1/-1}}
 @media(max-width:560px){.calendar-archive-filters{grid-template-columns:1fr;gap:11px;padding:13px}.calendar-search-field,.calendar-result-count{grid-column:auto}.calendar-reset-filters{width:100%}}
+
+.usage-privacy-note{display:block;flex-basis:100%;text-align:center;font-size:9px;letter-spacing:normal;line-height:1.45;opacity:.72}
