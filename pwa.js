@@ -9,7 +9,35 @@
   }
 
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  if (standalone) return;
+  if (standalone) {
+    recordPwaLaunch();
+    return;
+  }
+
+  async function recordPwaLaunch() {
+    const conf = window.MONTANINO_SUPABASE || {};
+    if (!conf.url || !conf.anonKey) return;
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date()).reduce((out, part) => {
+      if (part.type !== 'literal') out[part.type] = part.value;
+      return out;
+    }, {});
+    const key = 'montanino-pwa-open-' + parts.year + '-' + parts.month + '-' + parts.day;
+    try { if (localStorage.getItem(key)) return; } catch (_) { return; }
+    try {
+      const baseUrl = conf.url.endsWith('/') ? conf.url.slice(0, -1) : conf.url;
+      const response = await fetch(baseUrl + '/functions/v1/club-app-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': conf.anonKey },
+        body: JSON.stringify({ event: 'pwa_launch' }),
+        credentials: 'omit'
+      });
+      if (response.ok) {
+        try { localStorage.setItem(key, '1'); } catch (_) {}
+      }
+    } catch (_) {}
+  }
 
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
