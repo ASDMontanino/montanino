@@ -43,11 +43,40 @@
       reminderAt>now?'Promemoria previsto '+formatDateTime(reminderAt)+' (2 ore prima).':
       'Promemoria: fascia delle 2 ore già trascorsa; invio non verificato.';
   }
+  function renderScheduleWarnings(calendar,played){
+    const section=$('aa-schedule-warning');
+    const incomplete=calendar.filter(match=>!played(match)&&(!match.data||!match.ora))
+      .sort((a,b)=>(Number(a.giornata)||999)-(Number(b.giornata)||999));
+    section.hidden=false;
+    $('aa-schedule-warning-count').textContent=String(incomplete.length);
+    $('aa-schedule-warning-copy').textContent=incomplete.length
+      ?'Senza data e orario il countdown non parte e il promemoria non può essere programmato.'
+      :'Tutte le partite ancora da giocare hanno data e orario.';
+    section.classList.toggle('is-complete',incomplete.length===0);
+    const listEl=$('aa-incomplete-list');
+    listEl.replaceChildren();
+    for(const match of incomplete.slice(0,5)){
+      const item=document.createElement('li');
+      const title=document.createElement('strong');
+      title.textContent=(match.giornata?'Giornata '+match.giornata+' · ':'')+(match.casa||'Casa')+' – '+(match.ospite||'Ospiti');
+      const missing=document.createElement('small');
+      missing.textContent='Manca '+[!match.data?'la data':'',!match.ora?'l’orario':''].filter(Boolean).join(' e ');
+      item.append(title,missing);
+      listEl.append(item);
+    }
+    if(incomplete.length>5){
+      const more=document.createElement('li');
+      more.className='aa-warning-more';
+      more.textContent='E altre '+(incomplete.length-5)+' partite da programmare.';
+      listEl.append(more);
+    }
+  }
   function updateDashboard(content){
     const calendar=list(content.calendario);
     const now=Date.now();
     const played=m=>Number.isInteger(m.golCasa)&&Number.isInteger(m.golOspite);
     const pending=calendar.filter(m=>!played(m));
+    renderScheduleWarnings(calendar,played);
     const sortedPending=[...pending].sort((a,b)=>localDay(a)-localDay(b));
     const next=sortedPending.find(m=>localDay(m)>=now)||sortedPending[0];
     const last=[...calendar].filter(m=>played(m)).sort((a,b)=>localDay(b)-localDay(a))[0];
