@@ -78,6 +78,22 @@
       $('aa-last-game').append(names,score,away);
     }else $('aa-last-game').textContent='In attesa del primo risultato registrato.';
   }
+  async function loadUsageMetrics(){
+    const topics=$('aa-usage-topics'),opens=$('aa-usage-pwa-7d');
+    try{
+      const {data,error}=await client.rpc('club_admin_usage_metrics');
+      if(error)throw error;
+      $('aa-usage-push-total').textContent=Number(data?.push_total)||0;
+      topics.textContent='Calendario '+(Number(data?.push_calendar)||0)+' · Risultati '+(Number(data?.push_result)||0)+' · Foto '+(Number(data?.push_photos)||0);
+      opens.textContent=Number(data?.pwa_7d)||0;
+      $('aa-usage-pwa-note').textContent='Avvii anonimi in modalità app negli ultimi 7 giorni · non installazioni.';
+    }catch(error){
+      $('aa-usage-push-total').textContent='—';
+      topics.textContent='Conteggio non disponibile al momento.';
+      opens.textContent='—';
+      $('aa-usage-pwa-note').textContent='Conteggio non disponibile al momento.';
+    }
+  }
   async function enter(){
     const {data:{session},error:authError}=await client.auth.getSession();
     if(authError)throw authError;
@@ -90,6 +106,7 @@
     currentUser=session.user;
     authState(true);
     updateDashboard(rows?.[0]?.payload||{});
+    await loadUsageMetrics();
     $('aa-status').hidden=true;
     installButton();
   }
