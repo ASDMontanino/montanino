@@ -106,6 +106,62 @@
       const away=document.createElement('span');away.textContent='  '+(last.ospite||'OSPITI')+(date?'  ·  '+date:'');
       $('aa-last-game').append(names,score,away);
     }else $('aa-last-game').textContent='In attesa del primo risultato registrato.';
+    return next||null;
+  }
+  function reminderStatusLabel(status){
+    return ({pending:'IN CODA',sent:'INVIATO',failed:'NON RIUSCITO',partial:'PARZIALE',not_dispatched:'NESSUN INVIO REGISTRATO'})[status]||'ESITO NON DISPONIBILE';
+  }
+  async function loadReminderHistory(next,content){
+    const listEl=$('aa-reminder-log-list');
+    try{
+      const {data,error}=await client.rpc('club_admin_reminder_overview',{p_limit:8});
+      if(error)throw error;
+      const entries=Array.isArray(data)?data:[];
+      listEl.replaceChildren();
+      const calendar=list(content.calendario);
+      for(const entry of entries){
+        const match=calendar.find(item=>item.id===entry.fixture_id);
+        const item=document.createElement('li');
+        item.className='aa-reminder-log-item status-'+entry.status;
+        const main=document.createElement('div');main.className='aa-reminder-log-main';
+        const title=document.createElement('strong');
+        title.textContent=(match?.giornata?'Giornata '+match.giornata+' · ':'')+
+          (match?(match.casa||'Casa')+' – '+(match.ospite||'Ospiti'):'Partita '+entry.fixture_id);
+        const when=document.createElement('small');
+        when.textContent='Calcio d’inizio: '+formatDateTime(new Date(entry.kickoff_at));
+        main.append(title,when);
+        const result=document.createElement('div');result.className='aa-reminder-log-result';
+        const badge=document.createElement('b');badge.textContent=reminderStatusLabel(entry.status);
+        const counts=document.createElement('small');
+        counts.textContent='Inviate '+(Number(entry.sent_count)||0)+' · In coda '+(Number(entry.queued_count)||0)+' · Non riuscite '+(Number(entry.failed_count)||0);
+        result.append(badge,counts);item.append(main,result);listEl.append(item);
+      }
+      if(!entries.length){
+        const empty=document.createElement('li');empty.className='aa-reminder-empty';
+        empty.textContent='Nessun promemoria è ancora entrato nella finestra di invio.';
+        listEl.append(empty);
+      }
+      if(next?.data&&next?.ora){
+        const kickoff=new Date(next.data+'T'+next.ora+':00');
+        const event=entries.find(item=>item.fixture_id===next.id&&Math.abs(new Date(item.kickoff_at).valueOf()-kickoff.valueOf())<60000);
+        const statusEl=$('aa-reminder-status');
+        if(event){
+          statusEl.textContent='Promemoria previsto 2 ore prima · Stato: '+reminderStatusLabel(event.status)+'.';
+        }else if(kickoff>Date.now()){
+          const target=kickoff.valueOf()-2*60*60*1000;
+          statusEl.textContent=target>Date.now()
+            ?'Promemoria previsto '+formatDateTime(new Date(target))+' · Stato: in attesa.'
+            :'Promemoria previsto 2 ore prima · Stato: nessun esito registrato.';
+        }else{
+          statusEl.textContent='Promemoria: nessun esito registrato.';
+        }
+      }
+    }catch(error){
+      listEl.replaceChildren();
+      const failed=document.createElement('li');failed.className='aa-reminder-empty';
+      failed.textContent='Esiti non disponibili al momento.';
+      listEl.append(failed);
+    }
   }
   async function loadUsageMetrics(){
     const topics=$('aa-usage-topics'),opens=$('aa-usage-pwa-7d');
@@ -134,8 +190,9 @@
     if(readError)throw readError;
     currentUser=session.user;
     authState(true);
-    updateDashboard(rows?.[0]?.payload||{});
-    await loadUsageMetrics();
+    const content=rows?.[0]?.payload||{};
+    const next=updateDashboard(content);
+    await Promise.all([loadReminderHistory(next,content),loadUsageMetrics()]);
     $('aa-status').hidden=true;
     installButton();
   }
